@@ -71,6 +71,7 @@ try {
     const P = () => engine.player;
     let maxEnemies = 0;
     let maxGems = 0;
+    let maxChests = 0;
     try {
       const steps = Math.round(MINUTES * 60 / DT);
       for (let i = 0; i < steps; i++) {
@@ -88,7 +89,14 @@ try {
         engine.update(DT);
         if (i % 60 === 0) {
           maxEnemies = Math.max(maxEnemies, engine.enemies.length);
-          maxGems = Math.max(maxGems, engine.gems.length);
+          let xp = 0;
+          let chests = 0;
+          for (const g of engine.gems) {
+            if (g.isTreasure) chests++;
+            else xp++;
+          }
+          maxGems = Math.max(maxGems, xp);
+          maxChests = Math.max(maxChests, chests);
           if (!Number.isFinite(P().x + P().y)) throw new Error("player position NaN");
           for (const e of engine.enemies) {
             if (!Number.isFinite(e.x + e.y + e.hp)) throw new Error(`enemy NaN (${e.enemyType})`);
@@ -102,7 +110,10 @@ try {
     // caps: regular spawns stop at maxCount; elites (1/min) may exceed it slightly
     const enemyCap = CONFIG.enemy.maxCount + Math.ceil(MINUTES) + 1;
     if (maxEnemies > enemyCap) fail(`${ch.id}: ${maxEnemies} enemies > cap ${enemyCap}`);
-    if (maxGems > 41) fail(`${ch.id}: ${maxGems} gems > 41`);
+    // XP gems consolidate at 40; +1 covers a spawn before the next merge.
+    // Chests are excluded from that merge, so they are capped on their own.
+    if (maxGems > 41) fail(`${ch.id}: ${maxGems} xp gems > 41`);
+    if (maxChests > 8) fail(`${ch.id}: ${maxChests} chests > 8`);
     for (const w of engine.weaponMgr.weapons) {
       if (w.evolved && w.level !== CONFIG.weapons[w.type].maxLevel) fail(`${ch.id}: evolved ${w.type} level ${w.level}`);
     }
@@ -116,6 +127,7 @@ try {
       weapons: st.weapons.map((w) => `${w.type}${w.evolved ? "*" : w.level}`).join(" "),
       maxEnemies,
       maxGems,
+      maxChests,
     });
     engine.stop();
   }
