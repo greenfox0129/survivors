@@ -19,4 +19,7 @@ listed in `scripts/sync-pixel-assets.mjs`, which copies them into `src/assets/pi
 4. Draw with `game/render/pixel.ts` (`drawUnit`, `drawStrip`) or `ui/components/PixelSprite.tsx`.
 5. Credit line in `wiki/design/assets/CREDITS.md` if it comes from a new pack.
 
-Only CC0 / CC-BY packs belong here. Images only — no scripts or executables from downloaded packs.
+Only CC0 / CC-BY packs belong here, except `linya/`. That character is CC BY-SA 3.0
+because the LPC body and eyes are share-alike, and neither pack here has a cat-person
+walk cycle. Credits and the license are in `linya/README.md`.
+Images only — no scripts or executables from downloaded packs.

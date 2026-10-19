@@ -144,6 +144,27 @@ try {
     engine.stop();
   }
 
+  // ---------------------------------------------------------------- 2b. treasure chests must survive gem merging
+  {
+    const { consolidateGems, mergeFarGems } = await server.ssrLoadModule("/src/game/entities/GemManager.ts");
+    const chest = (x, y) => ({ id: 1, x, y, radius: 12, value: 0, alive: true, isTreasure: true });
+    const gem = (id, x) => ({ id, x, y: 0, radius: 7, value: 1, alive: true });
+    const crowded = [];
+    for (let i = 0; i < 45; i++) crowded.push(gem(10 + i, (i % 5) * 20));
+    crowded.push(chest(10, 0));
+    const consolidated = consolidateGems(crowded, 40, 80);
+    const chestsAfterCrowd = consolidated.filter((g) => g.isTreasure);
+    if (chestsAfterCrowd.length !== 1 || !Number.isFinite(chestsAfterCrowd[0].x)) {
+      fail(`chest lost in consolidate: ${chestsAfterCrowd.length}`);
+    }
+    const farChest = chest(5000, 0);
+    const pulled = mergeFarGems([farChest, gem(2, 10)], 0, 0, 1152);
+    const chestsAfterPull = pulled.filter((g) => g.isTreasure);
+    if (chestsAfterPull.length !== 1 || !chestsAfterPull[0].alive || Math.hypot(chestsAfterPull[0].x, chestsAfterPull[0].y) > 1152 + 1) {
+      fail("far chest was merged into an XP gem");
+    }
+  }
+
   // ---------------------------------------------------------------- 3. exhausted options must not soft-lock
   {
     let opens = 0;

@@ -47,6 +47,8 @@ export const CONFIG = {
     spawnIntervalDecay: 0.97, // multiply interval every spawn
     maxCount: 120,
     contactDamageCooldown: 0.5,
+    // Spawn HP = base × hpPerMinute ^ (elapsed minutes). Elites use this too, then × elite.hpMult.
+    hpPerMinute: 1.5,
   },
 
   // ---- Enemy types ----
@@ -384,4 +386,9 @@ interface AccessoryDef {
 // Derived helper: XP required to go from `level` to `level+1`
 export function xpForLevel(level: number): number {
   return Math.floor(CONFIG.leveling.baseXpToNext * Math.pow(CONFIG.leveling.xpGrowth, level - 1));
+}
+
+/** HP multiplier for an enemy spawned at `elapsedSeconds`. 1 at 0:00, 1.5 at 1:00, 2.25 at 2:00. */
+export function enemyHpScale(elapsedSeconds: number): number {
+  return Math.pow(CONFIG.enemy.hpPerMinute, elapsedSeconds / 60);
 }

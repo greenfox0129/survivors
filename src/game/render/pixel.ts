@@ -9,7 +9,7 @@
 // ============================================================
 
 import { pixelUrl } from "@/assets/pixel";
-import { STRIP_FRAME_W, UNIT_FRAME, UNIT_FRAMES } from "@/assets/pixel/catalog";
+import { STRIP_FRAME_W, UNIT_DRAW_SCALE, UNIT_FRAME, UNIT_FRAME_PX, UNIT_FRAMES } from "@/assets/pixel/catalog";
 
 const images = new Map<string, HTMLImageElement>();
 const tinted = new Map<string, HTMLCanvasElement>();
@@ -100,11 +100,12 @@ export function drawUnit(
   const img = getPixelImage(sheet);
   if (!img) return false;
   const src = opts?.tint ? getTinted(sheet, img, opts.tint, opts.tintAmount ?? 0.35) : img;
-  const s = UNIT_FRAME * scale;
+  const framePx = UNIT_FRAME_PX[sheet] ?? UNIT_FRAME;
+  const s = UNIT_FRAME * scale * (UNIT_DRAW_SCALE[sheet] ?? 1);
   if (opts?.shadow !== false) drawShadow(ctx, x, y + s * 0.42, scale);
   const row = ((frame % UNIT_FRAMES) + UNIT_FRAMES) % UNIT_FRAMES;
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(src, facing * UNIT_FRAME, row * UNIT_FRAME, UNIT_FRAME, UNIT_FRAME, Math.round(x - s / 2), Math.round(y - s / 2), s, s);
+  ctx.drawImage(src, facing * framePx, row * framePx, framePx, framePx, Math.round(x - s / 2), Math.round(y - s / 2), s, s);
   ctx.imageSmoothingEnabled = true;
   return true;
 }

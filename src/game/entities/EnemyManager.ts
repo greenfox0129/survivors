@@ -2,7 +2,7 @@
 //  EnemyManager.ts — Spawning, tracking, collision, death
 // ============================================================
 
-import { CONFIG } from "@/game/data/config";
+import { CONFIG, enemyHpScale } from "@/game/data/config";
 import { playHitSound } from "@/game/core/audio";
 import type { EnemyState, PlayerState } from "@/game/core/types";
 import { isLowQuality } from "@/game/render/quality";
@@ -74,13 +74,14 @@ function createEliteEnemy(elapsedTime: number, px: number, py: number): EnemySta
   const pos = spawnEdgePosition(px, py);
   const t = pickType(elapsedTime);
   const ec = CONFIG.elite;
+  const hp = t.hp * ec.hpMult * enemyHpScale(elapsedTime);
   return {
     id: ++idCounter,
     x: pos.x,
     y: pos.y,
     radius: t.radius * ec.radiusMult,
-    hp: t.hp * ec.hpMult,
-    maxHp: t.hp * ec.hpMult,
+    hp,
+    maxHp: hp,
     alive: true,
     speed: t.speed * ec.speedMult,
     baseSpeed: t.speed * ec.speedMult,
@@ -132,13 +133,14 @@ function pickType(elapsedTime: number): EnemyTypeConfig {
 function createEnemy(elapsedTime: number, px: number, py: number): EnemyState {
   const pos = spawnEdgePosition(px, py);
   const t = pickType(elapsedTime);
+  const hp = t.hp * enemyHpScale(elapsedTime);
   return {
     id: ++idCounter,
     x: pos.x,
     y: pos.y,
     radius: t.radius,
-    hp: t.hp,
-    maxHp: t.hp,
+    hp,
+    maxHp: hp,
     alive: true,
     speed: t.speed * (0.8 + Math.random() * 0.4),
     baseSpeed: t.speed * (0.8 + Math.random() * 0.4),

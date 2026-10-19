@@ -157,23 +157,40 @@ export function cullGems(gems: Gem[]): Gem[] {
 }
 
 /**
- * Merges gems that are too far from the player into the nearest in-range gem,
+ * Merges XP gems that are too far from the player into the nearest in-range gem,
  * adding their value. If no in-range gem exists, the far gem is teleported
  * to the edge of the range so it stays collectable.
+ * Treasure chests are never merged; a far chest is only pulled to the edge.
  */
+function pullToRangeEdge(g: Gem, px: number, py: number, maxDist: number): void {
+  const dx = px - g.x;
+  const dy = py - g.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist > 0.1) {
+    g.x = px - (dx / dist) * maxDist;
+    g.y = py - (dy / dist) * maxDist;
+  }
+}
+
 export function mergeFarGems(gems: Gem[], px: number, py: number, maxDist: number): Gem[] {
   const maxDist2 = maxDist * maxDist;
   const inRange: Gem[] = [];
   const far: Gem[] = [];
+  const treasures: Gem[] = [];
   for (const g of gems) {
     if (!g.alive) continue;
+    // Chests are not XP. Folding one into a gem drops isTreasure and the chest vanishes.
+    if (g.isTreasure) {
+      const dx = g.x - px;
+      const dy = g.y - py;
+      if (dx * dx + dy * dy > maxDist2) pullToRangeEdge(g, px, py, maxDist);
+      treasures.push(g);
+      continue;
+    }
     const dx = g.x - px;
     const dy = g.y - py;
-    if (dx * dx + dy * dy > maxDist2) {
-      far.push(g);
-    } else {
-      inRange.push(g);
-    }
+    if (dx * dx + dy * dy > maxDist2) far.push(g);
+    else inRange.push(g);
   }
 
   for (const f of far) {
@@ -196,28 +213,29 @@ export function mergeFarGems(gems: Gem[], px: number, py: number, maxDist: numbe
       f.alive = false;
     } else {
       // No in-range gem — pull the far gem to the edge of range toward the player
-      const dx = px - f.x;
-      const dy = py - f.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist > 0.1) {
-        f.x = px - (dx / dist) * maxDist;
-        f.y = py - (dy / dist) * maxDist;
-      }
+      pullToRangeEdge(f, px, py, maxDist);
       inRange.push(f);
     }
   }
 
-  return inRange;
+  return inRange.concat(treasures);
 }
 
 /**
- * When the gem count exceeds a threshold, merges nearby gems together to keep
+ * When the XP gem count exceeds a threshold, merges nearby gems together to keep
  * the field manageable. Each gem merges into the closest other gem within
  * `mergeRadius`, accumulating value and radius.
+ * Treasure chests are left untouched, so an elite drop cannot vanish into a gem.
  */
 export function consolidateGems(gems: Gem[], maxCount: number, mergeRadius: number): Gem[] {
-  const alive = gems.filter((g) => g.alive);
-  if (alive.length <= maxCount) return alive;
+  const treasures: Gem[] = [];
+  const alive: Gem[] = [];
+  for (const g of gems) {
+    if (!g.alive) continue;
+    if (g.isTreasure) treasures.push(g);
+    else alive.push(g);
+  }
+  if (alive.length <= maxCount) return alive.concat(treasures);
 
   // Single-pass greedy merge: merge each gem into the nearest already-visited gem if within mergeRadius.
   const mergeR2 = mergeRadius * mergeRadius;
@@ -236,8 +254,10 @@ export function consolidateGems(gems: Gem[], maxCount: number, mergeRadius: numb
     }
     if (best) {
       const total = best.value + g.value;
-      best.x = (best.x * best.value + g.x * g.value) / total;
-      best.y = (best.y * best.value + g.y * g.value) / total;
+      if (total > 0) {
+        best.x = (best.x * best.value + g.x * g.value) / total;
+        best.y = (best.y * best.value + g.y * g.value) / total;
+      }
       best.value = total;
       best.radius = Math.min(best.radius + 0.5, 12);
     } else {
@@ -265,13 +285,15 @@ export function consolidateGems(gems: Gem[], maxCount: number, mergeRadius: numb
     }
     const target = merged[nearestIdx];
     const total = target.value + last.value;
-    target.x = (target.x * target.value + last.x * last.value) / total;
-    target.y = (target.y * target.value + last.y * last.value) / total;
+    if (total > 0) {
+      target.x = (target.x * target.value + last.x * last.value) / total;
+      target.y = (target.y * target.value + last.y * last.value) / total;
+    }
     target.value = total;
     target.radius = Math.min(target.radius + 0.5, 12);
   }
 
-  return merged;
+  return merged.concat(treasures);
 }
 
 // Value-based gem tiers for clear visual distinction

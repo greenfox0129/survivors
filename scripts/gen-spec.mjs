@@ -209,6 +209,7 @@ try {
         ["접촉 피해 쿨다운(적별)", `${e.contactDamageCooldown}s`],
         ["엘리트 주기", `${el.spawnInterval}s마다 1마리 (상한과 무관)`],
         ["엘리트 배율", `HP ×${el.hpMult} · 피해 ×${el.damageMult} · 속도 ×${el.speedMult} · 크기 ×${el.radiusMult}`],
+        ["생성 시 체력", `기본 HP × ${e.hpPerMinute}^(경과 분). 엘리트는 그 뒤 ×${el.hpMult}. 이미 나온 적은 변하지 않음`],
         ["엘리트 보상", "보물 상자 → 획득 시 즉시 레벨업 선택지"],
       ],
     ),
