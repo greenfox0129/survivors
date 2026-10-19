@@ -154,6 +154,41 @@ export function drawStrip(
   return true;
 }
 
+/** Same as drawStrip, with a cached color laid over the opaque pixels. */
+export function drawTintedStrip(
+  ctx: CanvasRenderingContext2D,
+  name: string,
+  frame: number,
+  x: number,
+  y: number,
+  scale: number,
+  angle: number,
+  color: string,
+  amount: number,
+): boolean {
+  const img = getPixelImage(name);
+  if (!img) return false;
+  const src = getTinted(name, img, color, amount);
+  const fw = STRIP_FRAME_W[name] ?? img.naturalWidth;
+  const fh = img.naturalHeight;
+  const n = Math.max(1, Math.floor(img.naturalWidth / fw));
+  const f = ((Math.floor(frame) % n) + n) % n;
+  const w = fw * scale;
+  const h = fh * scale;
+  ctx.imageSmoothingEnabled = false;
+  if (angle === 0) {
+    ctx.drawImage(src, f * fw, 0, fw, fh, x - w / 2, y - h / 2, w, h);
+  } else {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.drawImage(src, f * fw, 0, fw, fh, -w / 2, -h / 2, w, h);
+    ctx.restore();
+  }
+  ctx.imageSmoothingEnabled = true;
+  return true;
+}
+
 /** Draw a rectangle of 16px tiles (c, r, w, h in tile units) from a tile sheet at world (x, y). */
 export function drawTiles(
   ctx: CanvasRenderingContext2D,

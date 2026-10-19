@@ -201,7 +201,7 @@ export function Lobby({ onNavigate, save }: LobbyProps) {
         WASD / 방향키 — 이동 · 공격은 자동 · ESC — 일시정지
       </p>
       <p className="mt-2 text-[11px] text-slate-700">
-        v{GAME_INFO.version} · Icons by {ICON_AUTHORS} (game-icons.net, CC BY 3.0) · Pixel art: Ninja Adventure by Pixel-boy &amp; AAA (CC0) · 리냐: Universal LPC (CC BY-SA 3.0)
+        v{GAME_INFO.version} · Icons by {ICON_AUTHORS} (game-icons.net, CC BY 3.0) · Pixel art: Ninja Adventure by Pixel-boy &amp; AAA (CC0) · 리냐·에우로안: Universal LPC (CC BY-SA 3.0)
       </p>
 
       {/* Settings modal */}

@@ -31,7 +31,7 @@ import {
   resetEnemyManager,
   setElapsedTime,
 } from "@/game/entities/EnemyManager";
-import { WeaponManager, weaponName, weaponEvolvedName } from "@/game/systems/WeaponManager";
+import { WeaponManager, weaponFormName } from "@/game/systems/WeaponManager";
 import { pickUpgrades } from "@/game/systems/upgrades";
 import {
   dropGem,
@@ -449,7 +449,7 @@ export class GameEngine {
    * opening an empty modal (which would soft-lock the game).
    */
   private openNextLevelUp(): void {
-    const options = pickUpgrades(this.weaponMgr, this.accessoryMgr);
+    const options = pickUpgrades(this.weaponMgr, this.accessoryMgr, this.save?.selectedCharacter);
     if (options.length === 0) {
       this.pendingLevelUps = 0;
       this.paused = false;
@@ -468,7 +468,7 @@ export class GameEngine {
   rerollUpgrades(): UpgradeOption[] | null {
     if (this.rerollsLeft <= 0) return null;
     this.rerollsLeft--;
-    return pickUpgrades(this.weaponMgr, this.accessoryMgr);
+    return pickUpgrades(this.weaponMgr, this.accessoryMgr, this.save?.selectedCharacter);
   }
 
   getRerollsLeft(): number {
@@ -484,7 +484,7 @@ export class GameEngine {
         if (opt.weaponType) this.weaponMgr.levelUpWeapon(opt.weaponType);
         break;
       case "weaponEvolve":
-        if (opt.weaponType) this.weaponMgr.evolveWeapon(opt.weaponType);
+        if (opt.weaponType) this.weaponMgr.evolveWeapon(opt.weaponType, this.save?.selectedCharacter);
         break;
       case "newAccessory":
         if (opt.accessoryType) this.accessoryMgr.addAccessory(opt.accessoryType);
@@ -523,7 +523,7 @@ export class GameEngine {
       score: this.score,
       weapons: this.weaponMgr.weapons.map((w) => ({
         type: w.type,
-        name: w.evolved ? weaponEvolvedName(w.type) : weaponName(w.type),
+        name: weaponFormName(w),
         level: w.level,
         evolved: w.evolved,
       })),

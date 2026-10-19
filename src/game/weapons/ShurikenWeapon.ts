@@ -38,6 +38,7 @@ export function shurikenPierce(w: WeaponInstance): number {
 }
 
 export function shurikenCount(w: WeaponInstance): number {
+  if (w.super) return 20;
   if (w.evolved) return 8;
   if (w.level >= 8) return 5;
   if (w.level >= 6) return 4;
@@ -91,10 +92,12 @@ export function updateShuriken(
       const radius = shurikenRadius(w);
       const pierce = shurikenPierce(w);
 
-      const spread = count > 1 ? 0.22 : 0;
+      // Normal evolution is a fan. Super evolution (Linya) fills the whole circle.
+      const fullRing = w.super;
+      const spread = !fullRing && count > 1 ? 0.22 : 0;
       for (let i = 0; i < count; i++) {
-        const offset = count > 1 ? (i - (count - 1) / 2) * spread : 0;
-        const angle = baseAngle + offset;
+        const offset = !fullRing && count > 1 ? (i - (count - 1) / 2) * spread : 0;
+        const angle = fullRing ? baseAngle + (i / count) * Math.PI * 2 : baseAngle + offset;
         projectiles.push({
           id: ++idCounter,
           x: px, y: py,

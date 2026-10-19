@@ -1,7 +1,7 @@
 // ============================================================
 //  PixelSprite — pixel-art portraits and walking sprites for the UI
 //  (src/assets/pixel). Crisp scaling via image-rendering.
-//  Most sheets are Ninja Adventure (CC0, 16px frames). Linya is a 32px LPC catgirl.
+//  Most sheets are Ninja Adventure (CC0, 16px frames). Linya and Euroan are 32px LPC.
 //
 //  <PixelFace kind="char" id="survivor" size={48} />   38×38 faceset, square
 //  <PixelWalker id="survivor" size={64} />            4-frame walk loop (CSS steps)

@@ -16,7 +16,8 @@
 | 게임 id | 스프라이트 |
 |---|---|
 | 생존자 / 버서커 / 가디언 / 스카웃 | NinjaBlue / FighterWhite / Knight / NinjaGreen |
-| 메이지 / 에우로안 | NinjaMageBlack / Cavegirl |
+| 메이지 | NinjaMageBlack |
+| 에우로안 | `art/euroan` — Universal LPC로 합성한 빨간 머리 남성 (32px 프레임, CC BY-SA 3.0). 어두운 트렌치코트 |
 | 리냐 | `art/linya` — Universal LPC로 합성한 고양이 수인 (32px 프레임, CC BY-SA 3.0). 귀·꼬리·검은 단발 |
 | 슬라임 / 박쥐 / 스켈레톤 / 고스트 / 브루트 / 래쓰 | Slime / Butterfly / Skeleton / Spirit / Beast / Flam |
 | 늑대 | 원본 `Wolf.png` 유지 (높음 품질에선 스무딩 없이) |

@@ -27,7 +27,7 @@ const load = (p) => server.ssrLoadModule(p);
 
 try {
   const { CONFIG, xpForLevel } = await load("/src/game/data/config.ts");
-  const { EVOLUTIONS } = await load("/src/game/data/evolutions.ts");
+  const { EVOLUTIONS, SUPER_EVOLUTIONS } = await load("/src/game/data/evolutions.ts");
   const P = await load("/src/game/data/progression.ts");
   const { AccessoryManager, allAccessoryTypes, accessoryName } = await load("/src/game/systems/AccessoryManager.ts");
   const { ALL_WEAPON_TYPES } = await load("/src/game/weapons/registry.ts");
@@ -100,13 +100,13 @@ try {
       ),
     aura: () =>
       table(
-        ["Lv", "틱 피해", "틱 간격(s)", "반경", "화상 피해", "넉백", "도달 시 효과"],
+        ["Lv", "틱 피해", "틱 간격(s)", "반경", "화상 피해", "도달 시 효과"],
         levels("aura").map((w) => {
           const s = A.createAuraState(w);
           const dmg = s.damage * (A.auraDoubleDamage(w) ? 2 : 1);
           return [
             lvLabel(w), n(dmg), n(s.tickInterval, 3), n(s.radius), s.burnDamage > 0 ? n(s.burnDamage) : "—",
-            yes(A.auraHasKnockback(w)), A.auraLevelEffect(w) ?? "",
+            A.auraLevelEffect(w) ?? "",
           ];
         }),
       ),
@@ -124,7 +124,7 @@ try {
         levels("claw").map((w) => {
           if (w.evolved) {
             const b = BR.createBreathState(w);
-            return [lvLabel(w), `${n(b.damage)} /틱(${b.tickInterval}s)`, n(b.cooldown, 2), `사거리 ${n(b.range)}`, "브레스 0.8s", "전방 화염 + 화상"];
+            return [lvLabel(w), `${n(b.damage)} /틱(${b.tickInterval}s)`, n(b.cooldown, 2), `사거리 ${n(b.range)}`, "브레스 0.8s · 60°", "이동 방향 입자 + 화상"];
           }
           const c = C.createClawState(w);
           return [lvLabel(w), n(c.damage), n(c.cooldown, 2), n(c.radius), C.clawSlashCount(w), C.clawLevelEffect(w) ?? ""];
@@ -146,6 +146,18 @@ try {
         `${accessoryName(EVOLUTIONS[t].pairedAccessory)} (\`${EVOLUTIONS[t].pairedAccessory}\`)`,
         EVOLUTIONS[t].evolvedName, EVOLUTIONS[t].desc,
       ]),
+    ),
+    "",
+    "## 초진화",
+    "",
+    "스페셜 캐릭터가 자신의 시작 무기를 진화시키면 일반 진화 대신 이 형태가 된다. 다른 캐릭터의 같은 무기는 위 진화 그대로다.",
+    "",
+    table(
+      ["캐릭터", "무기", "초진화", "설명"],
+      SUPER_EVOLUTIONS.map((s) => {
+        const who = P.CHARACTERS.find((c) => c.id === s.characterId);
+        return [who ? who.name : s.characterId, CONFIG.weapons[s.weapon].name, s.name, s.desc];
+      }),
     ),
     "",
     ...ALL_WEAPON_TYPES.flatMap((t) => [

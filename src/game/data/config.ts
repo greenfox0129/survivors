@@ -277,7 +277,7 @@ export const CONFIG = {
       baseCooldown: 0,    // continuous, not timer-based
       baseBladeRadius: 55, // swing orbit radius
       baseBladeSize: 16,
-      baseBladeCount: 1,
+      baseBladeCount: 2,
       hitCooldown: 0.4,   // per-enemy re-hit delay
       damageGrowth: 1.25,
       bladeCountGrowth: 1, // +1 blade every 2 levels
@@ -317,7 +317,7 @@ export const CONFIG = {
       name: "화염 오오라",
       desc: "플레이어 주변의 적에게 지속 데미지",
       color: "#f87171",
-      baseDamage: 5,
+      baseDamage: 2.5,
       baseCooldown: 0,     // continuous tick
       baseAuraRadius: 70,
       tickInterval: 0.5,
