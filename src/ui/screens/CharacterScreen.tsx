@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { ArrowLeft, Star, Check, ChevronUp, Lock, RotateCcw, X, Play, Sparkles } from "lucide-react";
+import { PixelFace, PixelWalker } from "@/ui/components/PixelSprite";
 import { GameIcon } from "@/ui/components/GameIcon";
-import { UI_ICONS, characterIcon, weaponIcon } from "@/ui/icons";
+import { UI_ICONS, weaponIcon } from "@/ui/icons";
 import { readableAccent, weaponColor } from "@/ui/theme";
 import {
   CHARACTERS,
@@ -144,14 +145,10 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
                   </span>
                 )}
                 <div
-                  className="w-12 h-12 rounded-full mb-2 flex items-center justify-center"
-                  style={{
-                    backgroundColor: char.color + "33",
-                    border: `2px solid ${readableAccent(char.color)}`,
-                    opacity: isOwned ? 1 : 0.55,
-                  }}
+                  className="w-12 h-12 rounded-lg mb-2 flex items-center justify-center overflow-hidden"
+                  style={{ border: `2px solid ${readableAccent(char.color)}` }}
                 >
-                  <GameIcon name={characterIcon(char.id)} size={28} color={readableAccent(char.color)} />
+                  <PixelFace kind="char" id={char.id} size={44} color={readableAccent(char.color)} dimmed={!isOwned} />
                 </div>
                 <span className="text-slate-100 text-xs font-semibold">{char.name}</span>
                 {isOwned && own && (
@@ -182,10 +179,10 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
           <div className="rounded-2xl border-2 border-slate-700 bg-slate-900/40 p-6">
             <div className="flex items-start gap-5 mb-5">
               <div
-                className="flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center"
-                style={{ backgroundColor: def.color + "22", border: `2px solid ${readableAccent(def.color)}` }}
+                className="flex-shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center bg-[#2f4a1f]"
+                style={{ border: `2px solid ${readableAccent(def.color)}` }}
               >
-                <GameIcon name={characterIcon(def.id)} size={40} color={readableAccent(def.color)} />
+                <PixelWalker id={def.id} size={64} />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">

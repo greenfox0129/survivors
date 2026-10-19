@@ -54,8 +54,12 @@ import {
 } from "@/game/systems/AccessoryManager";
 import { drawBackground } from "@/game/render/background";
 import { renderDecor } from "@/game/render/decor";
-import { reportFrameTime } from "@/game/render/quality";
+import { reportFrameTime, isLowQuality } from "@/game/render/quality";
+import { drawTileWorld } from "@/game/render/tileWorld";
 import { preloadGameSprites } from "@/game/render/iconSprites";
+import { preloadPixel } from "@/game/render/pixel";
+import { pixelNames } from "@/assets/pixel";
+import { characterSheet } from "@/assets/pixel/catalog";
 import { resetEffects, spawnKillPop, spawnLevelUpBurst, updateEffects, renderEffects } from "@/game/render/effects";
 import { UI_ICONS, characterIcon } from "@/assets/icons/map";
 
@@ -117,6 +121,7 @@ export class GameEngine {
       pickupRangeMult: this.modifiers.pickupRangeMult,
       playerColor: this.modifiers.playerColor,
       emblem: this.emblem(),
+      sprite: characterSheet(this.save?.selectedCharacter ?? "survivor"),
     });
     this.camera = { x: this.player.x, y: this.player.y };
     preloadGameSprites([
@@ -124,6 +129,7 @@ export class GameEngine {
       "weapon-bomb", "weapon-bomb-evo", "weapon-trap", "weapon-trap-evo", "weapon-shuriken-evo",
       ...CONFIG.enemyTypes.map((t) => `enemy-${t.id}`),
     ]);
+    preloadPixel(pixelNames()); // ~300 KB of small PNGs, all used in play
     this.weaponMgr = new WeaponManager(getStartWeapon(this.save));
     this.accessoryMgr = new AccessoryManager();
     this.baseMaxHp = this.player.maxHp;
@@ -250,6 +256,7 @@ export class GameEngine {
       pickupRangeMult: this.modifiers.pickupRangeMult,
       playerColor: this.modifiers.playerColor,
       emblem: this.emblem(),
+      sprite: characterSheet(this.save?.selectedCharacter ?? "survivor"),
     });
     this.camera = { x: this.player.x, y: this.player.y };
     this.enemies = [];
@@ -544,16 +551,24 @@ export class GameEngine {
     ctx.filter = "none";
     ctx.globalCompositeOperation = "source-over";
 
-    const camX = this.camera.x - CONFIG.canvasWidth / 2;
-    const camY = this.camera.y - CONFIG.canvasHeight / 2;
+    // High quality = pixel-art world/sprites; low quality = the original vector look.
+    const pixel = !isLowQuality();
+    let camX = this.camera.x - CONFIG.canvasWidth / 2;
+    let camY = this.camera.y - CONFIG.canvasHeight / 2;
+    if (pixel) {
+      // Whole-pixel camera so nearest-neighbour sprites don't shimmer
+      camX = Math.round(camX);
+      camY = Math.round(camY);
+    }
 
-    // Background + scrolling grid (screen space, pre-rendered pattern)
-    drawBackground(ctx, camX, camY);
+    // Ground: cached tile chunks (high) or background + scrolling grid (low / while loading)
+    const tiled = pixel && drawTileWorld(ctx, camX, camY);
+    if (!tiled) drawBackground(ctx, camX, camY);
 
     // World space
     ctx.save();
     ctx.translate(-camX, -camY);
-    renderDecor(ctx, camX, camY);
+    if (!tiled) renderDecor(ctx, camX, camY);
     renderGems(ctx, this.gems);
     renderEnemies(ctx, this.enemies);
     renderEffects(ctx);

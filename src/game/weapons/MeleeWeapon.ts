@@ -8,6 +8,8 @@ import { damageEnemy } from "@/game/entities/EnemyManager";
 import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
 import { getIconSprite, drawSpriteRotated } from "@/game/render/iconSprites";
+import { isLowQuality } from "@/game/render/quality";
+import { drawStrip, getPixelImage } from "@/game/render/pixel";
 
 export function createMeleeBlades(w: WeaponInstance): MeleeBlade[] {
   const count = meleeBladeCount(w);
@@ -139,6 +141,18 @@ export function renderMelee(
   const orbitR = meleeBladeRadius(w);
   const size = meleeBladeSize(w);
   const color = CONFIG.weapons.melee.color;
+
+  // High quality: real sword sprites (blade points up in the sheet → +90° to point outward)
+  const sword = w.evolved ? "items/big-sword" : "items/sword";
+  if (!isLowQuality() && getPixelImage(sword)) {
+    const scale = (size * 3) / 17;
+    for (const blade of blades) {
+      const bx = px + Math.cos(blade.angle) * orbitR;
+      const by = py + Math.sin(blade.angle) * orbitR;
+      drawStrip(ctx, sword, 0, bx, by, scale, blade.angle + Math.PI / 2);
+    }
+    return;
+  }
 
   // Orbit guide (subtle)
   ctx.strokeStyle = color + "11";

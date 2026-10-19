@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { ArrowLeft, Sparkles, Check, Lock } from "lucide-react";
+import { PixelFace, PixelWalker } from "@/ui/components/PixelSprite";
 import { GameIcon } from "@/ui/components/GameIcon";
-import { UI_ICONS, characterIcon } from "@/ui/icons";
+import { UI_ICONS } from "@/ui/icons";
 import { readableAccent } from "@/ui/theme";
 import {
   CHARACTERS,
@@ -164,7 +165,7 @@ export function GachaScreen({ onBack, save, onUpdate }: GachaScreenProps) {
                 }}
               >
                 {state === "rolling" && rollFlashId ? (
-                  <GameIcon name={characterIcon(rollFlashId)} size={64} color={rollFlash} />
+                  <PixelFace kind="char" id={rollFlashId} size={76} color={rollFlash} className="rounded-lg" />
                 ) : (
                   <GameIcon name={UI_ICONS.gacha} size={56} className="text-slate-500" />
                 )}
@@ -316,18 +317,10 @@ export function GachaScreen({ onBack, save, onUpdate }: GachaScreenProps) {
                     <Lock className={`absolute top-1.5 right-1.5 w-3 h-3 ${isLockedSpecial ? "text-amber-600" : "text-slate-600"}`} />
                   )}
                   <div
-                    className="w-10 h-10 rounded-full mb-1.5 flex items-center justify-center"
-                    style={{
-                      backgroundColor: char.color + (isOwned ? "33" : "15"),
-                      border: `2px solid ${readableAccent(char.color)}${isOwned ? "" : "55"}`,
-                    }}
+                    className="w-10 h-10 rounded-lg mb-1.5 flex items-center justify-center overflow-hidden"
+                    style={{ border: `2px solid ${readableAccent(char.color)}${isOwned ? "" : "55"}` }}
                   >
-                    <GameIcon
-                      name={characterIcon(char.id)}
-                      size={24}
-                      color={readableAccent(char.color)}
-                      className={isOwned ? "" : "opacity-40"}
-                    />
+                    <PixelFace kind="char" id={char.id} size={36} color={readableAccent(char.color)} dimmed={!isOwned} />
                   </div>
                   <span className={`text-xs font-semibold ${isOwned ? "text-slate-200" : "text-slate-500"}`}>
                     {char.name}
@@ -386,7 +379,7 @@ function SingleResult({
           boxShadow: `0 0 40px ${readableAccent(char.color)}44`,
         }}
       >
-        <GameIcon name={characterIcon(char.id)} size={72} color={readableAccent(char.color)} />
+        <PixelWalker id={char.id} size={88} />
       </div>
 
       <div className="flex items-center gap-2 mb-2">
@@ -463,13 +456,10 @@ function ResultCard({ result }: { result: PullResult }) {
       }}
     >
       <div
-        className="w-9 h-9 rounded-full mb-1.5 flex items-center justify-center"
-        style={{
-          backgroundColor: char.color + "33",
-          border: `2px solid ${readableAccent(char.color)}`,
-        }}
+        className="w-9 h-9 rounded-lg mb-1.5 flex items-center justify-center overflow-hidden"
+        style={{ border: `2px solid ${readableAccent(char.color)}` }}
       >
-        <GameIcon name={characterIcon(char.id)} size={22} color={readableAccent(char.color)} />
+        <PixelFace kind="char" id={char.id} size={32} color={readableAccent(char.color)} />
       </div>
       <span className="text-[10px] font-semibold text-slate-200 text-center leading-tight">
         {char.name}

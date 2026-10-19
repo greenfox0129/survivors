@@ -4,9 +4,11 @@
 WASD로 움직이기만 하면 무기가 자동으로 공격하고, 경험치를 모아 레벨업할 때마다 무기·장신구를 골라 빌드를 완성한다.
 판이 끝나면 골드로 캐릭터 뽑기·강화·특성 같은 영구 성장을 한다.
 
-| 로비 | 인게임 |
+| 인게임 (높음 품질 — 픽셀 아트) | 적 전 종류 + 엘리트 |
 |---|---|
-| ![lobby](wiki/design/screenshots/01-lobby.jpg) | ![gameplay](wiki/design/screenshots/02-gameplay.jpg) |
+| ![gameplay](wiki/design/screenshots/11-pixel-gameplay.jpg) | ![units](wiki/design/screenshots/12-pixel-units.jpg) |
+| **인게임 (저사양 품질)** | **로비** |
+| ![low](wiki/design/screenshots/14-low-quality.jpg) | ![lobby](wiki/design/screenshots/01-lobby.jpg) |
 | **레벨업** | **캐릭터 관리** |
 | ![levelup](wiki/design/screenshots/03-levelup.jpg) | ![characters](wiki/design/screenshots/05-characters.jpg) |
 
@@ -31,10 +33,11 @@ WASD로 움직이기만 하면 무기가 자동으로 공격하고, 경험치를
 ## 기술
 
 React 18 · TypeScript 5 · Vite 5 · Tailwind CSS 3 · Canvas 2D (엔진은 React와 독립)
-아이콘: game-icons.net (CC BY 3.0) · 이펙트/후보 에셋: Kenney (CC0) — [CREDITS](wiki/design/assets/CREDITS.md)
+픽셀 아트: Ninja Adventure — Pixel-boy & AAA (CC0, 원본 팩 `art/`) · 아이콘: game-icons.net (CC BY 3.0) · 이펙트/후보 에셋: Kenney (CC0) — [CREDITS](wiki/design/assets/CREDITS.md)
 원클릭 실행기: C# (Windows 기본 .NET Framework 4 `csc.exe`로 빌드, 추가 설치 없음)
 
-저사양 원칙: 60fps 상한, 일시정지 중 재렌더 없음, shadowBlur·매 프레임 그라디언트 없음, 자동 저사양 모드.
+그래픽 품질: **높음** = 16px 픽셀 아트(타일 월드·걷기 스프라이트·에셋 이펙트), **저사양** = 가벼운 벡터 룩(도형·그리드).
+저사양 원칙: 60fps 상한, 일시정지 중 재렌더 없음, shadowBlur·매 프레임 그라디언트 없음, 타일 바닥은 청크 캐시, 자동 저사양 모드.
 
 ## 명령어
 
@@ -44,6 +47,7 @@ React 18 · TypeScript 5 · Vite 5 · Tailwind CSS 3 · Canvas 2D (엔진은 Rea
 | `npm run check` | 타입체크 + 린트 + 헤드리스 시뮬레이션 + 빌드 (커밋 전 필수) |
 | `npm run sim` | 헤드리스 게임플레이 회귀 테스트 |
 | `npm run docs:spec` | `wiki/specs/generated/*.md` 수치표 재생성 |
+| `npm run assets:pixel` | `art/` 픽셀 팩에서 사용 에셋만 `src/assets/pixel/` 로 복사 |
 | `npm run build:exe` | 웹 빌드 + `release/SurvivorsProto.exe` 생성 (Windows) |
 
 ## 디렉토리
@@ -52,7 +56,8 @@ React 18 · TypeScript 5 · Vite 5 · Tailwind CSS 3 · Canvas 2D (엔진은 Rea
 .
 ├─ AGENTS.md        ← AI 에이전트 작업 지침 (사람도 먼저 읽을 것)
 ├─ CHANGELOG.md
-├─ src/             ← 게임 소스 (game: 순수 로직 / ui: React 화면 / assets: 아이콘·이펙트)
+├─ art/             ← 픽셀 아트 원본 팩 (CC0) — 게임은 일부만 복사해 사용
+├─ src/             ← 게임 소스 (game: 순수 로직 / ui: React 화면 / assets: 아이콘·이펙트·픽셀 아트)
 ├─ public/          ← 런타임 정적 에셋 (늑대 스프라이트 등)
 ├─ launcher/        ← 원클릭 exe 실행기 (C#)
 ├─ scripts/         ← exe 빌드 · 수치표 생성 · 헤드리스 시뮬레이션

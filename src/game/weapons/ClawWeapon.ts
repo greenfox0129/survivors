@@ -8,6 +8,8 @@ import type { ClawState, EnemyState, WeaponInstance } from "@/game/core/types";
 import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
 import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
+import { isLowQuality } from "@/game/render/quality";
+import { drawStrip, getPixelImage } from "@/game/render/pixel";
 
 // Claw image — loaded lazily on first render (so this module can also be imported
 // outside a browser, e.g. by scripts/gen-spec.mjs), drawn statically at the attack
@@ -281,6 +283,15 @@ export function renderClaw(
 
   const alpha = Math.max(0, 1 - state.slashTimer / state.slashDuration);
   const baseAngle = state.slashBaseAngle;
+
+  // High quality: animated claw-slash sheet (strikes toward +x in the sheet)
+  if (!isLowQuality() && getPixelImage("fx/claw")) {
+    const prog = Math.min(0.999, state.slashTimer / state.slashDuration);
+    const reach = state.radius * 0.6;
+    drawStrip(ctx, "fx/claw", prog * 4, px + Math.cos(baseAngle) * reach, py + Math.sin(baseAngle) * reach,
+      (state.radius * 1.5) / 32, baseAngle);
+    return;
+  }
 
   // Draw the claw PNG statically at the attack direction — one image per slash,
   // centered along the slash direction. Inverted (black/white) via filter.

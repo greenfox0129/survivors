@@ -8,6 +8,13 @@ import type { EnemyState, PlayerState } from "@/game/core/types";
 import { isLowQuality } from "@/game/render/quality";
 import { getIconSprite, drawSpriteCentered } from "@/game/render/iconSprites";
 import { UI_ICONS } from "@/assets/icons/map";
+import { drawUnit, drawShadow, facingFromVector } from "@/game/render/pixel";
+import { enemySheet } from "@/assets/pixel/catalog";
+
+/** Walk frames per second for pixel-sprite enemies. */
+const ENEMY_WALK_FPS = 6;
+/** Sprite size relative to the collision radius (16px frame → radius × this px). */
+const ENEMY_SPRITE_PER_RADIUS = 3;
 
 type EnemyTypeConfig = {
   id: string;
@@ -90,6 +97,7 @@ function createEliteEnemy(elapsedTime: number, px: number, py: number): EnemySta
     dyingTimer: 0,
     isElite: true,
     gemDropped: false,
+    facing: 0,
   };
 }
 
@@ -147,6 +155,7 @@ function createEnemy(elapsedTime: number, px: number, py: number): EnemyState {
     dyingTimer: 0,
     isElite: false,
     gemDropped: false,
+    facing: 0,
   };
 }
 
@@ -184,6 +193,7 @@ export function updateEnemies(
     const dx = player.x - e.x;
     const dy = player.y - e.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
+    e.facing = facingFromVector(dx, dy, e.facing);
 
     // Sprite animation updates
     if (e.shape === "sprite") {
@@ -399,6 +409,8 @@ function renderWolfSprite(
 
   // Draw sprite centered on entity position, scaled to 2x radius
   const drawSize = e.radius * 3.5;
+  const crisp = !isLowQuality(); // nearest-neighbour like the other pixel sprites (low keeps the old look)
+  if (crisp) ctx.imageSmoothingEnabled = false;
   ctx.drawImage(
     img,
     sx, sy, fw, fh,
@@ -407,6 +419,7 @@ function renderWolfSprite(
     drawSize,
     drawSize
   );
+  if (crisp) ctx.imageSmoothingEnabled = true;
 
   // HP bar if damaged
   if (e.hp < e.maxHp && !e.dying) {
@@ -421,11 +434,52 @@ function renderWolfSprite(
   }
 }
 
+/** HP bar above an enemy (gameplay info, every quality). `top` = y of the sprite's top edge. */
+function drawHpBar(ctx: CanvasRenderingContext2D, e: EnemyState, top: number): void {
+  if (e.hp >= e.maxHp || e.dying) return;
+  const barW = Math.max(16, e.radius * 2);
+  const bx = e.x - barW / 2;
+  const by = top - 5;
+  ctx.fillStyle = "#1f2937";
+  ctx.fillRect(bx - 1, by - 1, barW + 2, 5);
+  ctx.fillStyle = e.isElite ? "#fbbf24" : "#f87171";
+  ctx.fillRect(bx, by, barW * (e.hp / e.maxHp), 3);
+}
+
+/**
+ * High quality: the enemy's own pixel sprite, facing the player, with a shadow.
+ * Elites get a gold-tinted copy (built once) + a gold ring under their feet.
+ * @returns false while the sheet is loading (caller draws the shape instead)
+ */
+function renderEnemySprite(ctx: CanvasRenderingContext2D, e: EnemyState, now: number): boolean {
+  const sheet = enemySheet(e.enemyType);
+  if (!sheet) return false;
+  const size = e.radius * ENEMY_SPRITE_PER_RADIUS;
+  const scale = size / 16;
+  const frame = Math.floor(now * 0.001 * ENEMY_WALK_FPS + e.id * 0.37);
+  if (e.isElite) {
+    ctx.strokeStyle = "#fbbf24";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(e.x, e.y + size * 0.42, e.radius * 0.9, e.radius * 0.35, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  const ok = drawUnit(ctx, sheet, e.facing, frame, e.x, e.y, scale,
+    e.isElite ? { tint: "#fbbf24", tintAmount: 0.3 } : undefined);
+  if (!ok) return false;
+  drawHpBar(ctx, e, e.y - size / 2);
+  return true;
+}
+
 export function renderEnemies(ctx: CanvasRenderingContext2D, enemies: EnemyState[]): void {
   const low = isLowQuality();
-  const pulse = 0.6 + Math.sin(performance.now() * 0.005) * 0.2;
+  const now = performance.now();
+  const pulse = 0.6 + Math.sin(now * 0.005) * 0.2;
   for (const e of enemies) {
     if (!e.alive && !e.dying) continue;
+
+    if (!low && e.shape !== "sprite" && renderEnemySprite(ctx, e, now)) continue;
+    if (!low && e.shape === "sprite") drawShadow(ctx, e.x, e.y + e.radius * 1.1, e.radius / 8);
 
     if (e.isElite) {
       // Golden glow aura for elite enemies (ring always; soft fill is decoration)
@@ -476,11 +530,12 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, enemies: EnemyState
 /** Crown above elites so they are recognizable even inside a crowd (gameplay info: drawn on every quality). */
 export function renderEliteMarkers(ctx: CanvasRenderingContext2D, enemies: EnemyState[]): void {
   let crown: HTMLCanvasElement | null | undefined;
+  const pixel = !isLowQuality();
   for (const e of enemies) {
     if (!e.isElite || !e.alive || e.dying) continue;
     if (crown === undefined) crown = getIconSprite(UI_ICONS.crown, "#fbbf24", 18);
     if (!crown) return;
-    const top = e.shape === "sprite" ? e.radius * 1.75 : e.radius;
+    const top = e.shape === "sprite" ? e.radius * 1.75 : pixel ? e.radius * ENEMY_SPRITE_PER_RADIUS * 0.5 + 4 : e.radius;
     drawSpriteCentered(ctx, crown, e.x, e.y - top - 16);
   }
 }

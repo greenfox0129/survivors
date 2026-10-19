@@ -30,7 +30,8 @@
 | 진화 | `src/game/data/evolutions.ts` |
 | 캐릭터·특성·업적·비용 | `src/game/data/progression.ts` |
 | 무기 동작 | `src/game/weapons/<Name>Weapon.ts` + `weapons/registry.ts` 등록 (종류별 `switch` 새로 만들지 말 것) |
-| 그림 | `src/assets/icons/<name>.svg` + `src/assets/icons/map.ts` |
+| 그림 (아이콘·저사양) | `src/assets/icons/<name>.svg` + `src/assets/icons/map.ts` |
+| 그림 (픽셀 아트·높음 품질) | `scripts/sync-pixel-assets.mjs` 목록 한 줄 → `npm run assets:pixel` (+ 스트립이면 `src/assets/pixel/catalog.ts` 프레임 폭). 원본 팩은 `art/` |
 | 색 | 무기: `config.ts`, 장신구: `src/ui/theme.ts` |
 | 세이브 구조 | `src/game/core/storage.ts` — `SAVE_SCHEMA_VERSION` + `MIGRATIONS` (`STORAGE_KEY` 변경 금지) |
 | 설정(품질·음량) | `src/game/core/settings.ts` |
@@ -51,6 +52,9 @@
 | WebGL·고해상도 업스케일·상시 `backdrop-filter` | 960×720 고정 캔버스 + CSS 스케일 |
 
 - 장식은 `isLowQuality()` 로 감싼다. 게임 정보(공격 범위·적·투사체·HP·엘리트 왕관·보물 상자)는 항상 그린다.
+- **품질 = 두 가지 룩.** 높음 = 픽셀 아트(`render/pixel.ts`, `render/tileWorld.ts`, `src/assets/pixel`), 저사양 = v0.1 벡터 룩 그대로.
+  render 함수는 `if (!isLowQuality() && <픽셀 경로 성공>) return/continue;` 다음에 원래 코드를 둔다 (로딩 중 자동 폴백). 저사양 경로는 고치지 않는다.
+- 픽셀 아트는 `imageSmoothingEnabled=false` 로 그리고 복구, 타일 바닥은 청크 캐시만 쓴다(타일 단위 매 프레임 그리기 금지).
 - 이펙트는 `render/effects.ts` 에 — 개수 상한, 짧은 수명, 저사양 생략.
 - 엔티티는 항상 불투명. 그리는 순서: 배경 → 보석 → 적 → 이펙트 → 엘리트 표식 → 무기 → 플레이어.
 
@@ -77,23 +81,25 @@ UI·시각 변경은 `npm run dev` 에서 직접 확인한다 (렌더링은 sim 
 ## 3. 구조와 의존 방향
 
 ```
+art/                          CC0 픽셀 팩 원본 라이브러리 (코드가 직접 import 하지 않음)
 src/
 ├─ main.tsx · App.tsx         진입점, 화면 전환(state)
 ├─ gameInfo.ts                제목·버전 (단일 출처)
 ├─ launcherBridge.ts          원클릭 exe 연결 (ping/bye/세이브 미러)
 ├─ assets/
 │  ├─ icons/                  SVG 74종 + index.ts(이름→URL) + map.ts(의미 매핑) + credits.json
-│  └─ fx/                     캔버스 이펙트 텍스처 (Kenney CC0)
+│  ├─ fx/                     캔버스 이펙트 텍스처 (Kenney CC0)
+│  └─ pixel/                  픽셀 아트 59종 (생성물: npm run assets:pixel) + index.ts + catalog.ts(슬라이스·id 매핑)
 ├─ game/                      ── React 없이 동작하는 순수 게임 로직 ──
 │  ├─ core/      GameEngine(루프·통합·레벨업 큐·일시정지) · types · storage · settings · audio
 │  ├─ data/      config(밸런스) · evolutions · progression
 │  ├─ entities/  Player · EnemyManager · GemManager
 │  ├─ systems/   WeaponManager · AccessoryManager · upgrades · traitHelper
 │  ├─ weapons/   무기 7종 + registry.ts(등록표)
-│  └─ render/    quality · sprites · iconSprites · effects · background
+│  └─ render/    quality · sprites · iconSprites · effects · background · decor · pixel · tileWorld
 └─ ui/                        ── React 화면 ──
    ├─ screens/   Lobby · GameCanvas · Gacha · Character · Traits · Codex · Achievements
-   ├─ components/ HUD · UpgradeModal · SettingsPanel · GameIcon · EnemyShape
+   ├─ components/ HUD · UpgradeModal · SettingsPanel · GameIcon · EnemyShape · PixelSprite(초상·걷기)
    ├─ hooks/     useSettings
    ├─ icons.ts   (assets/icons/map.ts 재노출)
    └─ theme.ts   장신구 색, 무기 색, readableAccent
@@ -122,11 +128,13 @@ src/
 `types.ts` `AccessoryType` → `config.ts` `accessories` → `AccessoryManager` (`ALL_ACCESSORY_TYPES`·`computeMods`·`getLevelEffect`) → `ui/theme.ts` 색 → 아이콘 `acc-<id>.svg` → docs:spec
 
 ### 새 적
-`config.ts` `enemyTypes` (등장 시간·가중치·모양) → 도감 설명 `CodexScreen.tsx` `ENEMY_DESCS` → 아이콘 `enemy-<id>.svg`.
+`config.ts` `enemyTypes` (등장 시간·가중치·모양) → 도감 설명 `CodexScreen.tsx` `ENEMY_DESCS` → 아이콘 `enemy-<id>.svg`(저사양)
+→ 픽셀 시트·초상 `units/enemy-<id>`, `faces/enemy-<id>` (`scripts/sync-pixel-assets.mjs` 에 한 줄, `npm run assets:pixel`).
 스프라이트 적은 늑대 구현(16×16 시트, 지연 로딩)을 따른다.
 
 ### 새 캐릭터
-`progression.ts` `CHARACTERS` (패시브는 `PassiveType` + `GameEngine.updateWeaponMods`/`applyAccessoryMods`) → 엠블럼 `char-<id>.svg`.
+`progression.ts` `CHARACTERS` (패시브는 `PassiveType` + `GameEngine.updateWeaponMods`/`applyAccessoryMods`) → 엠블럼 `char-<id>.svg`(저사양)
+→ 픽셀 걷기 시트·초상 (`scripts/sync-pixel-assets.mjs` 캐릭터 목록에 `[id, Ninja Adventure 폴더명]`, `npm run assets:pixel`).
 특수 캐릭터는 `special: true` + `unlockAchievement`.
 
 ### 새 아이콘·에셋

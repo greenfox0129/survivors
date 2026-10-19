@@ -13,7 +13,8 @@
 | `components/UpgradeModal.tsx` | 레벨업 3지선다 + 리롤, 배지(NEW/UP/EVOLVE), 단축키 1/2/3·R, 대기 수 표시 |
 | `components/SettingsPanel.tsx` | 그래픽 품질·효과음 (일시정지 메뉴·로비 공용) |
 | `components/GameIcon.tsx` | SVG 아이콘을 CSS mask 로 틴트 |
-| `components/EnemyShape.tsx` | 게임 속 적 도형 SVG |
+| `components/EnemyShape.tsx` | 게임 속 적 도형 SVG (저사양 모드의 모습) |
+| `components/PixelSprite.tsx` | `PixelFace`(38×38 초상) · `PixelWalker`(4프레임 걷기, CSS steps) — `src/assets/pixel`, 없으면 SVG 엠블럼 폴백 |
 | `hooks/useSettings.ts` | `core/settings.ts` React 바인딩 |
 | `icons.ts` | `assets/icons/map.ts` 재노출 |
 | `theme.ts` | 장신구 색, 무기 색, `readableAccent()` |

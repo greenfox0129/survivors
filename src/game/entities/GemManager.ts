@@ -7,6 +7,54 @@ import type { EnemyState, Gem, PlayerState } from "@/game/core/types";
 import { isLowQuality } from "@/game/render/quality";
 import { getIconSprite, drawSpriteCentered } from "@/game/render/iconSprites";
 import { UI_ICONS } from "@/assets/icons/map";
+import { getPixelImage, drawStrip, drawShadow } from "@/game/render/pixel";
+
+/** Pixel crystal clusters per gem tier: [column, row] in tiles/nature.png + draw scale. */
+const GEM_TILES: ReadonlyArray<readonly [number, number, number]> = [
+  [1, 14, 1.25], // teal   (value < 2)
+  [2, 14, 1.5],  // violet (2–4)
+  [3, 14, 1.6],  // green  (5–9)
+  [0, 14, 1.8],  // amber  (10–19)
+  [0, 14, 2.3],  // big amber (20+)
+];
+
+function gemTierIndex(value: number): number {
+  if (value >= 20) return 4;
+  if (value >= 10) return 3;
+  if (value >= 5) return 2;
+  if (value >= 2) return 1;
+  return 0;
+}
+
+/**
+ * High quality: gems are pixel crystals, the treasure is a pixel chest.
+ * Returns false while images load (caller draws the original shapes).
+ */
+function renderPixelGems(ctx: CanvasRenderingContext2D, gems: Gem[], now: number): boolean {
+  const nature = getPixelImage("tiles/nature");
+  const chest = getPixelImage("items/chest");
+  if (!nature || !chest) return false;
+  for (const g of gems) {
+    if (!g.alive) continue;
+    if (g.isTreasure) {
+      // Same pulsing golden halo as before (decoration) + the chest sprite
+      const pulse = 0.7 + Math.sin(now * 0.006) * 0.3;
+      ctx.fillStyle = `rgba(251, 191, 36, ${pulse * 0.25})`;
+      ctx.beginPath();
+      ctx.arc(g.x, g.y, g.radius + 10, 0, Math.PI * 2);
+      ctx.fill();
+      drawShadow(ctx, g.x, g.y + 14, 3);
+      drawStrip(ctx, "items/chest", 0, g.x, g.y, 2.5);
+      continue;
+    }
+    const [c, r, scale] = GEM_TILES[gemTierIndex(g.value)];
+    const s = 16 * scale;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(nature, c * 16, r * 16, 16, 16, Math.round(g.x - s / 2), Math.round(g.y - s / 2), s, s);
+    ctx.imageSmoothingEnabled = true;
+  }
+  return true;
+}
 
 let idCounter = 9000;
 
@@ -253,6 +301,7 @@ function getGemTier(value: number): GemTier {
 
 export function renderGems(ctx: CanvasRenderingContext2D, gems: Gem[]): void {
   const low = isLowQuality();
+  if (!low && renderPixelGems(ctx, gems, performance.now())) return;
   const pulse = 0.7 + Math.sin(performance.now() * 0.006) * 0.3;
   for (const g of gems) {
     if (!g.alive) continue;

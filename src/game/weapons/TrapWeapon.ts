@@ -8,6 +8,8 @@ import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
 import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
 import { getIconSprite, drawSpriteCentered } from "@/game/render/iconSprites";
+import { isLowQuality } from "@/game/render/quality";
+import { drawStrip, getPixelImage } from "@/game/render/pixel";
 
 let idCounter = 5400;
 export function resetTrapIds() { idCounter = 5400; }
@@ -171,6 +173,8 @@ export function cullTraps(traps: TrapEntity[]): TrapEntity[] {
 export function renderTraps(ctx: CanvasRenderingContext2D, traps: TrapEntity[]): void {
   const color = CONFIG.weapons.trap.color;
   const pulse = Math.sin(Date.now() / 200) * 0.15 + 0.85;
+  const pixel = !isLowQuality() && getPixelImage("fx/circle-spark") !== null;
+  const now = performance.now();
   for (const t of traps) {
     if (!t.alive) continue;
 
@@ -188,6 +192,13 @@ export function renderTraps(ctx: CanvasRenderingContext2D, traps: TrapEntity[]):
       ctx.beginPath();
       ctx.arc(t.x, t.y, t.slowRadius, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    if (pixel) {
+      // Rune circle (looping spark animation); evolved/permanent traps crackle with thunder
+      drawStrip(ctx, "fx/circle-spark", now / 110 + t.id, t.x, t.y, (t.radius * 2.3) / 32);
+      if (t.lifetime > 999) drawStrip(ctx, "fx/thunder", now / 70 + t.id, t.x, t.y - t.radius * 0.3, 1.6);
+      continue;
     }
 
     // Outer ring

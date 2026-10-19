@@ -8,6 +8,8 @@ import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
 import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
 import { getIconSprite, drawSpriteRotated } from "@/game/render/iconSprites";
+import { isLowQuality } from "@/game/render/quality";
+import { drawStrip } from "@/game/render/pixel";
 
 let idCounter = 5800;
 export function resetShurikenIds() { idCounter = 5800; }
@@ -177,8 +179,17 @@ export function cullShurikens(projectiles: ShurikenProjectile[]): ShurikenProjec
 }
 
 export function renderShurikens(ctx: CanvasRenderingContext2D, projectiles: ShurikenProjectile[]): void {
+  const pixel = !isLowQuality();
+  const frame = Math.floor(performance.now() / 70);
   for (const p of projectiles) {
     if (!p.alive) continue;
+    // High quality: kunai flying along its path; the evolved returning blade is a spinning magic shuriken
+    if (pixel) {
+      const ok = p.returning
+        ? drawStrip(ctx, "proj/shuriken-magic", frame, p.x, p.y, 2, p.rotation)
+        : drawStrip(ctx, "proj/kunai", 0, p.x, p.y, 2, Math.atan2(p.vy, p.vx));
+      if (ok) continue;
+    }
     // Sprite: spinning flying dagger (evolved/returning: gold shuriken star)
     const size = p.radius * 3;
     const sprite = p.returning

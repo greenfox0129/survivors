@@ -8,6 +8,8 @@ import { damageEnemy } from "@/game/entities/EnemyManager";
 import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
 import { getRadialSprite, drawCentered } from "@/game/render/sprites";
+import { isLowQuality } from "@/game/render/quality";
+import { drawStrip, getPixelImage } from "@/game/render/pixel";
 
 export function createAuraState(w: WeaponInstance): AuraState {
   const d = CONFIG.weapons.aura;
@@ -174,6 +176,18 @@ export function renderAura(
     0.3,
   );
   drawCentered(ctx, glow, px, py, aura.radius * pulse);
+
+  // High quality: the edge of the aura is a slowly turning ring of pixel flames
+  if (!isLowQuality() && getPixelImage("fx/fire")) {
+    const now = performance.now();
+    const n = Math.max(8, Math.min(24, Math.round((Math.PI * 2 * aura.radius) / 36)));
+    const spin = now * 0.0005;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + spin;
+      drawStrip(ctx, "fx/fire", now / 85 + i * 3, px + Math.cos(a) * aura.radius, py + Math.sin(a) * aura.radius, 2);
+    }
+    return;
+  }
 
   // Ring
   ctx.strokeStyle = color + "55";

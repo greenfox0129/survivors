@@ -4,9 +4,10 @@ import { GAME_INFO } from "@/gameInfo";
 import type { SaveData } from "@/game/core/storage";
 import { CHARACTERS } from "@/game/data/progression";
 import { weaponName } from "@/game/systems/WeaponManager";
+import { PixelFace, PixelWalker } from "@/ui/components/PixelSprite";
 import { GameIcon } from "@/ui/components/GameIcon";
 import { SettingsPanel } from "@/ui/components/SettingsPanel";
-import { UI_ICONS, characterIcon, weaponIcon } from "@/ui/icons";
+import { UI_ICONS, weaponIcon } from "@/ui/icons";
 import { readableAccent, weaponColor } from "@/ui/theme";
 
 export type Screen = "lobby" | "game" | "gacha" | "codex" | "achievements" | "characters" | "traits";
@@ -134,16 +135,23 @@ export function Lobby({ onNavigate, save }: LobbyProps) {
         </p>
       </div>
 
+      {/* Owned party walking on a strip of grass (selected character first) */}
+      <div className="mb-5 flex items-end gap-1 rounded-xl border border-[#4d7a2a] bg-[#3f6b24] px-4 pb-1 pt-2 shadow-inner">
+        {[charDef, ...CHARACTERS.filter((c) => c.id !== charDef.id && save.owned.some((o) => o.id === c.id))].map((c, i) => (
+          <PixelWalker key={c.id} id={c.id} size={i === 0 ? 48 : 36} facing={i === 0 ? 0 : 2} />
+        ))}
+      </div>
+
       {/* Selected character */}
       <button
         onClick={() => onNavigate("characters")}
         className="group mb-6 flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-2.5 transition-colors hover:border-slate-600"
       >
         <span
-          className="flex h-10 w-10 items-center justify-center rounded-full"
-          style={{ backgroundColor: `${charDef.color}26`, border: `2px solid ${readableAccent(charDef.color)}` }}
+          className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg"
+          style={{ border: `2px solid ${readableAccent(charDef.color)}` }}
         >
-          <GameIcon name={characterIcon(charDef.id)} size={24} color={readableAccent(charDef.color)} />
+          <PixelFace kind="char" id={charDef.id} size={40} color={readableAccent(charDef.color)} />
         </span>
         <span className="text-left">
           <span className="block text-[11px] uppercase tracking-wider text-slate-500">플레이 캐릭터</span>
@@ -193,7 +201,7 @@ export function Lobby({ onNavigate, save }: LobbyProps) {
         WASD / 방향키 — 이동 · 공격은 자동 · ESC — 일시정지
       </p>
       <p className="mt-2 text-[11px] text-slate-700">
-        v{GAME_INFO.version} · Icons by {ICON_AUTHORS} (game-icons.net, CC BY 3.0)
+        v{GAME_INFO.version} · Icons by {ICON_AUTHORS} (game-icons.net, CC BY 3.0) · Pixel art: Ninja Adventure by Pixel-boy &amp; AAA (CC0)
       </p>
 
       {/* Settings modal */}

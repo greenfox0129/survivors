@@ -10,6 +10,48 @@ import { EVOLUTIONS } from "@/game/data/evolutions";
 import { getRadialSprite, drawCentered } from "@/game/render/sprites";
 import { isLowQuality } from "@/game/render/quality";
 import { getIconSprite, getFxSprite, drawSpriteCentered } from "@/game/render/iconSprites";
+import { drawStrip, getPixelImage } from "@/game/render/pixel";
+
+/** Burning field as a patch of animated pixel flames (high quality). */
+function renderPixelFlames(ctx: CanvasRenderingContext2D, b: BombEntity, now: number, life: number): void {
+  const r = b.burnRadius;
+  const n = Math.max(4, Math.min(14, Math.round(r / 12)));
+  const scale = life > 0.25 ? 2 : 2 * (life / 0.25) + 0.5; // shrink while dying out
+  for (let i = 0; i < n; i++) {
+    const a = i * 2.39996 + b.id; // golden angle → even spread
+    const d = r * 0.85 * Math.sqrt((i + 0.5) / n);
+    drawStrip(ctx, "fx/fire", now / 90 + i * 3, b.x + Math.cos(a) * d, b.y + Math.sin(a) * d, scale);
+  }
+}
+
+/** High-quality bomb visuals; returns false while sprites load. */
+function renderPixelBomb(ctx: CanvasRenderingContext2D, b: BombEntity, now: number): boolean {
+  if (!getPixelImage("proj/canonball") || !getPixelImage("fx/circle-orange") || !getPixelImage("fx/fire")) return false;
+  const color = CONFIG.weapons.bomb.color;
+  if (b.phase === "falling") {
+    // Impact area stays visible (gameplay info) — outline only on high quality
+    ctx.beginPath();
+    ctx.arc(b.targetX, b.targetY, b.explosionRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = color + "88";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    if (b.explosionRadius > 150) {
+      // Evolved: a meteor (fireball head points up-right in the sheet → +45°)
+      drawStrip(ctx, "proj/fireball", now / 80, b.x, b.y, 3, Math.atan2(b.targetY - b.y, b.targetX - b.x) + Math.PI / 4);
+    } else {
+      drawStrip(ctx, "proj/canonball", now / 70, b.x, b.y, 1.6);
+    }
+  } else if (b.phase === "exploding") {
+    const prog = Math.min(0.999, b.explosionTimer / 0.3);
+    drawStrip(ctx, "fx/circle-orange", prog * 4, b.x, b.y, (b.explosionRadius * 2) / 28);
+    drawStrip(ctx, "fx/smoke", prog * 6, b.x, b.y, Math.max(2, b.explosionRadius / 16));
+  } else if (b.phase === "burning") {
+    renderPixelFlames(ctx, b, now, b.burnTimer);
+  }
+  return true;
+}
 
 let idCounter = 5200;
 export function resetBombIds() { idCounter = 5200; }
@@ -191,6 +233,7 @@ export function renderBombs(ctx: CanvasRenderingContext2D, bombs: BombEntity[]):
   const low = isLowQuality();
   const now = Date.now();
   for (const b of bombs) {
+    if (!low && renderPixelBomb(ctx, b, now)) continue;
     if (b.phase === "falling") {
       // Shadow at target
       ctx.fillStyle = color + "22";

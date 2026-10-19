@@ -9,6 +9,8 @@ import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
 import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
 import { spawnMuzzleFlash } from "@/game/render/effects";
+import { isLowQuality } from "@/game/render/quality";
+import { drawStrip } from "@/game/render/pixel";
 
 let idCounter = 5000;
 export function resetBulletIds() { idCounter = 5000; }
@@ -165,8 +167,13 @@ export function updateBullet(
 }
 
 export function renderBullets(ctx: CanvasRenderingContext2D, projectiles: Projectile[]): void {
+  const pixel = !isLowQuality();
+  const frame = Math.floor(performance.now() / 90);
   for (const p of projectiles) {
     if (!p.alive) continue;
+    // High quality: animated energy shot (sprite's head points up → +90°)
+    if (pixel && drawStrip(ctx, "proj/energy-ball", frame + p.id, p.x, p.y,
+      Math.max(1, p.radius / 3.5), Math.atan2(p.vy, p.vx) + Math.PI / 2)) continue;
     ctx.fillStyle = p.color;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);

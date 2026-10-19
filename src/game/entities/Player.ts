@@ -6,6 +6,11 @@ import { CONFIG, xpForLevel } from "@/game/data/config";
 import type { PlayerState } from "@/game/core/types";
 import { isLowQuality } from "@/game/render/quality";
 import { getIconSprite, drawSpriteCentered } from "@/game/render/iconSprites";
+import { drawUnit, facingFromVector } from "@/game/render/pixel";
+
+/** Source px → world px for the player's 16px walk sheet. */
+const PLAYER_SPRITE_SCALE = 2.25;
+const WALK_FPS = 8;
 
 let idCounter = 0;
 
@@ -15,6 +20,7 @@ export function createPlayer(mods?: {
   pickupRangeMult?: number;
   playerColor?: string;
   emblem?: string;
+  sprite?: string;
 }): PlayerState {
   const hpMult = mods?.hpMult ?? 1;
   const speedMult = mods?.speedMult ?? 1;
@@ -37,6 +43,10 @@ export function createPlayer(mods?: {
     pickupRadius: CONFIG.player.pickupRadius * pickupMult,
     color: mods?.playerColor ?? CONFIG.player.color,
     emblem: mods?.emblem,
+    sprite: mods?.sprite,
+    facing: 0,
+    walkTime: 0,
+    moving: false,
   };
 }
 
@@ -61,6 +71,13 @@ export function updatePlayer(
 
   player.x += dx * player.speed * dt;
   player.y += dy * player.speed * dt;
+
+  // Walk animation state (render only)
+  player.moving = len > 0;
+  if (player.moving) {
+    player.facing = facingFromVector(dx, dy, player.facing);
+    player.walkTime += dt;
+  }
 
   if (player.invulnTimer > 0) {
     player.invulnTimer -= dt;
@@ -102,6 +119,22 @@ function emblemInk(hex: string): string {
 
 export function renderPlayer(ctx: CanvasRenderingContext2D, player: PlayerState): void {
   const blinking = player.invulnTimer > 0 && Math.floor(player.invulnTimer * 10) % 2 === 0;
+
+  // High quality: the character's own pixel sprite (falls through to the circle while loading)
+  if (!isLowQuality() && player.sprite) {
+    const frame = player.moving ? Math.floor(player.walkTime * WALK_FPS) : 0;
+    // i-frames: classic blink (skip every other 0.1s) instead of a translucent body
+    const drawn = blinking || drawUnit(ctx, player.sprite, player.facing, frame, player.x, player.y - 4, PLAYER_SPRITE_SCALE);
+    if (drawn) {
+      ctx.strokeStyle = "rgba(255,255,255,0.10)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.pickupRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      return;
+    }
+  }
+
   const bodyColor = blinking ? "#67e8f9" : player.color;
   ctx.fillStyle = bodyColor;
 

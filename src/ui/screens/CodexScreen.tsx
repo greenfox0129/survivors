@@ -9,7 +9,8 @@ import { weaponLevelEffectAt } from "@/game/weapons/registry";
 import { accessoryColor, weaponColor } from "@/ui/theme";
 import { GameIcon } from "@/ui/components/GameIcon";
 import { EnemyShape } from "@/ui/components/EnemyShape";
-import { accessoryIconName, enemyIcon, weaponIcon } from "@/ui/icons";
+import { PixelFace, PixelWalker } from "@/ui/components/PixelSprite";
+import { accessoryIconName, weaponIcon } from "@/ui/icons";
 import type { WeaponType, WeaponInstance, AccessoryType } from "@/game/core/types";
 
 type Category = "enemies" | "weapons" | "evolutions" | "accessories";
@@ -120,7 +121,7 @@ export function CodexScreen({ onBack }: CodexScreenProps) {
                            transition-all hover:border-slate-500 active:scale-[0.98] text-left"
               >
                 <div
-                  className="relative flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center overflow-hidden"
+                  className="relative flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden"
                   style={{ backgroundColor: enemy.color + "22", border: `2px solid ${enemy.color}` }}
                 >
                   {enemy.shape === "sprite" ? (
@@ -129,17 +130,12 @@ export function CodexScreen({ onBack }: CodexScreenProps) {
                       style={{ width: "400%", height: "1400%", imageRendering: "pixelated" }}
                     />
                   ) : (
-                    <GameIcon name={enemyIcon(enemy.id)} size={28} color={enemy.color} />
+                    <PixelFace kind="enemy" id={enemy.id} size={44} color={enemy.color} />
                   )}
                 </div>
                 <div className="flex-1">
                   <h3 className="flex items-center gap-2 text-slate-100 font-bold text-sm">
                     {enemy.name}
-                    {enemy.shape !== "sprite" && (
-                      <span title="게임 내 모습">
-                        <EnemyShape shape={enemy.shape} color={enemy.color} borderColor={enemy.borderColor} size={14} />
-                      </span>
-                    )}
                   </h3>
                   <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">{enemy.desc}</p>
                 </div>
@@ -288,7 +284,7 @@ function EnemyDetail({ enemy, onBack }: { enemy: EnemyInfo; onBack: () => void }
               style={{ width: "400%", height: "1400%", imageRendering: "pixelated" }}
             />
           ) : (
-            <GameIcon name={enemyIcon(enemy.id)} size={40} color={enemy.color} />
+            <PixelFace kind="enemy" id={enemy.id} size={60} color={enemy.color} />
           )}
         </div>
         <div className="flex-1">
@@ -296,9 +292,15 @@ function EnemyDetail({ enemy, onBack }: { enemy: EnemyInfo; onBack: () => void }
           <p className="text-slate-400 text-sm mt-1 leading-relaxed">{enemy.desc}</p>
         </div>
         {enemy.shape !== "sprite" && (
-          <div className="flex flex-col items-center gap-1 rounded-xl border border-slate-700/60 bg-[#0a0a12] px-3 py-2">
-            <EnemyShape shape={enemy.shape} color={enemy.color} borderColor={enemy.borderColor} size={36} />
-            <span className="text-[10px] text-slate-500">게임 내 모습</span>
+          <div className="flex gap-2">
+            <div className="flex flex-col items-center gap-1 rounded-xl border border-slate-700/60 bg-[#2f4a1f] px-3 py-2">
+              <PixelWalker kind="enemy" id={enemy.id} size={44} />
+              <span className="text-[10px] text-slate-300">게임 내 모습</span>
+            </div>
+            <div className="flex flex-col items-center justify-between gap-1 rounded-xl border border-slate-700/60 bg-[#0a0a12] px-3 py-2">
+              <EnemyShape shape={enemy.shape} color={enemy.color} borderColor={enemy.borderColor} size={36} />
+              <span className="text-[10px] text-slate-500">저사양 모드</span>
+            </div>
           </div>
         )}
       </div>

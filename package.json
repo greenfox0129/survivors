@@ -12,6 +12,7 @@
     "check": "npm run typecheck && npm run lint && npm run sim -- --minutes 3 && npm run build",
     "build:exe": "node scripts/build-exe.mjs",
     "docs:spec": "node scripts/gen-spec.mjs",
+    "assets:pixel": "node scripts/sync-pixel-assets.mjs",
     "sim": "node scripts/sim.mjs"
   },
   "dependencies": {

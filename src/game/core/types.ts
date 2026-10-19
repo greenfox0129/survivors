@@ -23,8 +23,15 @@ export interface PlayerState extends Entity {
   invulnTimer: number;
   pickupRadius: number;
   color: string;
-  /** Character emblem icon name (src/assets/icons) drawn on the player circle */
+  /** Character emblem icon name (src/assets/icons) drawn on the player circle (low quality) */
   emblem?: string;
+  /** Pixel-art walk sheet (src/assets/pixel, high quality) */
+  sprite?: string;
+  /** Facing column of the walk sheet: 0 down, 1 up, 2 left, 3 right */
+  facing: number;
+  /** Seconds spent walking (drives the walk frame) */
+  walkTime: number;
+  moving: boolean;
 }
 
 export interface EnemyState extends Entity {
@@ -44,6 +51,8 @@ export interface EnemyState extends Entity {
   dyingTimer: number;
   isElite: boolean;
   gemDropped: boolean;
+  /** Facing column toward the player (pixel sprites): 0 down, 1 up, 2 left, 3 right */
+  facing: number;
 }
 
 // ---- Weapon types ----

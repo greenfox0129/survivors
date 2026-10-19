@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* PixelWalker (ui/components/PixelSprite.tsx): step through the 4 walk rows of a unit sheet */
+@keyframes pixel-walk {
+  from { background-position-y: 0; }
+  to { background-position-y: calc(-1 * var(--walk-h)); }
+}
+.pixel-walker {
+  animation: pixel-walk 0.6s steps(4) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pixel-walker { animation: none; }
+}

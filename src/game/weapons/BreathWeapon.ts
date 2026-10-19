@@ -11,6 +11,7 @@ import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
 import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
 import { isLowQuality } from "@/game/render/quality";
+import { drawStrip, getPixelImage } from "@/game/render/pixel";
 
 const BURN_DURATION = 3.0;
 const BURN_TICK_INTERVAL = 0.5;
@@ -175,6 +176,18 @@ export function renderBreath(
   const ey = py + fy * state.range;
   const halfWidth = 18;
   const coreHalfWidth = 7;
+
+  // High quality: the beam is a column of animated pixel flames (flame points up → +90°)
+  if (!isLowQuality() && getPixelImage("fx/flam")) {
+    const n = Math.max(4, Math.round(state.range / 26));
+    const rot = state.facing + Math.PI / 2;
+    const base = state.breathTimer * 14;
+    for (let i = 1; i <= n; i++) {
+      const k = i / n;
+      drawStrip(ctx, "fx/flam", base + i, px + fx * state.range * k, py + fy * state.range * k, 1.4 + k * 0.8, rot);
+    }
+    return;
+  }
 
   ctx.save();
   ctx.globalAlpha = alpha;
