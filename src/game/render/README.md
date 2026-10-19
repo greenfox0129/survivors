@@ -2,8 +2,11 @@
 
 | 파일 | 역할 |
 |---|---|
-| `quality.ts` | 그래픽 품질 설정 `auto/high/low` (localStorage `survivors_proto_settings`). `auto` 는 평균 프레임 간격이 `CONFIG.render.autoLowFrameMs`(24ms) 를 `autoLowAfterSec`(2s) 넘게 초과하면 세션 동안 low. `isLowQuality()` 로 장식 생략 여부 판단 |
-| `sprites.ts` | `getRadialSprite()` — 색·반지름별 원형 그라디언트를 오프스크린 캔버스에 한 번 그려 캐시(최대 64개). `drawCentered()` |
-| `background.ts` | 월드 배경 + 40px 그리드를 패턴 1장으로 그림 (선 ~45회 stroke → fillRect 1회) |
+| `quality.ts` | 그래픽 품질 판단. 값은 `core/settings.ts`. `auto` 는 평균 프레임 간격이 `CONFIG.render.autoLowFrameMs`(24ms) 를 `autoLowAfterSec`(2s) 넘게 초과하면 세션 동안 low (100ms 넘는 간격·숨김 탭은 측정 제외). `isLowQuality()` 로 장식 생략 |
+| `sprites.ts` | `getRadialSprite()` — 원형 그라디언트를 오프스크린에 한 번 그려 캐시(64개). `drawCentered()` |
+| `iconSprites.ts` | `getIconSprite(name, color, size)` — SVG 아이콘을 틴트 + 1px 외곽선으로 한 번 굽고 캐시(128개). `getStarFxSprite()`, `preloadGameSprites()` |
+| `effects.ts` | 처치 이펙트(Kenney 별, 0.18초, 최대 32개, 저사양 생략). `spawnKillPop/updateEffects/renderEffects/resetEffects` |
+| `background.ts` | 월드 배경 + 40px 그리드를 패턴 1장으로 |
 
-원칙과 근거(MDN·web.dev): [wiki/methodology/canvas-performance.md](../../../wiki/methodology/canvas-performance.md)
+Nothing here touches the DOM at import time (images/canvases are created on first use) — keeps game modules importable in Node.
+원칙과 근거: [wiki/methodology/canvas-performance.md](../../../wiki/methodology/canvas-performance.md)

@@ -29,7 +29,7 @@
 |---|---|---|---|
 | F-01 | 8방향 이동, 무한 월드, 카메라 추적 | ✅ 구현 | core-loop |
 | F-02 | 자동 공격 무기 7종 (Lv1–8) | ✅ | combat |
-| F-03 | 무기 진화 (Lv8 + 짝 장신구) | ⚠ 구현됨, 일부 수치·설명 불일치 | combat, [known-issues](../direction/known-issues.md) |
+| F-03 | 무기 진화 (Lv8 + 짝 장신구, 최종형) | ✅ (v0.1.0 수치·설명 불일치 수정) | combat, [known-issues](../direction/known-issues.md) |
 | F-04 | 장신구 9종 (Lv1–5) | ✅ | combat |
 | F-05 | 레벨업 3지선다 + 리롤 | ✅ | core-loop |
 | F-06 | 적 7종 시간차 등장 + 엘리트 | ✅ | enemies-spawning |
@@ -43,7 +43,8 @@
 | F-14 | 그래픽 품질 자동/수동 | ✅ v0.1.0 | save-settings-launcher |
 | F-15 | 세이브 스키마 마이그레이션 | ✅ v0.1.0 | save-settings-launcher |
 | F-16 | 원클릭 exe + 디스크 세이브 미러 | ✅ v0.1.0 | save-settings-launcher |
-| F-17 | 새 버전 알림 | ✅ v0.1.0 | save-settings-launcher |
-| F-18 | 일시정지(ESC)·옵션(음량) | ❌ 없음 | [로드맵](../direction/README.md) |
+| F-17 | 레벨업 큐 (한 번에 여러 레벨 → 선택지 여러 번) | ✅ v0.1.0 | core-loop |
+| F-18 | 일시정지(ESC/P·포커스 상실)·설정(그래픽·효과음) | ✅ v0.1.0 | core-loop, ui-flow |
+| F-21 | 아이콘 에셋 전 화면 적용 + 캔버스 표식 | ✅ v0.1.0 | ui-flow, [design](../design/README.md) |
 | F-19 | 보스·스테이지 목표 시간(승리 조건) | ❌ 없음 | 로드맵 (게임 디자인 결정 필요) |
 | F-20 | 게임패드·터치 입력 | ❌ 없음 | 로드맵 |

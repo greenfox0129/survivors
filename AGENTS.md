@@ -4,163 +4,159 @@
 > 사람이 **가장 먼저 읽는 문서**. 사람용 소개는 [README.md](README.md), 깊은 지식은 [wiki/](wiki/README.md).
 > 사용자가 채팅으로 직접 준 지시가 이 문서보다 우선한다.
 
-## 1. 프로젝트 한 줄 요약
+## 0. 30초 요약
 
-Bolt.new로 만든 **뱀서라이크 브라우저 로그라이트 프로토타입**(React + TypeScript + Canvas 2D)을
-유지보수·확장 가능한 형태로 정리한 저장소. Windows 원클릭 실행 exe(`launcher/`)도 함께 빌드한다.
+- Bolt.new 로 만든 **뱀서라이크 브라우저 로그라이트**(React + TypeScript + Canvas 2D). 개발은 주로 AI가 한다.
+- 수정 전: 고칠 폴더의 `README.md` → 관련 파일만 열기. 수정 후: **`npm run check`** (타입·린트·헤드리스 시뮬·빌드).
+- 게임성(규칙·밸런스·컨셉)은 바꾸지 않는다. 원작자 의도: [wiki/overview/original-intent-audit.md](wiki/overview/original-intent-audit.md)
+- 업데이트는 한 곳만 고치면 되게, 렌더링은 저사양 우선.
+- 배포하지 않는 토이 프로젝트 — CI·릴리스·자동 업데이트 없음.
 
-## 2. 최우선 원칙 (반드시 지킬 것)
+## 1. 최우선 원칙
 
-### 2-1. 게임의 성격을 바꾸지 않는다 — 기술적 개입이 기본값
+### 1-1. 게임의 성격을 바꾸지 않는다 — 기술적 개입이 기본값
+- 장르·조작·핵심 루프·콘텐츠 구성·**밸런스 수치**·무기 컨셉은 **사용자가 요청할 때만** 바꾼다.
+- 기본 작업 범위: 구조, 성능, 버그(설명·원작자 발언과 구현이 어긋난 것 포함), UI, 디자인 에셋, 도구, 문서.
+- 수정이 밸런스를 크게 움직이면 고치기 전에 [wiki/direction/known-issues.md](wiki/direction/known-issues.md) 에 남기고 확인받는다.
+- 원작자 취향: **또렷함**(잔상·모션블러·반투명 엔티티 싫어함), "수치만 오르는" 성장보다 **레벨별 특수 효과**, 진화형은 **최종형**.
+- UI 문구는 한국어, 기존 톤(짧고 게임스러운 문장).
 
-- 장르·조작·핵심 루프·콘텐츠 구성·**밸런스 수치**·아트 방향은 **사용자가 요청할 때만** 바꾼다.
-- 기본 작업 범위는 *구현의 기술적 부분*: 구조, 성능, 버그(설명과 구현이 어긋난 것 포함), 빌드·배포, 문서.
-- 버그 수정이 밸런스를 바꾸게 되면(예: 진화 무기가 Lv8보다 약한 문제) **고치지 말고**
-  [wiki/direction/known-issues.md](wiki/direction/known-issues.md)에 기록하고 사용자에게 결정을 요청한다.
-- UI 문구는 한국어. 기존 톤(짧고 게임스러운 문장)을 따른다.
+### 1-2. 업데이트가 편해야 한다 (Update-friendly by default)
+모든 변경은 "다음 사람이 콘텐츠·밸런스·그림을 **한 곳만 고쳐서** 갱신할 수 있는가?"를 기준으로 한다.
 
-### 2-2. 업데이트가 편해야 한다 (Update-friendly by default)
+| 바꿀 것 | 한 곳 |
+|---|---|
+| 수치 | `src/game/data/config.ts` (그 후 `npm run docs:spec`) |
+| 진화 | `src/game/data/evolutions.ts` |
+| 캐릭터·특성·업적·비용 | `src/game/data/progression.ts` |
+| 무기 동작 | `src/game/weapons/<Name>Weapon.ts` + `weapons/registry.ts` 등록 (종류별 `switch` 새로 만들지 말 것) |
+| 그림 | `src/assets/icons/<name>.svg` + `src/assets/icons/map.ts` |
+| 색 | 무기: `config.ts`, 장신구: `src/ui/theme.ts` |
+| 세이브 구조 | `src/game/core/storage.ts` — `SAVE_SCHEMA_VERSION` + `MIGRATIONS` (`STORAGE_KEY` 변경 금지) |
+| 설정(품질·음량) | `src/game/core/settings.ts` |
+| 제목·버전 | `src/gameInfo.ts`, `package.json` |
 
-모든 변경은 "다음 사람이 콘텐츠·밸런스·버전을 **한 곳만 고쳐서** 갱신할 수 있는가?"를 기준으로 한다.
+사용자에게 보이는 변경은 `CHANGELOG.md` 의 `Unreleased` 에 한 줄.
 
-1. **데이터는 한 곳에** — 수치는 `src/game/data/config.ts`, 진화는 `data/evolutions.ts`,
-   메타 성장(캐릭터·특성·업적·비용)은 `data/progression.ts`. 코드에 매직 넘버를 흩뿌리지 않는다.
-2. **등록표(registry)로 확장** — 무기는 `src/game/weapons/registry.ts`의 `WEAPON_MODULES` 한 표로
-   WeaponManager·레벨업 선택지·도감이 동작한다. 종류별 `switch` 를 새로 만들지 말고 등록표를 쓴다.
-   `Record<WeaponType, …>` 타입 덕분에 등록 누락은 타입체크에서 실패한다.
-3. **세이브 호환** — 저장 구조를 바꾸면 `src/game/core/storage.ts`의 `SAVE_SCHEMA_VERSION`을 올리고
-   `MIGRATIONS`에 변환 함수를 추가한다. `STORAGE_KEY`("vs_proto_save")는 **절대 변경 금지**.
-4. **문서 자동 생성** — 수치를 바꾸면 `npm run docs:spec`으로 `wiki/specs/generated/*.md`를 재생성한다(손으로 고치지 않음).
-5. **버전·기록** — 사용자에게 보이는 변경은 `CHANGELOG.md`의 `Unreleased`에 적는다.
-   릴리스는 `npm version patch|minor` → `git push --follow-tags` → CI가 exe를 Release에 첨부 →
-   게임 로비가 새 버전을 알린다 (`src/ui/hooks/useUpdateCheck.ts`).
-6. **설정은 한 파일** — 게임 제목·버전·저장소 주소는 `src/gameInfo.ts`.
-
-### 2-3. 하드웨어를 많이 요구하는 렌더링을 피한다 (Low-spec first)
-
-목표: 내장 그래픽 노트북(1366×768)에서도 60fps. 자세한 근거: [wiki/methodology/canvas-performance.md](wiki/methodology/canvas-performance.md)
+### 1-3. 하드웨어를 많이 요구하는 렌더링을 피한다 (Low-spec first)
+목표: 내장 그래픽 노트북(1366×768)에서 60fps. 근거: [wiki/methodology/canvas-performance.md](wiki/methodology/canvas-performance.md)
 
 | 금지 / 지양 | 대신 |
 |---|---|
-| `ctx.shadowBlur`, `ctx.filter`(매 프레임) | 반투명 굵은 선/원으로 halo, 필터는 오프스크린에 한 번 굽기 |
-| 매 프레임 `createRadialGradient`/`createLinearGradient` 로 큰 면 채우기 | `render/sprites.ts`의 `getRadialSprite()` 캐시 + `drawImage` |
-| 같은 모양 선을 여러 번 `stroke()` | 한 path에 모아 한 번 `stroke()` (배칭) |
-| 정지·일시정지 중에도 계속 다시 그리기 | 엔진이 정지 화면 1장만 그림 (`frozenFrameDrawn`) |
-| 루프 안에서 `Date.now()`/`performance.now()` 반복 호출, 매 프레임 객체·배열 대량 생성 | 프레임당 한 번 계산해 재사용, in-place 컬링 |
-| CSS `backdrop-filter`·큰 `box-shadow` 를 애니메이션 위에 상시 사용 | 정적 화면에서만 사용 |
-| devicePixelRatio 업스케일, WebGL 도입 | 960×720 고정 캔버스 + CSS 스케일 유지 |
+| `ctx.shadowBlur`, `ctx.filter` 매 프레임 | 반투명 굵은 선 halo / 오프스크린에 1회 적용 |
+| 매 프레임 큰 그라디언트 | `render/sprites.ts` `getRadialSprite()` |
+| 매 프레임 SVG·이미지 틴트 | `render/iconSprites.ts` `getIconSprite()` (한 번 굽고 캐시) |
+| 같은 스타일 선을 여러 번 `stroke()` | 한 path 에 모아 1번 |
+| 정지 중 재렌더, 루프 안 객체 대량 생성 | 정지 화면 1장(`frozenFrameDrawn`), in-place 컬링 |
+| WebGL·고해상도 업스케일·상시 `backdrop-filter` | 960×720 고정 캔버스 + CSS 스케일 |
 
-- **장식은 `isLowQuality()`로 감싼다** (잔불, 깜빡임, 보석 광채, 엘리트 은은한 채움 등).
-  게임플레이 정보(공격 범위, 적, 투사체, HP바)는 low 품질에서도 반드시 그린다.
-- FPS 상한은 `CONFIG.render.fpsCap`(기본 60). 고주사율 모니터에서 불필요한 프레임을 그리지 않는다.
-- 적·투사체 수를 늘리는 변경을 하면 `npm run dev`에서 그래픽 "저사양"으로 체감 확인 후,
-  300개 이상이 되면 공간 분할(spatial hash) 도입을 검토한다.
+- 장식은 `isLowQuality()` 로 감싼다. 게임 정보(공격 범위·적·투사체·HP·엘리트 왕관·보물 상자)는 항상 그린다.
+- 이펙트는 `render/effects.ts` 에 — 개수 상한, 짧은 수명, 저사양 생략.
+- 엔티티는 항상 불투명. 그리는 순서: 배경 → 보석 → 적 → 이펙트 → 엘리트 표식 → 무기 → 플레이어.
 
-## 3. 명령어
+### 1-4. AI가 개발하기 편하게
+- 작은 파일, 한 파일 한 책임. 폴더마다 `README.md` (새 폴더를 만들면 README도).
+- **주석은 영어로 써도 된다.** 기존 한국어 주석은 일부러 번역하지 않는다.
+- 파일 머리에 `// ====` 배너 + 한 줄 역할 설명. 주석은 "왜"를 적는다.
+- 생성 가능한 문서는 생성한다(`docs:spec`). 손으로 같은 표를 두 번 쓰지 않는다.
+- 게임 모듈 최상단에서 `document`/`new Image()` 를 쓰지 않는다 — 헤드리스 시뮬(`npm run sim`)이 깨진다. 이미지는 첫 render 때 지연 로딩.
+
+## 2. 명령어
 
 ```bash
 npm install          # 의존성
 npm run dev          # 개발 서버 http://localhost:5173
-npm run check        # typecheck + lint + build — 커밋 전 반드시 통과
+npm run check        # typecheck + lint + sim(3분) + build — 커밋 전 반드시 통과
+npm run sim          # 헤드리스 게임플레이 회귀 테스트 (캐릭터 7명 × 6분, 레벨업 큐·소프트락 검사)
 npm run docs:spec    # 위키 수치표 재생성
 npm run build:exe    # release/SurvivorsProto.exe (Windows 전용)
 ```
 
-자동화된 단위 테스트는 아직 없다. 검증은 `npm run check` + 개발 서버에서 직접 플레이
-(무기 1종 이상 Lv8·진화, 레벨업 모달, 게임오버, 로비 이동)로 한다.
+UI·시각 변경은 `npm run dev` 에서 직접 확인한다 (렌더링은 sim 범위 밖).
 
-## 4. 구조와 의존 방향
+## 3. 구조와 의존 방향
 
 ```
 src/
 ├─ main.tsx · App.tsx         진입점, 화면 전환(state)
-├─ gameInfo.ts                제목·버전·저장소 (단일 출처)
-├─ launcherBridge.ts          원클릭 exe와의 통신 (ping/bye/세이브 미러)
+├─ gameInfo.ts                제목·버전 (단일 출처)
+├─ launcherBridge.ts          원클릭 exe 연결 (ping/bye/세이브 미러)
+├─ assets/
+│  ├─ icons/                  SVG 62종 + index.ts(이름→URL) + map.ts(의미 매핑) + credits.json
+│  └─ fx/                     캔버스 이펙트 텍스처 (Kenney CC0)
 ├─ game/                      ── React 없이 동작하는 순수 게임 로직 ──
-│  ├─ core/      GameEngine(루프·통합) · types · storage(세이브) · audio
-│  ├─ data/      config(밸런스) · evolutions · progression(캐릭터·특성·업적·비용)
+│  ├─ core/      GameEngine(루프·통합·레벨업 큐·일시정지) · types · storage · settings · audio
+│  ├─ data/      config(밸런스) · evolutions · progression
 │  ├─ entities/  Player · EnemyManager · GemManager
-│  ├─ systems/   WeaponManager · AccessoryManager · upgrades(레벨업 선택지) · traitHelper(배율 계산)
-│  ├─ weapons/   무기별 로직/렌더 + registry.ts(등록표)
-│  └─ render/    quality(저사양 판단) · sprites(오프스크린 캐시) · background(그리드)
+│  ├─ systems/   WeaponManager · AccessoryManager · upgrades · traitHelper
+│  ├─ weapons/   무기 7종 + registry.ts(등록표)
+│  └─ render/    quality · sprites · iconSprites · effects · background
 └─ ui/                        ── React 화면 ──
    ├─ screens/   Lobby · GameCanvas · Gacha · Character · Traits · Codex · Achievements
-   ├─ components/ HUD · UpgradeModal
-   ├─ hooks/     useUpdateCheck
-   └─ theme.ts   장신구 색·아이콘, 무기 색 (UI 공용 매핑)
+   ├─ components/ HUD · UpgradeModal · SettingsPanel · GameIcon · EnemyShape
+   ├─ hooks/     useSettings
+   ├─ icons.ts   (assets/icons/map.ts 재노출)
+   └─ theme.ts   장신구 색, 무기 색, readableAccent
 ```
 
 **의존 규칙**
-- `game/**` 는 `ui/**`·React를 import 하지 않는다. UI와는 `GameEngine` 공개 메서드 + `GameCallbacks`로만 통신.
-- `game/data/**` 는 로직 모듈을 import 하지 않는다(타입 제외). 데이터는 위에서 아래로만 흐른다.
-- 모든 import는 `@/` 별칭 (`@/game/...`, `@/ui/...`). 상대경로 `../../` 금지.
-- 새 UI 라이브러리를 추가하지 않는다 (Tailwind + lucide-react 만).
+- `game/**` 는 `ui/**`·React 를 import 하지 않는다. UI와는 `GameEngine` 공개 메서드 + `GameCallbacks` 로만.
+- `assets/**` 는 game·ui 양쪽에서 쓸 수 있다(데이터·URL만, 로직 없음).
+- `game/data/**` 는 로직 모듈을 import 하지 않는다(타입 제외).
+- 모든 import 는 `@/` 별칭. 새 UI 라이브러리 금지(Tailwind + lucide-react + `GameIcon`).
 
-## 5. 작업별 체크리스트
+## 4. 작업별 체크리스트
 
-### 새 무기 추가
-1. `game/core/types.ts` — `WeaponType` 유니온에 id 추가 (필요하면 상태 타입 추가)
-2. `game/data/config.ts` — `weapons.<id>` 스탯 (name, desc, color, base*, *Growth, maxLevel)
-3. `game/data/evolutions.ts` — 진화 정의 (짝 장신구, 이름, 설명)
-4. `game/weapons/<Name>Weapon.ts` — `update*`, `render*`, `*LevelEffect`, (필요시) `reset*Ids`
-5. `game/weapons/registry.ts` — 어댑터 작성 후 `WEAPON_MODULES`에 등록 (renderOrder 지정)
-6. `game/data/progression.ts` — 업적 `evo_<id>` 추가 (진화 업적을 쓸 경우), `StartWeaponType` 갱신
-7. `scripts/gen-spec.mjs` — `weaponTables`에 수치표 생성기 추가
-8. `npm run check` → `npm run docs:spec` → CHANGELOG
-9. (선택) 아이콘 후보: `wiki/design/assets/icons/`
+### 새 무기
+1. `game/core/types.ts` — `WeaponType` 유니온
+2. `game/data/config.ts` — `weapons.<id>` (name, desc, color, base*, *Growth, maxLevel)
+3. `game/data/evolutions.ts` — 진화 (짝 장신구·이름·설명·배율). 진화형 수치 = **최대 레벨 수치 × 배율**
+4. `game/weapons/<Name>Weapon.ts` — update/render/levelEffect (+ `reset*Ids`), 진화 분기 `w.evolved`
+5. `game/weapons/registry.ts` — 어댑터 + `WEAPON_MODULES` 등록 (`renderOrder`)
+6. `game/data/progression.ts` — 업적 `evo_<id>`, `StartWeaponType`
+7. 아이콘 `src/assets/icons/weapon-<id>.svg`, `weapon-<id>-evo.svg` (+ `credits.json`)
+8. `scripts/gen-spec.mjs` — `weaponTables` 에 수치표 함수
+9. `npm run check` → `npm run docs:spec` → CHANGELOG
 
 ### 새 장신구
-`types.ts`의 `AccessoryType` → `config.ts` `accessories` → `systems/AccessoryManager.ts`의
-`ALL_ACCESSORY_TYPES`·`computeMods`·`getLevelEffect` → `ui/theme.ts` 색·아이콘 → docs:spec
+`types.ts` `AccessoryType` → `config.ts` `accessories` → `AccessoryManager` (`ALL_ACCESSORY_TYPES`·`computeMods`·`getLevelEffect`) → `ui/theme.ts` 색 → 아이콘 `acc-<id>.svg` → docs:spec
 
 ### 새 적
-`config.ts`의 `enemyTypes`에 항목 추가(등장 시간·가중치·모양). 스프라이트 적은
-`EnemyManager.ts`의 늑대 구현(16×16 프레임 시트, 지연 로딩)을 따른다. 도감 설명은 `CodexScreen.tsx`의 `ENEMY_DESCS`.
+`config.ts` `enemyTypes` (등장 시간·가중치·모양) → 도감 설명 `CodexScreen.tsx` `ENEMY_DESCS` → 아이콘 `enemy-<id>.svg`.
+스프라이트 적은 늑대 구현(16×16 시트, 지연 로딩)을 따른다.
 
 ### 새 캐릭터
-`data/progression.ts`의 `CHARACTERS`(패시브는 `PassiveType` + `GameEngine.updateWeaponMods`/`applyAccessoryMods`).
+`progression.ts` `CHARACTERS` (패시브는 `PassiveType` + `GameEngine.updateWeaponMods`/`applyAccessoryMods`) → 엠블럼 `char-<id>.svg`.
 특수 캐릭터는 `special: true` + `unlockAchievement`.
 
+### 새 아이콘·에셋
+game-icons.net(CC BY 3.0) 또는 Kenney(CC0)만. SVG 는 단색 `fill="currentColor"`, 배경 제거, 스크립트·외부 참조 없음.
+`credits.json` + `wiki/design/assets/CREDITS.md` + (새 작가면) 로비 크레딧 줄 갱신.
+
 ### 세이브 구조 변경
-`storage.ts`: `SAVE_SCHEMA_VERSION`++ → `MIGRATIONS[이전버전]` 추가 → `normalize` 기본값 → `docs` 갱신.
-실행기 디스크 백업(`save.json`)도 같은 JSON을 그대로 저장하므로 별도 작업은 없다.
+`storage.ts`: `SAVE_SCHEMA_VERSION`++ → `MIGRATIONS[이전]` → `normalize` 기본값. 실행기 디스크 백업은 같은 JSON 이라 추가 작업 없음.
 
-### 원클릭 실행기(launcher/) 수정
-- `Launcher.cs` 는 **C# 5 문법만** (Windows 기본 csc.exe가 C# 5까지만 지원):
-  문자열 보간 `$""`, `?.`, `nameof`, `out var`, 식 본문 멤버 사용 금지.
-- 포트 후보 순서(37615 → 38917 → 41234)와 `--user-data-dir` 경로를 바꾸면 세이브 위치가 달라진다.
-  디스크 미러가 있어 복구는 되지만 이유 없이 바꾸지 않는다.
+### 원클릭 실행기(launcher/)
+`Launcher.cs` 는 **C# 5 문법만** (Windows 기본 csc.exe). 문자열 보간·`?.`·`nameof`·`out var` 금지.
+포트 후보·프로필 경로를 이유 없이 바꾸지 않는다(디스크 미러로 복구는 됨).
 
-## 6. 코드 스타일
+## 5. 문서 유지 규칙
 
-- 파일 머리에 `// ====` 배너 + 한 줄 역할 설명 (기존 파일과 동일한 형식).
-- 주석은 "왜"를 적는다. 한국어/영어 혼용 가능 — 주변 코드에 맞춘다.
-- 쓰지 않는 인자는 `_` 접두사 (eslint 설정됨).
-- 게임 루프 안 코드는 할당을 최소화한다 (in-place 컬링 패턴 유지).
-
-## 7. 문서 유지 규칙
-
-| 바꾼 것 | 같이 갱신할 문서 |
+| 바꾼 것 | 같이 갱신 |
 |---|---|
-| 수치(config/progression/evolutions) | `npm run docs:spec` |
-| 시스템 규칙·동작 | `wiki/specs/*.md` 해당 문서 |
-| 방향·우선순위·결정 | `wiki/direction/README.md` (결정 기록) |
-| 밸런스 의심점·설계-구현 불일치 | `wiki/direction/known-issues.md` |
+| 수치 | `npm run docs:spec` |
+| 시스템 규칙 | `wiki/specs/*.md` |
+| 방향·결정 | `wiki/direction/README.md` 결정 기록 |
+| 설계-구현 불일치·밸런스 의심 | `wiki/direction/known-issues.md` |
 | 렌더링 기법 | `wiki/methodology/canvas-performance.md` |
-| 새 폴더 | 그 폴더의 `README.md` + 이 문서 4장 |
-| 외부 에셋 추가 | `wiki/design/assets/CREDITS.md` (라이선스 필수, CC0/CC BY 우선) |
+| 에셋 | `wiki/design/README.md` 적용 지도 + CREDITS |
+| 새 폴더 | 그 폴더 `README.md` + 이 문서 3장 |
 
-## 8. Git
+## 6. Git
 
-- 커밋 메시지: Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `perf:`).
-- `main` 에 강제 푸시 금지. 큰 작업은 브랜치 → PR.
-- `release/`, `dist/`, `launcher/obj/` 는 커밋하지 않는다 (.gitignore).
+- Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `perf:`). `main` 강제 푸시 금지.
+- `release/`, `dist/`, `launcher/obj/` 는 커밋하지 않는다.
 
-## 9. 지식 지도
+## 7. 지식 지도
 
-- 무엇을/왜: [wiki/overview/project-history.md](wiki/overview/project-history.md), [wiki/direction/](wiki/direction/README.md)
-- 기능 명세: [wiki/specs/](wiki/specs/README.md)
-- 레퍼런스 게임 비교: [wiki/references/](wiki/references/README.md)
-- 개발 방법론: [wiki/methodology/](wiki/methodology/README.md)
-- 커뮤니티 글 모음: [wiki/community/](wiki/community/README.md)
-- 디자인: [wiki/design/](wiki/design/README.md)
+[wiki/README.md](wiki/README.md) — 개요·원작자 의도 대조 / 기능 명세(+자동 수치표) / 레퍼런스 / 방법론 / 커뮤니티 / 방향성 / 디자인

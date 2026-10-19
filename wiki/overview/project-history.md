@@ -27,14 +27,17 @@
 | 구조 | `src/game/{core,data,entities,systems,weapons,render}` + `src/ui/{screens,components,hooks}` | 역할별로 찾기 쉽게, 다른 AI가 붙어도 길을 잃지 않게 |
 | 확장성 | 무기 등록표, 레벨업 로직 분리, 세이브 스키마 버전, `gameInfo.ts` | 업데이트를 한 곳 수정으로 |
 | 성능 | FPS 상한, 일시정지 재렌더 중단, shadowBlur 제거, 그라디언트 캐시, 그리드 패턴, 불투명 캔버스, 자동 저사양 | 저사양 PC 대응 |
-| 배포 | 원클릭 exe(380KB), GitHub Actions(CI·Release), 로비 업데이트 알림 | 설치 없이 실행, 업데이트 편의 |
-| 문서 | AGENTS.md, 디렉토리별 README, 이 위키, 자동 수치표 | 인수인계 |
+| 실행 | 원클릭 exe(~0.4MB) + 디스크 세이브 미러 | 설치 없이 실행 |
+| UI·에셋 | 아이콘 62종 전 화면 적용, 캔버스 표식(상자·왕관·엠블럼), 일시정지·설정 | 디자인 에셋 적용, 사용성 |
+| 버그 | 진화 수치, 레벨업 누락·소프트락, 키 고착 등 | 원작자 의도 복원·안정성 ([대조표](original-intent-audit.md)) |
+| 문서·도구 | AGENTS.md, 디렉토리별 README, 이 위키, 자동 수치표, 헤드리스 시뮬레이션 | AI 인수인계·검증 |
 | 이름 | 로비 제목 "Vampire Survivors" → "Survivors" (`src/gameInfo.ts`) | 공개 저장소에서 타 게임 상표를 제목으로 쓰지 않기 위해. 한 줄로 되돌릴 수 있다 |
 
 변경 상세: [CHANGELOG.md](../../CHANGELOG.md) · 커밋 이력 (`git log`) 첫 커밋이 원본 그대로의 스냅샷이다.
 
 ## 하지 않은 것 (의도적으로)
 
-- 밸런스 수치, 무기·적·캐릭터 구성, 화면 구성, 아트 스타일 변경.
-- 발견한 설계-구현 불일치(진화 무기가 Lv8보다 약해지는 문제 등)는 고치지 않고
-  [direction/known-issues.md](../direction/known-issues.md) 에 기록 — 게임 디자인 결정이기 때문.
+- 밸런스 수치, 무기·적·캐릭터 구성, 화면 흐름, 적·플레이어의 기하 도형 스타일 변경.
+- CI·릴리스·자동 업데이트 (배포하지 않는 토이 프로젝트).
+- 원작자 로그와 어긋나 있던 구현(진화 수치 등)은 고쳤고, 컨셉 판단이 필요한 것은
+  [direction/known-issues.md](../direction/known-issues.md) 에 남겼다.

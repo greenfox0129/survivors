@@ -7,13 +7,13 @@ AI 에이전트 작업 규칙은 [AGENTS.md](../AGENTS.md) 가 우선한다.
 
 | 섹션 | 내용 | 시작 문서 |
 |---|---|---|
-| 🧭 **개요** | 이 폴더가 무엇이었고 무엇을 바꿨나 | [overview/project-history.md](overview/project-history.md) |
+| 🧭 **개요** | 이 폴더가 무엇이었고 무엇을 바꿨나, 원작자 의도 대조 | [overview/project-history.md](overview/project-history.md), [overview/original-intent-audit.md](overview/original-intent-audit.md) |
 | 📐 **기능 명세** | 게임 시스템 규칙 + 코드에서 자동 생성된 수치표 | [specs/README.md](specs/README.md) |
 | 🎮 **레퍼런스** | 장르 대표작 비교 시트, Vampire Survivors 설계 노트, 가챠·규제 | [references/README.md](references/README.md) |
-| 🛠 **방법론** | 게임 루프, Canvas 성능, 데이터 주도 설계, 스폰·밸런스, 게임 필, 릴리스·업데이트 | [methodology/README.md](methodology/README.md) |
+| 🛠 **방법론** | 게임 루프, Canvas 성능, 데이터 주도 설계, 스폰·밸런스, 게임 필, 버전·업데이트 | [methodology/README.md](methodology/README.md) |
 | 💬 **커뮤니티** | 개발 커뮤니티 글·기사 큐레이션과 우리 프로젝트에 주는 시사점 | [community/README.md](community/README.md) |
 | 🎯 **개발 방향성** | 원칙, 로드맵, 결정 기록, 알려진 이슈 | [direction/README.md](direction/README.md) |
-| 🎨 **디자인** | 디자인 시스템, 아트 디렉션, 후보 에셋, 디자인 보드 | [design/README.md](design/README.md) |
+| 🎨 **디자인** | 디자인 시스템, 에셋 적용 지도, 아트 디렉션, 디자인 보드, 크레딧 | [design/README.md](design/README.md) |
 
 ## 위키 유지 규칙
 

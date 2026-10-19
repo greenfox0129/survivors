@@ -58,29 +58,32 @@
 </head>
 <body>
 <main>
-  <h1>Survivors <small>DESIGN BOARD · v0.1</small></h1>
-  <p class="note">현재 게임의 시각 언어(어두운 월드 + 채도 높은 기하 도형 + 16px 픽셀 스프라이트)를 유지하는 전제로 모은 토큰·후보 에셋. 라이선스: <code>assets/CREDITS.md</code></p>
+  <h1>Survivors <small>DESIGN BOARD · v0.1 · IN USE</small></h1>
+  <p class="note">게임에 실제로 들어간 아이콘(src/assets/icons, game-icons.net CC BY 3.0)과 색 토큰, 후보 에셋(Kenney CC0). 라이선스: <code>assets/CREDITS.md</code></p>
 
   <h2>1 · 월드 & 엔티티 색 토큰 (src/game/data/config.ts)</h2>
   <div class="grid swatches" id="world-sw"></div>
 
-  <h2>2 · 무기 아이콘 후보 — 기본 / 진화 (game-icons.net, CC BY 3.0)</h2>
+  <h2>2 · 무기 아이콘 — 기본 / 진화 (HUD · 레벨업 · 도감 · 업적)</h2>
   <div class="grid icons" id="weapons"></div>
 
-  <h2>3 · 장신구 아이콘 후보</h2>
+  <h2>3 · 장신구 아이콘 (HUD · 레벨업 · 도감)</h2>
   <div class="grid icons" id="accs"></div>
 
-  <h2>4 · 적 아이콘 후보 (도감·HUD 용)</h2>
+  <h2>4 · 적 아이콘 (도감) — 게임 속 적은 기하 도형 그대로</h2>
   <div class="grid icons" id="enemies"></div>
 
-  <h2>5 · UI 글리프 후보</h2>
+  <h2>5 · 캐릭터 엠블럼 (로비 · 캐릭터 관리 · 뽑기 · 인게임 플레이어 원 안)</h2>
+  <div class="grid icons" id="chars"></div>
+
+  <h2>6 · 메뉴 · 재화 · 통계 · 특성 · 표식</h2>
   <div class="grid icons" id="ui"></div>
 
-  <h2>6 · 이펙트 텍스처 후보 (Kenney Particle Pack, CC0 · 128px로 축소)</h2>
+  <h2>7 · 이펙트 텍스처 (Kenney Particle Pack, CC0) — star 는 처치 이펙트로 사용 중, 나머지는 후보</h2>
   <div class="grid fx" id="fx"></div>
   <p class="note">흰색 알파 텍스처라 drawImage 한 번 + 미리 색을 입힌 오프스크린 캔버스로 쓰면 shadowBlur·그라디언트보다 싸다 (render/sprites.ts 방식).</p>
 
-  <h2>7 · 픽셀 스프라이트 레퍼런스 (Kenney Tiny Dungeon, CC0 · 16×16)</h2>
+  <h2>8 · 픽셀 스프라이트 레퍼런스 (Kenney Tiny Dungeon, CC0 · 16×16) — 후보</h2>
   <div class="row">
     <img class="pixel" src="assets/tiny-dungeon/tilemap_packed_x4.png" width="384" alt="tiny dungeon tileset x4" />
     <img class="pixel" src="assets/references/kenney-tiny-dungeon-sample.png" width="320" alt="tiny dungeon sample" />
@@ -88,7 +91,7 @@
   </div>
   <p class="note">기존 늑대 스프라이트(public/assets/enemy/Wolf.png)도 16×16 프레임 — 같은 해상도 계열이라 섞어도 어색하지 않다.</p>
 
-  <h2>8 · 타이포그래피 & 월드 미리보기</h2>
+  <h2>9 · 타이포그래피 & 월드 미리보기</h2>
   <div class="row">
     <div class="type" style="flex:1 1 320px">
       <div class="t1">Survivors</div>
@@ -106,7 +109,7 @@
     </div>
   </div>
 
-  <footer>Icons: game-icons.net — Lorc, Delapouite, Skoll, Sbed (CC BY 3.0) · Particles & tiles: Kenney.nl (CC0)</footer>
+  <footer>Icons: game-icons.net — Lorc, Delapouite, Skoll, Sbed, DarkZaitzev, Willdabeast (CC BY 3.0) · Particles &amp; tiles: Kenney.nl (CC0)</footer>
 </main>
 <script>
   const sw = [
@@ -143,11 +146,26 @@
   ];
   document.getElementById("enemies").innerHTML = enemies.map(([id, c, n]) => card(`enemy-${id}`, c, n, id)).join("");
 
+  const chars = [
+    ["char-survivor", "#22d3ee", "생존자", "survivor"], ["char-berserker", "#ef4444", "버서커", "berserker"],
+    ["char-guardian", "#3b82f6", "가디언", "guardian"], ["char-scout", "#22c55e", "스카웃", "scout"],
+    ["char-mage", "#a855f7", "메이지", "mage"], ["char-linya", "#cbd5e1", "리냐", "linya (#1f2937 → 밝게 보정)"],
+    ["char-euroan", "#16a34a", "에우로안", "euroan"],
+  ];
+  document.getElementById("chars").innerHTML = chars.map(([f, c, n, s]) => card(f, c, n, s)).join("");
   const ui = [
-    ["ui-reroll", "#e2e8f0", "리롤", "레벨업 모달"], ["ui-treasure", "#fbbf24", "보물 상자", "엘리트 보상"],
-    ["ui-xp-gem", "#3b82f6", "경험치 보석", "HUD"], ["ui-star", "#22d3ee", "별(각성 재화)", "업적 보상"],
-    ["ui-upgrade", "#34d399", "강화", "캐릭터/특성"], ["char-linya", "#c4b5fd", "리냐", "고양이 수인"],
-    ["char-mage", "#a855f7", "메이지", "캐릭터"],
+    ["menu-play", "#67e8f9", "게임 시작", "로비"], ["menu-gacha", "#fcd34d", "캐릭터 뽑기", "로비 · 뽑기"],
+    ["menu-characters", "#7dd3fc", "캐릭터 관리", "로비"], ["menu-traits", "#c4b5fd", "특성", "로비"],
+    ["menu-codex", "#6ee7b7", "도감", "로비 · 도감"], ["menu-achievements", "#fda4af", "업적", "로비 · 업적"],
+    ["stat-gold", "#fbbf24", "골드", "재화 표시"], ["ui-star", "#22d3ee", "별", "각성 재화"],
+    ["ui-memory", "#a78bfa", "기억", "돌파 재료"], ["ui-breakthrough", "#c4b5fd", "돌파", "캐릭터 관리"],
+    ["stat-time", "#67e8f9", "생존 시간", "HUD · 게임오버"], ["stat-kills", "#f87171", "처치", "HUD · 게임오버"],
+    ["stat-score", "#6ee7b7", "스코어", "HUD · 게임오버"], ["ui-upgrade", "#fcd34d", "레벨", "HUD"],
+    ["ui-reroll", "#e2e8f0", "리롤", "HUD · 레벨업"], ["ui-treasure", "#fbbf24", "보물 상자", "캔버스 (엘리트 보상)"],
+    ["ui-crown", "#fbbf24", "엘리트 왕관", "캔버스 표식"], ["ui-xp-gem", "#3b82f6", "경험치 보석", "예비"],
+    ["trait-vitality", "#6ee7b7", "생명력", "특성"], ["trait-swiftness", "#6ee7b7", "신속함", "특성"],
+    ["trait-power", "#6ee7b7", "공격 강화", "특성"], ["trait-rapidfire", "#6ee7b7", "연사", "특성"],
+    ["trait-greed", "#6ee7b7", "탐욕", "특성"], ["ui-sound", "#e2e8f0", "사운드", "예비"],
   ];
   document.getElementById("ui").innerHTML = ui.map(([f, c, n, s]) => card(f, c, n, s)).join("");
 

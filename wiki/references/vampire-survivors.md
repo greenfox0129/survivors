@@ -32,7 +32,7 @@
   ([Prima Games 진화 가이드](https://primagames.com/gaming/vampire-survivors-weapon-evolution-guide), [Pocket Tactics](https://www.pockettactics.com/vampire-survivors/weapons))
 - 진화 무기는 **원본보다 확실히 강하다**는 기대가 플레이어에게 있다.
 
-→ 우리 게임은 레벨업 선택지에 진화가 뜨고(상자에서도 가능), 진화 시 Lv1 수치로 돌아가 오히려 약해지는 무기가 있다 → [known-issues KI-01](../direction/known-issues.md#ki-01)
+→ 우리 게임은 레벨업 선택지(상자 포함)에 진화가 뜨고, 진화형은 Lv8 수치 × 진화 배율의 최종형이다 (v0.1.0 에서 Lv1 기준 계산 버그 수정 — [KI-01](../direction/known-issues.md#ki-01)).
 
 ### 레벨업 선택지 조작
 

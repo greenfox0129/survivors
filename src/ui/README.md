@@ -2,20 +2,26 @@
 
 | 폴더/파일 | 내용 |
 |---|---|
-| `screens/Lobby.tsx` | 메인 메뉴 6개 카드, 제목(`gameInfo.ts`), 버전·새 버전 알림 |
-| `screens/GameCanvas.tsx` | 캔버스 + 엔진 생성/정리, 키 입력, 레벨업/게임오버 단계, 골드·업적 정산, **그래픽 품질 버튼**, 화면 높이 맞춤 |
-| `screens/GachaScreen.tsx` | 캐릭터 뽑기(1회/10연), 중복 → 기억 |
+| `screens/Lobby.tsx` | 메뉴 카드 6개(게임 아이콘), 재화·선택 캐릭터, 설정 모달, 버전·아이콘 크레딧 |
+| `screens/GameCanvas.tsx` | 캔버스 + 엔진 생성/정리, 입력, 단계(playing/levelup/paused/gameover), ESC·포커스 상실 일시정지, 골드·업적 정산, 화면 높이 맞춤 |
+| `screens/GachaScreen.tsx` | 뽑기(1회/10연), 엠블럼 연출, 연타·중도 이탈 방지 |
 | `screens/CharacterScreen.tsx` | 캐릭터 선택·레벨업·각성(별)·돌파·초기화 |
 | `screens/TraitsScreen.tsx` | 특성 강화·초기화 |
-| `screens/CodexScreen.tsx` | 도감 (적/무기/진화/장신구) — 레벨 효과는 무기 등록표에서 읽음 |
-| `screens/AchievementsScreen.tsx` | 업적 목록 |
-| `components/HUD.tsx` | 시간·처치·스코어·레벨·XP바·HP바·보유 무기/장신구 |
-| `components/UpgradeModal.tsx` | 레벨업 3지선다 + 리롤 |
-| `hooks/useUpdateCheck.ts` | GitHub Releases 최신 버전 확인 (세션당 1회, 실패 무시) |
-| `theme.ts` | 장신구 색·아이콘, 무기 색 매핑 — **색/아이콘은 여기서만** |
+| `screens/CodexScreen.tsx` | 도감 (적: 아이콘 + 실제 도형 / 무기 / 진화 / 장신구) — 레벨 효과는 무기 등록표에서 |
+| `screens/AchievementsScreen.tsx` | 업적 (진화 무기 아이콘) |
+| `components/HUD.tsx` | 시간·처치·스코어·레벨·XP·HP·리롤·무기/장신구 칩·빈 슬롯 |
+| `components/UpgradeModal.tsx` | 레벨업 3지선다 + 리롤, 배지(NEW/UP/EVOLVE), 단축키 1/2/3·R, 대기 수 표시 |
+| `components/SettingsPanel.tsx` | 그래픽 품질·효과음 (일시정지 메뉴·로비 공용) |
+| `components/GameIcon.tsx` | SVG 아이콘을 CSS mask 로 틴트 |
+| `components/EnemyShape.tsx` | 게임 속 적 도형 SVG |
+| `hooks/useSettings.ts` | `core/settings.ts` React 바인딩 |
+| `icons.ts` | `assets/icons/map.ts` 재노출 |
+| `theme.ts` | 장신구 색, 무기 색, `readableAccent()` |
 
-## 규칙
+## Rules
 
-- 스타일은 Tailwind 클래스, 아이콘은 `lucide-react` 만. 새 UI 라이브러리 금지.
-- 게임 로직을 UI에 쓰지 않는다 — 엔진/데이터 함수를 호출만.
-- 반투명 `backdrop-blur` 는 정지 화면(모달) 위에서만 쓴다. 엔진이 일시정지 중 재렌더하지 않으므로 비용이 낮다.
+- Tailwind + `lucide-react` (generic UI glyphs) + `GameIcon` (game things). No new UI libraries.
+- No game logic in UI — call engine/data functions.
+- Colors/icons only via `theme.ts` / `assets/icons/map.ts`.
+- When a callback from the engine may fire synchronously inside an engine call (e.g. `applyUpgrade` opening the
+  next level-up), update React state *before* the call.

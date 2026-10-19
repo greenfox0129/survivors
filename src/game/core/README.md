@@ -2,13 +2,17 @@
 
 | 파일 | 역할 |
 |---|---|
-| `GameEngine.ts` | 메인 루프(requestAnimationFrame + FPS 상한 + 정지 화면), 입력, 모든 매니저 통합, 레벨업 일시정지, 통계/게임오버 콜백, 패시브(`PassiveType`) 런타임 효과 |
-| `types.ts` | 엔티티·무기 상태·업그레이드 옵션·`WeaponMods`·`GameStats` 등 공용 타입. 새 무기/장신구 id는 여기 유니온에 먼저 추가 |
-| `storage.ts` | 세이브(localStorage `vs_proto_save`) 로드/저장, **스키마 버전 + 마이그레이션**, 실행기 디스크 미러 훅(`setSaveMirror`) |
-| `audio.ts` | WebAudio 합성 효과음 (피격·히트·경험치·레벨업·게임오버). 에셋 파일 없음 |
+| `GameEngine.ts` | 메인 루프(requestAnimationFrame + FPS 상한 + 정지 화면), 입력·포커스 상실 시 해제, **레벨업 큐**(`pendingLevelUps`), 플레이어 일시정지(`setUserPaused`), 매니저 통합, 보상 드롭(`dropReward`), 패시브 런타임 효과, 통계/게임오버 콜백 |
+| `types.ts` | 엔티티·무기 상태·업그레이드 옵션·`WeaponMods`·`GameStats` 공용 타입. 새 무기/장신구 id 는 여기 유니온에 먼저 추가 |
+| `storage.ts` | 세이브(localStorage `vs_proto_save`), **스키마 버전 + 마이그레이션**, `updatedAt`, 실행기 디스크 미러 훅(`setSaveMirror`) |
+| `settings.ts` | 기기별 설정(그래픽 품질·효과음 볼륨·음소거) — 세이브와 분리, 구독 가능(`subscribeSettings`) |
+| `audio.ts` | WebAudio 합성 효과음, 마스터 게인(설정 반영), 음소거면 노드 생성 안 함, 노이즈 버퍼 캐시 |
 
-## 주의
+## Notes
 
-- `STORAGE_KEY` 는 바꾸지 않는다. 구조 변경은 `SAVE_SCHEMA_VERSION` + `MIGRATIONS` 로.
-- `GameEngine` 은 매 프레임 `updateWeaponMods()` 를 호출한다 (체력 비례 패시브 때문). 무거운 계산을 넣지 말 것.
-- dt 는 0.05s 로 클램프된다 → 20fps 미만에서는 게임 시간이 실제보다 느리게 흐른다 (의도된 안전장치).
+- `STORAGE_KEY` must never change. Structure changes go through `SAVE_SCHEMA_VERSION` + `MIGRATIONS`.
+- `updateWeaponMods()` runs every frame (HP-based passive) — keep it cheap.
+- dt is clamped to 0.05s → below 20fps game time slows down on purpose (anti-tunneling).
+- Level-up flow: XP/treasure → `pendingLevelUps` → `openNextLevelUp()` (pauses, emits stats, `onLevelUp`) →
+  UI resets its own state *then* calls `applyUpgrade()` → next pending pick or resume. Empty option pool drops the queue.
+- `update()` never touches the canvas, so `scripts/sim.mjs` can run it in Node.

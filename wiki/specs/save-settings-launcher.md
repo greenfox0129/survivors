@@ -26,13 +26,18 @@ interface SaveData {
 
 새 변경은 `SAVE_SCHEMA_VERSION` + `MIGRATIONS[n]` 추가. 알 수 없는 미래 버전 세이브는 그대로 두고 기본값만 보충한다.
 
-## 그래픽 설정 (localStorage `survivors_proto_settings`)
+## 설정 (localStorage `survivors_proto_settings`, `src/game/core/settings.ts`)
+
+`{ quality: "auto" | "high" | "low", volume: 0..1, muted: boolean }` — 세이브와 분리된 기기별 설정. 일시정지 메뉴·로비 설정에서 변경.
+음소거이거나 볼륨 0이면 오디오 노드를 아예 만들지 않는다.
+
+### 그래픽 품질
 
 | 값 | 동작 |
 |---|---|
-| `auto` (기본) | 평균 프레임 간격 > 24ms 가 2초 이상 지속되면 이번 세션 동안 저사양으로 전환 (버튼에 "(저사양)" 표시) |
+| `auto` (기본) | 평균 프레임 간격 > 24ms 가 2초 이상 지속되면 이번 세션 동안 저사양으로 전환 (설정 패널에 "자동 → 저사양 적용 중" 표시, 100ms 넘는 간격·숨김 탭은 측정 제외) |
 | `high` | 모든 장식 효과 |
-| `low` | 장식 생략: 폭탄 잔불, 브레스 깜빡임, 병합 보석 광채·반짝임, 엘리트 은은한 채움, 흡수 반경 원 |
+| `low` | 장식 생략: 폭탄 잔불, 브레스 깜빡임, 병합 보석 광채·반짝임, 엘리트 은은한 채움, 흡수 반경 원, 처치 이펙트 |
 
 모든 품질에서 공통: FPS 상한 60, 일시정지 중 재렌더 없음, shadowBlur 없음, 그라디언트 캐시.
 
@@ -53,7 +58,7 @@ interface SaveData {
 
 → 포트가 바뀌어 브라우저 저장소(origin)가 달라져도, 브라우저 프로필을 지워도 진행도가 이어진다.
 
-## 새 버전 알림
+## 네트워크
 
-로비 진입 시 세션당 1회 `GET https://api.github.com/repos/<repo>/releases/latest` →
-`tag_name` 이 현재 버전보다 크면 "새 버전 vX 받기" 링크. 실패·오프라인은 무시. 끄기: `gameInfo.ts` 의 `updateCheck: false`.
+게임은 외부 네트워크 요청을 하지 않는다 (배포·릴리스가 없는 토이 프로젝트라 업데이트 확인 기능은 두지 않음).
+실행기 모드의 통신은 모두 `127.0.0.1` 로컬 실행기와만 한다.
