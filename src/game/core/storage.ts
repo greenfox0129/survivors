@@ -17,6 +17,7 @@ import {
 } from "@/game/data/progression";
 
 const STORAGE_KEY = "vs_proto_save";
+export const SAVE_STORAGE_KEY = STORAGE_KEY;
 
 /** 현재 세이브 스키마 버전 */
 export const SAVE_SCHEMA_VERSION = 2;
@@ -29,6 +30,8 @@ export interface SaveData {
   selectedCharacter: string;
   stars: number;
   completedAchievements: string[];
+  /** 마지막 저장 시각(ms) — 원클릭 실행기의 디스크 백업과 비교할 때 사용 */
+  updatedAt?: number;
 }
 
 type RawSave = Record<string, unknown>;
@@ -106,10 +109,22 @@ export function loadSave(): SaveData {
   }
 }
 
+let saveMirror: ((json: string) => void) | null = null;
+
+/**
+ * 세이브가 저장될 때마다 함께 호출할 추가 저장소를 등록한다.
+ * (원클릭 실행기 모드에서 디스크 백업에 사용 — src/launcherBridge.ts)
+ */
+export function setSaveMirror(fn: ((json: string) => void) | null): void {
+  saveMirror = fn;
+}
+
 export function saveSave(data: SaveData): void {
+  const json = JSON.stringify({ ...data, schemaVersion: SAVE_SCHEMA_VERSION, updatedAt: Date.now() });
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, schemaVersion: SAVE_SCHEMA_VERSION }));
+    localStorage.setItem(STORAGE_KEY, json);
   } catch {
     // ignore quota errors
   }
+  saveMirror?.(json);
 }
