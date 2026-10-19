@@ -2,11 +2,13 @@
 //  weapons/BombWeapon.ts — Delayed AoE explosion at random enemy
 // ============================================================
 
-import { CONFIG } from "../config";
-import type { BombEntity, EnemyState, WeaponInstance } from "../types";
-import { findNearestEnemy, damageEnemy } from "../EnemyManager";
-import type { WeaponMods } from "../WeaponManager";
-import { EVOLUTIONS } from "./evolutions";
+import { CONFIG } from "@/game/data/config";
+import type { BombEntity, EnemyState, WeaponInstance } from "@/game/core/types";
+import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
+import type { WeaponMods } from "@/game/core/types";
+import { EVOLUTIONS } from "@/game/data/evolutions";
+import { getRadialSprite, drawCentered } from "@/game/render/sprites";
+import { isLowQuality } from "@/game/render/quality";
 
 let idCounter = 5200;
 export function resetBombIds() { idCounter = 5200; }
@@ -185,6 +187,8 @@ export function cullBombs(bombs: BombEntity[]): BombEntity[] {
 
 export function renderBombs(ctx: CanvasRenderingContext2D, bombs: BombEntity[]): void {
   const color = CONFIG.weapons.bomb.color;
+  const low = isLowQuality();
+  const now = Date.now();
   for (const b of bombs) {
     if (b.phase === "falling") {
       // Shadow at target
@@ -223,21 +227,19 @@ export function renderBombs(ctx: CanvasRenderingContext2D, bombs: BombEntity[]):
     if (b.phase === "burning") {
       const prog = 1 - (b.burnTimer / b.burnDuration);
       const r = b.burnRadius;
-      const pulse = Math.sin(Date.now() / 100) * 0.1 + 0.9;
+      const pulse = Math.sin(now / 100) * 0.1 + 0.9;
 
-      // Burning field
-      const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, r);
-      grad.addColorStop(0, color + Math.round(prog * 80).toString(16).padStart(2, "0"));
-      grad.addColorStop(1, color + "00");
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, r * pulse, 0, Math.PI * 2);
-      ctx.fill();
+      // Burning field — cached sprite (center alpha 0x50), faded with globalAlpha
+      const field = getRadialSprite(r, [[0, color + "50"], [1, color + "00"]]);
+      ctx.globalAlpha = Math.max(0, prog);
+      drawCentered(ctx, field, b.x, b.y, r * pulse);
+      ctx.globalAlpha = 1;
 
-      // Flickering embers
+      // Flickering embers (decoration — skipped in low quality)
+      if (low) continue;
       ctx.fillStyle = "#fbbf24" + Math.round(prog * 150).toString(16).padStart(2, "0");
       for (let i = 0; i < 3; i++) {
-        const a = (Date.now() / 500 + i * 2) % (Math.PI * 2);
+        const a = (now / 500 + i * 2) % (Math.PI * 2);
         const ex = b.x + Math.cos(a) * r * 0.5;
         const ey = b.y + Math.sin(a) * r * 0.5;
         ctx.beginPath();

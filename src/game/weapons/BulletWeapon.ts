@@ -3,11 +3,11 @@
 //  Fires a burst of N shots in rapid succession, then pauses.
 // ============================================================
 
-import { CONFIG } from "../config";
-import type { EnemyState, Projectile, WeaponInstance } from "../types";
-import { findNearestEnemy, damageEnemy } from "../EnemyManager";
-import type { WeaponMods } from "../WeaponManager";
-import { EVOLUTIONS } from "./evolutions";
+import { CONFIG } from "@/game/data/config";
+import type { EnemyState, Projectile, WeaponInstance } from "@/game/core/types";
+import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
+import type { WeaponMods } from "@/game/core/types";
+import { EVOLUTIONS } from "@/game/data/evolutions";
 
 let idCounter = 5000;
 export function resetBulletIds() { idCounter = 5000; }
@@ -27,7 +27,7 @@ export function bulletBurstCount(w: WeaponInstance): number {
   return CONFIG.weapons.bullet.baseBurstCount;
 }
 
-export function bulletBurstInterval(w: WeaponInstance): number {
+export function bulletBurstInterval(_w: WeaponInstance): number {
   return CONFIG.weapons.bullet.baseBurstInterval;
 }
 

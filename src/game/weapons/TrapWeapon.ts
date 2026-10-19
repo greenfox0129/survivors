@@ -2,11 +2,11 @@
 //  weapons/TrapWeapon.ts — Deployable field trap, sustained damage
 // ============================================================
 
-import { CONFIG } from "../config";
-import type { EnemyState, TrapEntity, WeaponInstance } from "../types";
-import { findNearestEnemy, damageEnemy } from "../EnemyManager";
-import type { WeaponMods } from "../WeaponManager";
-import { EVOLUTIONS } from "./evolutions";
+import { CONFIG } from "@/game/data/config";
+import type { EnemyState, TrapEntity, WeaponInstance } from "@/game/core/types";
+import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
+import type { WeaponMods } from "@/game/core/types";
+import { EVOLUTIONS } from "@/game/data/evolutions";
 
 let idCounter = 5400;
 export function resetTrapIds() { idCounter = 5400; }
@@ -169,9 +169,9 @@ export function cullTraps(traps: TrapEntity[]): TrapEntity[] {
 
 export function renderTraps(ctx: CanvasRenderingContext2D, traps: TrapEntity[]): void {
   const color = CONFIG.weapons.trap.color;
+  const pulse = Math.sin(Date.now() / 200) * 0.15 + 0.85;
   for (const t of traps) {
     if (!t.alive) continue;
-    const pulse = Math.sin(Date.now() / 200) * 0.15 + 0.85;
 
     // Slow aura (Lv5+)
     if (t.slowRadius > 0) {
@@ -208,15 +208,15 @@ export function renderTraps(ctx: CanvasRenderingContext2D, traps: TrapEntity[]):
     ctx.arc(t.x, t.y, 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // Spikes
+    // Spikes — batched into one path / one stroke call
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
+    ctx.beginPath();
     for (let i = 0; i < 4; i++) {
       const a = (i / 4) * Math.PI * 2;
-      ctx.beginPath();
       ctx.moveTo(t.x + Math.cos(a) * (t.radius - 4), t.y + Math.sin(a) * (t.radius - 4));
       ctx.lineTo(t.x + Math.cos(a) * (t.radius + 4), t.y + Math.sin(a) * (t.radius + 4));
-      ctx.stroke();
     }
+    ctx.stroke();
   }
 }

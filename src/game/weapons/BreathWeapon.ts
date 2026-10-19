@@ -5,18 +5,19 @@
 //  Evolved weapons are final form — no level scaling.
 // ============================================================
 
-import { CONFIG } from "../config";
-import type { BreathState, EnemyState, WeaponInstance } from "../types";
-import { findNearestEnemy, damageEnemy } from "../EnemyManager";
-import type { WeaponMods } from "../WeaponManager";
-import { EVOLUTIONS } from "./evolutions";
+import { CONFIG } from "@/game/data/config";
+import type { BreathState, EnemyState, WeaponInstance } from "@/game/core/types";
+import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
+import type { WeaponMods } from "@/game/core/types";
+import { EVOLUTIONS } from "@/game/data/evolutions";
+import { isLowQuality } from "@/game/render/quality";
 
 const BURN_DURATION = 3.0;
 const BURN_TICK_INTERVAL = 0.5;
 const BREATH_DURATION = 0.8;
 const TICK_INTERVAL = 0.12;
 
-export function createBreathState(w: WeaponInstance): BreathState {
+export function createBreathState(_w: WeaponInstance): BreathState {
   const clawD = CONFIG.weapons.claw;
   const evo = EVOLUTIONS.claw;
   const baseDamage =
@@ -44,7 +45,7 @@ export function createBreathState(w: WeaponInstance): BreathState {
   return state;
 }
 
-export function breathDamage(w: WeaponInstance): number {
+export function breathDamage(_w: WeaponInstance): number {
   const clawD = CONFIG.weapons.claw;
   const evo = EVOLUTIONS.claw;
   return clawD.baseDamage * Math.pow(clawD.damageGrowth, 7) * (evo.damageMult ?? 1);
@@ -179,9 +180,16 @@ export function renderBreath(
   ctx.globalAlpha = alpha;
   ctx.lineCap = "round";
 
-  // Glow halo + beam body in one pass (single shadowBlur)
-  ctx.shadowColor = "#ff6a1a";
-  ctx.shadowBlur = 20;
+  // Glow halo — a wide translucent stroke instead of shadowBlur
+  // (shadowBlur는 매 프레임 블러를 재계산해 저사양 GPU에서 매우 비싸다)
+  ctx.strokeStyle = "rgba(255, 106, 26, 0.22)";
+  ctx.lineWidth = halfWidth * 2.4;
+  ctx.beginPath();
+  ctx.moveTo(px, py);
+  ctx.lineTo(ex, ey);
+  ctx.stroke();
+
+  // Beam body
   const beamGrad = ctx.createLinearGradient(px, py, ex, ey);
   beamGrad.addColorStop(0, "rgba(255, 240, 180, 0.95)");
   beamGrad.addColorStop(0.4, "rgba(255, 170, 40, 0.9)");
@@ -193,8 +201,7 @@ export function renderBreath(
   ctx.lineTo(ex, ey);
   ctx.stroke();
 
-  // Inner hot core (no shadow)
-  ctx.shadowBlur = 0;
+  // Inner hot core
   const coreGrad = ctx.createLinearGradient(px, py, ex, ey);
   coreGrad.addColorStop(0, "rgba(255, 255, 255, 1)");
   coreGrad.addColorStop(0.6, "rgba(255, 240, 180, 0.85)");
@@ -206,14 +213,16 @@ export function renderBreath(
   ctx.lineTo(ex, ey);
   ctx.stroke();
 
-  // Flickering core highlight
-  ctx.globalAlpha = alpha * (0.6 + Math.random() * 0.4);
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-  ctx.lineWidth = 2 + Math.random() * 2;
-  ctx.beginPath();
-  ctx.moveTo(px, py);
-  ctx.lineTo(ex, ey);
-  ctx.stroke();
+  // Flickering core highlight (decoration — skipped in low quality)
+  if (!isLowQuality()) {
+    ctx.globalAlpha = alpha * (0.6 + Math.random() * 0.4);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+    ctx.lineWidth = 2 + Math.random() * 2;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+  }
 
   // Muzzle flash + impact flare (reuse single radial approach)
   ctx.globalAlpha = alpha;

@@ -1,17 +1,18 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "survivors-proto",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "lint": "eslint .",
+    "check": "npm run typecheck && npm run lint && npm run build",
+    "build:exe": "node scripts/build-exe.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.57.4",
     "lucide-react": "^0.446.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
@@ -31,5 +32,10 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
     "vite": "^5.4.2"
+  },
+  "description": "Vampire Survivors-like browser roguelite prototype (React + TypeScript + Canvas 2D)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pokochy/survivors-proto.git"
   }
 }

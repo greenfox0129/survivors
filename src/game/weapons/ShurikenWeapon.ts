@@ -2,11 +2,11 @@
 //  weapons/ShurikenWeapon.ts — Multi-throw piercing blade
 // ============================================================
 
-import { CONFIG } from "../config";
-import type { EnemyState, WeaponInstance, ShurikenProjectile } from "../types";
-import { findNearestEnemy, damageEnemy } from "../EnemyManager";
-import type { WeaponMods } from "../WeaponManager";
-import { EVOLUTIONS } from "./evolutions";
+import { CONFIG } from "@/game/data/config";
+import type { EnemyState, WeaponInstance, ShurikenProjectile } from "@/game/core/types";
+import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
+import type { WeaponMods } from "@/game/core/types";
+import { EVOLUTIONS } from "@/game/data/evolutions";
 
 let idCounter = 5800;
 export function resetShurikenIds() { idCounter = 5800; }

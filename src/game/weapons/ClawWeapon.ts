@@ -3,11 +3,11 @@
 //  Scratches all enemies within a radius in an arc animation.
 // ============================================================
 
-import { CONFIG } from "../config";
-import type { ClawState, EnemyState, WeaponInstance } from "../types";
-import { findNearestEnemy, damageEnemy } from "../EnemyManager";
-import type { WeaponMods } from "../WeaponManager";
-import { EVOLUTIONS } from "./evolutions";
+import { CONFIG } from "@/game/data/config";
+import type { ClawState, EnemyState, WeaponInstance } from "@/game/core/types";
+import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
+import type { WeaponMods } from "@/game/core/types";
+import { EVOLUTIONS } from "@/game/data/evolutions";
 
 // Claw image — loaded once, drawn statically at the attack direction on each slash.
 // Pre-rendered to an offscreen canvas with the inversion filter baked in so we
@@ -259,7 +259,7 @@ export function renderClaw(
   state: ClawState,
   px: number,
   py: number,
-  w: WeaponInstance
+  _w: WeaponInstance
 ): void {
   if (!state.slashActive) {
     // Show subtle range indicator when not slashing

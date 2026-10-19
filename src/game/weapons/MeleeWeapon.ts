@@ -2,11 +2,11 @@
 //  weapons/MeleeWeapon.ts — Orbiting blade around player
 // ============================================================
 
-import { CONFIG } from "../config";
-import type { EnemyState, MeleeBlade, WeaponInstance } from "../types";
-import { damageEnemy } from "../EnemyManager";
-import type { WeaponMods } from "../WeaponManager";
-import { EVOLUTIONS } from "./evolutions";
+import { CONFIG } from "@/game/data/config";
+import type { EnemyState, MeleeBlade, WeaponInstance } from "@/game/core/types";
+import { damageEnemy } from "@/game/entities/EnemyManager";
+import type { WeaponMods } from "@/game/core/types";
+import { EVOLUTIONS } from "@/game/data/evolutions";
 
 export function createMeleeBlades(w: WeaponInstance): MeleeBlade[] {
   const count = meleeBladeCount(w);

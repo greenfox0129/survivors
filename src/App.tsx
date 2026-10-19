@@ -1,12 +1,12 @@
 import { useState, useCallback } from "react";
-import { Lobby, type Screen } from "@/game/UI/Lobby";
-import { GameCanvas } from "@/game/UI/GameCanvas";
-import { GachaScreen } from "@/game/UI/GachaScreen";
-import { CodexScreen } from "@/game/UI/CodexScreen";
-import { AchievementsScreen } from "@/game/UI/AchievementsScreen";
-import { CharacterScreen } from "@/game/UI/CharacterScreen";
-import { TraitsScreen } from "@/game/UI/TraitsScreen";
-import { loadSave, saveSave, type SaveData } from "@/game/storage";
+import { Lobby, type Screen } from "@/ui/screens/Lobby";
+import { GameCanvas } from "@/ui/screens/GameCanvas";
+import { GachaScreen } from "@/ui/screens/GachaScreen";
+import { CodexScreen } from "@/ui/screens/CodexScreen";
+import { AchievementsScreen } from "@/ui/screens/AchievementsScreen";
+import { CharacterScreen } from "@/ui/screens/CharacterScreen";
+import { TraitsScreen } from "@/ui/screens/TraitsScreen";
+import { loadSave, saveSave, type SaveData } from "@/game/core/storage";
 
 function App() {
   const [screen, setScreen] = useState<Screen>("lobby");

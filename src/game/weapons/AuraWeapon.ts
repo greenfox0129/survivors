@@ -2,11 +2,12 @@
 //  weapons/AuraWeapon.ts — Continuous damage field around player
 // ============================================================
 
-import { CONFIG } from "../config";
-import type { AuraState, EnemyState, WeaponInstance } from "../types";
-import { damageEnemy } from "../EnemyManager";
-import type { WeaponMods } from "../WeaponManager";
-import { EVOLUTIONS } from "./evolutions";
+import { CONFIG } from "@/game/data/config";
+import type { AuraState, EnemyState, WeaponInstance } from "@/game/core/types";
+import { damageEnemy } from "@/game/entities/EnemyManager";
+import type { WeaponMods } from "@/game/core/types";
+import { EVOLUTIONS } from "@/game/data/evolutions";
+import { getRadialSprite, drawCentered } from "@/game/render/sprites";
 
 export function createAuraState(w: WeaponInstance): AuraState {
   const d = CONFIG.weapons.aura;
@@ -99,7 +100,6 @@ export function updateAura(
   }
   aura.tickTimer = 0;
 
-  const auraR2 = aura.radius * aura.radius;
   for (const e of enemies) {
     if (!e.alive) continue;
     const dx = e.x - px;
@@ -165,16 +165,14 @@ export function renderAura(
   const color = CONFIG.weapons.aura.color;
   const pulse = Math.sin(Date.now() / 300) * 0.08 + 0.92;
 
-  // Outer glow — gradient must be recreated each frame because the player
-  // moves and the gradient coordinates are position-dependent.
-  const grad = ctx.createRadialGradient(px, py, aura.radius * 0.3, px, py, aura.radius);
-  grad.addColorStop(0, color + "00");
-  grad.addColorStop(0.7, color + "11");
-  grad.addColorStop(1, color + "33");
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.arc(px, py, aura.radius * pulse, 0, Math.PI * 2);
-  ctx.fill();
+  // Outer glow — pre-rendered once per (color, radius) and reused every frame.
+  // (매 프레임 radial gradient를 새로 만들지 않는다 — render/sprites.ts)
+  const glow = getRadialSprite(
+    aura.radius,
+    [[0, color + "00"], [0.7, color + "11"], [1, color + "33"]],
+    0.3,
+  );
+  drawCentered(ctx, glow, px, py, aura.radius * pulse);
 
   // Ring
   ctx.strokeStyle = color + "55";
