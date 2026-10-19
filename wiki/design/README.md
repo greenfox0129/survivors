@@ -67,7 +67,10 @@
 | 특성 | `trait-*` (강화된 특성은 초록) |
 | 도감 | 적 `enemy-*` + 실제 도형 배지 / 늑대 스프라이트(픽셀 렌더), 무기·진화·장신구 아이콘 |
 | 업적 | 진화 무기 아이콘(미달성은 회색 + 자물쇠), `ui-star` 보상 |
-| 캔버스 | 보물 상자 `ui-treasure`, 엘리트 왕관 `ui-crown`, 플레이어 원 안 `char-*` 엠블럼, 처치 시 Kenney `star` 이펙트(저사양 끔) |
+| 캔버스 — 표식 | 보물 상자 `ui-treasure`, 엘리트 왕관 `ui-crown`, 플레이어 원 안 `char-*` 엠블럼, 적 도형 안 `enemy-*` 엠블럼(저사양 끔) |
+| 캔버스 — 무기 | 회전검 `proj-blade` 칼날, 비도 `proj-dagger`(회귀 시 금색 `weapon-shuriken-evo`), 폭발탄 `weapon-bomb`/운석 `weapon-bomb-evo`, 트랩 `weapon-trap`/토템 `weapon-trap-evo` |
+| 캔버스 — 이펙트 (Kenney, 저사양 끔) | 처치 `star`, 레벨업 `light_02`, 라이플 총구 `muzzle_02`, 폭발 `fire_01`, 잔불 `flame_01` |
+| 캔버스 — 월드 장식 (저사양 끔) | `decor-*` 10종(풀·돌·뼈·해골·버섯·비석·고목·거미줄·꽃·바위)을 280px 칸마다 해시로 배치, 배경보다 살짝 밝은 실루엣 |
 
 ## 6. 스크린샷
 

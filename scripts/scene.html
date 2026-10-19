@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>Visual smoke scene</title>
+<!--
+  Visual smoke test: fast-forwards a real GameEngine (several weapons, an elite, a treasure)
+  and renders single frames so sprites/effects can be checked without playing.
+  Open: npm run dev → http://localhost:5173/scripts/scene.html
+  Headless capture: msedge --headless=new --screenshot=out.png --window-size=1000,780
+                    --virtual-time-budget=6000 http://localhost:5173/scripts/scene.html
+-->
+<style>
+  body { margin: 0; background: #020617; color: #94a3b8; font: 12px ui-monospace, monospace; }
+  canvas { display: block; margin: 8px auto 4px; image-rendering: pixelated; border: 1px solid #1e293b; }
+  p { text-align: center; margin: 0; }
+</style>
+</head>
+<body>
+<canvas id="c" width="960" height="720"></canvas>
+<p id="status">loading…</p>
+<script type="module" src="./scene.ts"></script>
+</body>
+</html>

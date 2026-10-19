@@ -7,6 +7,7 @@ import type { EnemyState, TrapEntity, WeaponInstance } from "@/game/core/types";
 import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
 import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
+import { getIconSprite, drawSpriteCentered } from "@/game/render/iconSprites";
 
 let idCounter = 5400;
 export function resetTrapIds() { idCounter = 5400; }
@@ -202,7 +203,14 @@ export function renderTraps(ctx: CanvasRenderingContext2D, traps: TrapEntity[]):
     ctx.arc(t.x, t.y, t.radius * 0.7, 0, Math.PI * 2);
     ctx.fill();
 
-    // Core
+    // Trap icon (bear trap; soul totem once permanent = evolved)
+    const trapSprite = getIconSprite(t.lifetime > 999 ? "weapon-trap-evo" : "weapon-trap", color, t.radius * 1.5);
+    if (trapSprite) {
+      drawSpriteCentered(ctx, trapSprite, t.x, t.y);
+      continue;
+    }
+
+    // Fallback while the sprite loads: core + spikes
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(t.x, t.y, 4, 0, Math.PI * 2);

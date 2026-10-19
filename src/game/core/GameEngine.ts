@@ -53,9 +53,10 @@ import {
   type AccessoryMods,
 } from "@/game/systems/AccessoryManager";
 import { drawBackground } from "@/game/render/background";
+import { renderDecor } from "@/game/render/decor";
 import { reportFrameTime } from "@/game/render/quality";
 import { preloadGameSprites } from "@/game/render/iconSprites";
-import { resetEffects, spawnKillPop, updateEffects, renderEffects } from "@/game/render/effects";
+import { resetEffects, spawnKillPop, spawnLevelUpBurst, updateEffects, renderEffects } from "@/game/render/effects";
 import { UI_ICONS, characterIcon } from "@/assets/icons/map";
 
 function getStartWeapon(save: SaveData | null): WeaponType {
@@ -118,7 +119,11 @@ export class GameEngine {
       emblem: this.emblem(),
     });
     this.camera = { x: this.player.x, y: this.player.y };
-    preloadGameSprites([UI_ICONS.treasure, UI_ICONS.crown, this.emblem()]);
+    preloadGameSprites([
+      UI_ICONS.treasure, UI_ICONS.crown, this.emblem(), "proj-dagger", "proj-blade",
+      "weapon-bomb", "weapon-bomb-evo", "weapon-trap", "weapon-trap-evo", "weapon-shuriken-evo",
+      ...CONFIG.enemyTypes.map((t) => `enemy-${t.id}`),
+    ]);
     this.weaponMgr = new WeaponManager(getStartWeapon(this.save));
     this.accessoryMgr = new AccessoryManager();
     this.baseMaxHp = this.player.maxHp;
@@ -446,6 +451,7 @@ export class GameEngine {
     this.pendingLevelUps--;
     this.paused = true;
     playLevelUpSound();
+    spawnLevelUpBurst(this.player.x, this.player.y);
     if (this.passive === "extraReroll") this.rerollsLeft += 1 + (this.breakthrough >= 3 ? 2 : 0);
     this.emitStats(); // so the modal shows the up-to-date reroll count
     this.callbacks.onLevelUp(options);
@@ -547,6 +553,7 @@ export class GameEngine {
     // World space
     ctx.save();
     ctx.translate(-camX, -camY);
+    renderDecor(ctx, camX, camY);
     renderGems(ctx, this.gems);
     renderEnemies(ctx, this.enemies);
     renderEffects(ctx);

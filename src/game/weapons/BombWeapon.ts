@@ -9,6 +9,7 @@ import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
 import { getRadialSprite, drawCentered } from "@/game/render/sprites";
 import { isLowQuality } from "@/game/render/quality";
+import { getIconSprite, getFxSprite, drawSpriteCentered } from "@/game/render/iconSprites";
 
 let idCounter = 5200;
 export function resetBombIds() { idCounter = 5200; }
@@ -202,14 +203,19 @@ export function renderBombs(ctx: CanvasRenderingContext2D, bombs: BombEntity[]):
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Falling bomb
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, 8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#fbbf24";
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      // Falling bomb (icon; meteor once evolved — the shadow above shows the impact area)
+      const bombSprite = getIconSprite(b.explosionRadius > 150 ? "weapon-bomb-evo" : "weapon-bomb", color, 22);
+      if (bombSprite) {
+        drawSpriteCentered(ctx, bombSprite, b.x, b.y);
+      } else {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#fbbf24";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
     }
 
     if (b.phase === "exploding") {
@@ -222,6 +228,17 @@ export function renderBombs(ctx: CanvasRenderingContext2D, bombs: BombEntity[]):
       ctx.strokeStyle = "#fbbf24";
       ctx.lineWidth = 2;
       ctx.stroke();
+
+      // Fire burst texture over the blast (decoration)
+      if (!low) {
+        const fire = getFxSprite("fire_01", "#fdba74", 128);
+        if (fire) {
+          const s = b.explosionRadius * (1.4 + prog * 0.6);
+          ctx.globalAlpha = 1 - prog;
+          ctx.drawImage(fire, b.x - s / 2, b.y - s / 2, s, s);
+          ctx.globalAlpha = 1;
+        }
+      }
     }
 
     if (b.phase === "burning") {
@@ -235,8 +252,15 @@ export function renderBombs(ctx: CanvasRenderingContext2D, bombs: BombEntity[]):
       drawCentered(ctx, field, b.x, b.y, r * pulse);
       ctx.globalAlpha = 1;
 
-      // Flickering embers (decoration — skipped in low quality)
+      // Flickering embers + small flame texture (decoration — skipped in low quality)
       if (low) continue;
+      const flame = getFxSprite("flame_01", "#fb923c", 64);
+      if (flame) {
+        const fs = r * (0.9 + Math.sin(now / 90 + b.id) * 0.1);
+        ctx.globalAlpha = Math.max(0, prog) * 0.55;
+        ctx.drawImage(flame, b.x - fs / 2, b.y - fs * 0.6, fs, fs);
+        ctx.globalAlpha = 1;
+      }
       ctx.fillStyle = "#fbbf24" + Math.round(prog * 150).toString(16).padStart(2, "0");
       for (let i = 0; i < 3; i++) {
         const a = (now / 500 + i * 2) % (Math.PI * 2);

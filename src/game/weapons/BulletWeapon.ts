@@ -8,6 +8,7 @@ import type { EnemyState, Projectile, WeaponInstance } from "@/game/core/types";
 import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
 import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
+import { spawnMuzzleFlash } from "@/game/render/effects";
 
 let idCounter = 5000;
 export function resetBulletIds() { idCounter = 5000; }
@@ -83,6 +84,7 @@ function fireOneBullet(
   const angle = Math.atan2(dy, dx);
   const speed = bulletSpeed(w);
   const radius = bulletProjectileRadius(w);
+  spawnMuzzleFlash(px, py, angle, w.evolved ? "#a5f3fc" : "#fde68a");
   projectiles.push({
     id: ++idCounter,
     x: px, y: py,

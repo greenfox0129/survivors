@@ -2,10 +2,10 @@
 
 | Folder | What | License |
 |---|---|---|
-| `icons/` | 62 single-color SVG icons (`fill="currentColor"`, no background, 512×512) | game-icons.net, CC BY 3.0 — authors per icon in `icons/credits.json` |
+| `icons/` | 74 single-color SVG icons (`fill="currentColor"`, no background, 512×512) | game-icons.net, CC BY 3.0 — authors per icon in `icons/credits.json` |
 | `icons/index.ts` | `iconUrl(name)` — file name → bundled URL (via `import.meta.glob`) | — |
 | `icons/map.ts` | Semantic mapping: `weaponIcon`, `accessoryIconName`, `enemyIcon`, `characterIcon`, `traitIcon`, `UI_ICONS` | — |
-| `fx/star.png` | Kill-pop texture (white alpha, tinted at runtime) | Kenney Particle Pack, CC0 |
+| `fx/*.png` | FX textures (white alpha, tinted at runtime): star (kill), light_02 (level-up), muzzle_02 (rifle), fire_01 (explosion), flame_01 (burn field), scorch_02/spark_04 (spare) | Kenney Particle Pack, CC0 |
 
 Usage
 - UI: `<GameIcon name={weaponIcon("claw", true)} color="#84cc16" size={24} />`

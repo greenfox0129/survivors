@@ -7,6 +7,7 @@ import type { EnemyState, WeaponInstance, ShurikenProjectile } from "@/game/core
 import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
 import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
+import { getIconSprite, drawSpriteRotated } from "@/game/render/iconSprites";
 
 let idCounter = 5800;
 export function resetShurikenIds() { idCounter = 5800; }
@@ -178,6 +179,16 @@ export function cullShurikens(projectiles: ShurikenProjectile[]): ShurikenProjec
 export function renderShurikens(ctx: CanvasRenderingContext2D, projectiles: ShurikenProjectile[]): void {
   for (const p of projectiles) {
     if (!p.alive) continue;
+    // Sprite: spinning flying dagger (evolved/returning: gold shuriken star)
+    const size = p.radius * 3;
+    const sprite = p.returning
+      ? getIconSprite("weapon-shuriken-evo", "#fbbf24", size)
+      : getIconSprite("proj-dagger", p.color, size);
+    if (sprite) {
+      drawSpriteRotated(ctx, sprite, p.x, p.y, p.rotation, size + 4);
+      continue;
+    }
+    // Fallback while the sprite loads: original diamond
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.rotate(p.rotation);

@@ -454,6 +454,12 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, enemies: EnemyState
     ctx.lineWidth = e.isElite ? 2.5 : 1.5;
     ctx.stroke();
 
+    // Emblem inside the shape (decoration — the shape/color already identify the enemy)
+    if (!low) {
+      const emblem = getIconSprite(`enemy-${e.enemyType}`, e.borderColor, Math.round(e.radius * 1.25), null);
+      if (emblem) drawSpriteCentered(ctx, emblem, e.x, e.y + (e.shape === "triangle" ? e.radius * 0.15 : 0));
+    }
+
     if (e.hp < e.maxHp) {
       const barW = e.radius * 2;
       const barH = 3;

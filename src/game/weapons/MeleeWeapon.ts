@@ -7,6 +7,7 @@ import type { EnemyState, MeleeBlade, WeaponInstance } from "@/game/core/types";
 import { damageEnemy } from "@/game/entities/EnemyManager";
 import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
+import { getIconSprite, drawSpriteRotated } from "@/game/render/iconSprites";
 
 export function createMeleeBlades(w: WeaponInstance): MeleeBlade[] {
   const count = meleeBladeCount(w);
@@ -146,11 +147,18 @@ export function renderMelee(
   ctx.arc(px, py, orbitR, 0, Math.PI * 2);
   ctx.stroke();
 
+  const bladeSprite = getIconSprite("proj-blade", color, size * 2.4);
   for (const blade of blades) {
     const bx = px + Math.cos(blade.angle) * orbitR;
     const by = py + Math.sin(blade.angle) * orbitR;
 
-    // Blade shape — diamond
+    // Blade sprite: the icon points to the upper-right (-45°) → +45° aligns the tip outward
+    if (bladeSprite) {
+      drawSpriteRotated(ctx, bladeSprite, bx, by, blade.angle + Math.PI / 4, size * 2.4);
+      continue;
+    }
+
+    // Fallback while the sprite loads: diamond
     ctx.save();
     ctx.translate(bx, by);
     ctx.rotate(blade.angle);

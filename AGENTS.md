@@ -82,7 +82,7 @@ src/
 ├─ gameInfo.ts                제목·버전 (단일 출처)
 ├─ launcherBridge.ts          원클릭 exe 연결 (ping/bye/세이브 미러)
 ├─ assets/
-│  ├─ icons/                  SVG 62종 + index.ts(이름→URL) + map.ts(의미 매핑) + credits.json
+│  ├─ icons/                  SVG 74종 + index.ts(이름→URL) + map.ts(의미 매핑) + credits.json
 │  └─ fx/                     캔버스 이펙트 텍스처 (Kenney CC0)
 ├─ game/                      ── React 없이 동작하는 순수 게임 로직 ──
 │  ├─ core/      GameEngine(루프·통합·레벨업 큐·일시정지) · types · storage · settings · audio

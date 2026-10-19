@@ -63,6 +63,46 @@
     "author": "DarkZaitzev",
     "source": "https://game-icons.net/1x1/darkzaitzev/hooded-figure.html"
   },
+  "decor-bones": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/crossed-bones.html"
+  },
+  "decor-cobweb": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/cobweb.html"
+  },
+  "decor-daisy": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/daisy.html"
+  },
+  "decor-deadwood": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/dead-wood.html"
+  },
+  "decor-grass": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/grass.html"
+  },
+  "decor-mushroom": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/mushroom.html"
+  },
+  "decor-rock": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/rock.html"
+  },
+  "decor-skull": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/skull-crossed-bones.html"
+  },
+  "decor-stones": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/stone-pile.html"
+  },
+  "decor-tombstone": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/tombstone.html"
+  },
   "enemy-bat": {
     "author": "Delapouite",
     "source": "https://game-icons.net/1x1/delapouite/bat.html"
@@ -118,6 +158,14 @@
   "menu-traits": {
     "author": "Lorc",
     "source": "https://game-icons.net/1x1/lorc/star-swirl.html"
+  },
+  "proj-blade": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/broadsword.html"
+  },
+  "proj-dagger": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/plain-dagger.html"
   },
   "stat-gold": {
     "author": "Delapouite",
