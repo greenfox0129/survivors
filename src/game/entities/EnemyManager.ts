@@ -6,6 +6,8 @@ import { CONFIG } from "@/game/data/config";
 import { playHitSound } from "@/game/core/audio";
 import type { EnemyState, PlayerState } from "@/game/core/types";
 import { isLowQuality } from "@/game/render/quality";
+import { getIconSprite, drawSpriteCentered } from "@/game/render/iconSprites";
+import { UI_ICONS } from "@/assets/icons/map";
 
 type EnemyTypeConfig = {
   id: string;
@@ -462,6 +464,18 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, enemies: EnemyState
       ctx.fillStyle = e.isElite ? "#fbbf24" : "#f87171";
       ctx.fillRect(bx, by, barW * (e.hp / e.maxHp), barH);
     }
+  }
+}
+
+/** Crown above elites so they are recognizable even inside a crowd (gameplay info: drawn on every quality). */
+export function renderEliteMarkers(ctx: CanvasRenderingContext2D, enemies: EnemyState[]): void {
+  let crown: HTMLCanvasElement | null | undefined;
+  for (const e of enemies) {
+    if (!e.isElite || !e.alive || e.dying) continue;
+    if (crown === undefined) crown = getIconSprite(UI_ICONS.crown, "#fbbf24", 18);
+    if (!crown) return;
+    const top = e.shape === "sprite" ? e.radius * 1.75 : e.radius;
+    drawSpriteCentered(ctx, crown, e.x, e.y - top - 16);
   }
 }
 

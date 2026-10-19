@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { ArrowLeft, Star, Check, ChevronUp, Lock, RotateCcw, X, Play, Sword, Sparkles, Gem, Zap } from "lucide-react";
+import { ArrowLeft, Star, Check, ChevronUp, Lock, RotateCcw, X, Play, Sparkles } from "lucide-react";
+import { GameIcon } from "@/ui/components/GameIcon";
+import { UI_ICONS, characterIcon, weaponIcon } from "@/ui/icons";
+import { readableAccent, weaponColor } from "@/ui/theme";
 import {
   CHARACTERS,
   CHARACTER_UPGRADE_COST,
@@ -98,12 +101,12 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
           </button>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-slate-800/60 rounded-lg px-4 py-2 border border-slate-700">
-              <Star className="w-4 h-4 text-amber-400" />
+              <GameIcon name={UI_ICONS.gold} size={16} className="text-amber-400" />
               <span className="text-amber-300 font-mono font-bold tabular-nums">{save.gold}</span>
               <span className="text-slate-500 text-xs">G</span>
             </div>
             <div className="flex items-center gap-2 bg-slate-800/60 rounded-lg px-4 py-2 border border-slate-700">
-              <Star className="w-4 h-4 text-cyan-400 fill-cyan-400" />
+              <GameIcon name={UI_ICONS.star} size={16} className="text-cyan-400" />
               <span className="text-cyan-300 font-mono font-bold tabular-nums">{save.stars}</span>
               <span className="text-slate-500 text-xs">별</span>
             </div>
@@ -142,12 +145,13 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
                 )}
                 <div
                   className="w-12 h-12 rounded-full mb-2 flex items-center justify-center"
-                  style={{ backgroundColor: char.color + "33", border: `2px solid ${char.color}` }}
+                  style={{
+                    backgroundColor: char.color + "33",
+                    border: `2px solid ${readableAccent(char.color)}`,
+                    opacity: isOwned ? 1 : 0.55,
+                  }}
                 >
-                  <div
-                    className="w-6 h-6 rounded-full"
-                    style={{ backgroundColor: char.color }}
-                  />
+                  <GameIcon name={characterIcon(char.id)} size={28} color={readableAccent(char.color)} />
                 </div>
                 <span className="text-slate-100 text-xs font-semibold">{char.name}</span>
                 {isOwned && own && (
@@ -179,9 +183,9 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
             <div className="flex items-start gap-5 mb-5">
               <div
                 className="flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center"
-                style={{ backgroundColor: def.color + "22", border: `2px solid ${def.color}` }}
+                style={{ backgroundColor: def.color + "22", border: `2px solid ${readableAccent(def.color)}` }}
               >
-                <div className="w-8 h-8 rounded-full" style={{ backgroundColor: def.color }} />
+                <GameIcon name={characterIcon(def.id)} size={40} color={readableAccent(def.color)} />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -194,9 +198,9 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
                 </div>
                 <p className="text-slate-400 text-sm mt-1">{def.desc}</p>
                 <div className="flex items-center gap-1.5 mt-2">
-                  <Sword className="w-3.5 h-3.5 text-slate-500" />
+                  <GameIcon name={weaponIcon(def.startWeapon)} size={16} color={weaponColor(def.startWeapon)} />
                   <span className="text-slate-500 text-xs">시작 무기:</span>
-                  <span className="text-cyan-400 text-xs font-semibold">{weaponName(def.startWeapon)}</span>
+                  <span className="text-xs font-semibold" style={{ color: weaponColor(def.startWeapon) }}>{weaponName(def.startWeapon)}</span>
                 </div>
                 <div className="flex items-center gap-1.5 mt-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -354,7 +358,7 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
             {owned && (
               <div className="mt-5 rounded-xl border-2 border-violet-800/40 bg-violet-950/20 p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <Gem className="w-4 h-4 text-violet-400" />
+                  <GameIcon name={UI_ICONS.memory} size={16} className="text-violet-400" />
                   <h3 className="text-violet-300 text-sm font-bold">돌파 시스템</h3>
                   <span className="text-slate-500 text-xs ml-auto">
                     기억 <span className="text-violet-300 font-mono font-bold">{owned.memories}</span>개 보유
@@ -400,10 +404,10 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
                                  hover:border-violet-500 hover:bg-violet-800/40 active:scale-[0.98]
                                  disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      <Zap className="w-4 h-4 text-violet-400" />
+                      <GameIcon name={UI_ICONS.breakthrough} size={16} className="text-violet-300" />
                       {owned.breakthrough + 1}돌파 진행
                       <span className="flex items-center gap-1 text-violet-300 text-xs font-mono">
-                        <Gem className="w-3 h-3" />
+                        <GameIcon name={UI_ICONS.memory} size={12} />
                         {breakthroughMemoryCost(owned.breakthrough)}
                       </span>
                     </button>

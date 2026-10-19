@@ -9,25 +9,32 @@ import { findNearestEnemy, damageEnemy } from "@/game/entities/EnemyManager";
 import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
 
-// Claw image — loaded once, drawn statically at the attack direction on each slash.
-// Pre-rendered to an offscreen canvas with the inversion filter baked in so we
-// don't pay the per-pixel filter cost every frame.
-const clawImage = new Image();
-clawImage.src = "/assets/weapon/claw.PNG";
+// Claw image — loaded lazily on first render (so this module can also be imported
+// outside a browser, e.g. by scripts/gen-spec.mjs), drawn statically at the attack
+// direction on each slash. Pre-rendered to an offscreen canvas with the inversion
+// filter baked in so we don't pay the per-pixel filter cost every frame.
+let clawImage: HTMLImageElement | null = null;
 let clawSprite: HTMLCanvasElement | null = null;
 
-clawImage.onload = () => {
-  const cv = document.createElement("canvas");
-  cv.width = clawImage.naturalWidth;
-  cv.height = clawImage.naturalHeight;
-  const cctx = cv.getContext("2d");
-  if (cctx) {
-    cctx.filter = "invert(1) grayscale(1) contrast(1.1)";
-    cctx.drawImage(clawImage, 0, 0);
-    cctx.filter = "none";
-  }
-  clawSprite = cv;
-};
+function getClawImage(): HTMLImageElement {
+  if (clawImage) return clawImage;
+  const img = new Image();
+  img.onload = () => {
+    const cv = document.createElement("canvas");
+    cv.width = img.naturalWidth;
+    cv.height = img.naturalHeight;
+    const cctx = cv.getContext("2d");
+    if (cctx) {
+      cctx.filter = "invert(1) grayscale(1) contrast(1.1)";
+      cctx.drawImage(img, 0, 0);
+      cctx.filter = "none";
+    }
+    clawSprite = cv;
+  };
+  img.src = "/assets/weapon/claw.PNG";
+  clawImage = img;
+  return img;
+}
 
 // ---- Bleed DoT state stored on enemies (evolved claw only) ----
 const enemyBleeds = new Map<
@@ -277,10 +284,11 @@ export function renderClaw(
 
   // Draw the claw PNG statically at the attack direction — one image per slash,
   // centered along the slash direction. Inverted (black/white) via filter.
-  const sprite: HTMLCanvasElement | HTMLImageElement = clawSprite ?? clawImage;
-  if (clawSprite || (clawImage.complete && clawImage.naturalWidth > 0)) {
-    const naturalW = clawSprite?.width ?? clawImage.naturalWidth;
-    const naturalH = clawSprite?.height ?? clawImage.naturalHeight;
+  const img = getClawImage();
+  const sprite: HTMLCanvasElement | HTMLImageElement = clawSprite ?? img;
+  if (clawSprite || (img.complete && img.naturalWidth > 0)) {
+    const naturalW = clawSprite?.width ?? img.naturalWidth;
+    const naturalH = clawSprite?.height ?? img.naturalHeight;
     const scale = (state.radius * 1.6) / naturalW;
     const drawW = naturalW * scale;
     const drawH = naturalH * scale;

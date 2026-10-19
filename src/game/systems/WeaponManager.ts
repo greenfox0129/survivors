@@ -80,12 +80,17 @@ export class WeaponManager {
     );
   }
 
-  /** Evolve a weapon: resets to Lv1 evolved state with enhanced stats. */
+  /**
+   * Evolve a weapon into its final form.
+   * The level stays at max: evolved stats are "max-level stats × evolution multipliers",
+   * which is what the codex shows (original design, see wiki/overview/original-intent-audit.md).
+   * Evolved weapons never level up again (levelUpWeapon/getUpgradeableWeapons skip them).
+   */
   evolveWeapon(type: WeaponType): void {
     const w = this.weapons.find((w) => w.type === type);
     if (!w || w.evolved) return;
     w.evolved = true;
-    w.level = 1;
+    w.level = weaponMaxLevel(type);
     w.cooldownTimer = 0;
     w.burstShotsLeft = 0;
     w.burstTimer = 0;

@@ -1,0 +1,250 @@
+{
+  "acc-hastePendant": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/stopwatch.html"
+  },
+  "acc-magnetCharm": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/magnet.html"
+  },
+  "acc-natureBlessing": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/sprout.html"
+  },
+  "acc-powerAmulet": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/gem-pendant.html"
+  },
+  "acc-shieldForge": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/checked-shield.html"
+  },
+  "acc-swiftBoots": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/running-shoe.html"
+  },
+  "acc-thornArmor": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/spiked-armor.html"
+  },
+  "acc-vitalRing": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/power-ring.html"
+  },
+  "acc-xpcrystal": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/crystal-growth.html"
+  },
+  "char-berserker": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/barbarian.html"
+  },
+  "char-euroan": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/bear-head.html"
+  },
+  "char-guardian": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/templar-shield.html"
+  },
+  "char-linya": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/cat.html"
+  },
+  "char-mage": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/pointy-hat.html"
+  },
+  "char-scout": {
+    "author": "DarkZaitzev",
+    "source": "https://game-icons.net/1x1/darkzaitzev/running-ninja.html"
+  },
+  "char-survivor": {
+    "author": "DarkZaitzev",
+    "source": "https://game-icons.net/1x1/darkzaitzev/hooded-figure.html"
+  },
+  "enemy-bat": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/bat.html"
+  },
+  "enemy-brute": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/ogre.html"
+  },
+  "enemy-elite": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/crowned-skull.html"
+  },
+  "enemy-ghost": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/ghost.html"
+  },
+  "enemy-skeleton": {
+    "author": "Skoll",
+    "source": "https://game-icons.net/1x1/skoll/skeleton.html"
+  },
+  "enemy-slime": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/slime.html"
+  },
+  "enemy-wolf": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/wolf-head.html"
+  },
+  "enemy-wraith": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/spectre.html"
+  },
+  "menu-achievements": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/trophy.html"
+  },
+  "menu-characters": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/hood.html"
+  },
+  "menu-codex": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/open-book.html"
+  },
+  "menu-gacha": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/present.html"
+  },
+  "menu-play": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/crossed-swords.html"
+  },
+  "menu-traits": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/star-swirl.html"
+  },
+  "stat-gold": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/two-coins.html"
+  },
+  "stat-kills": {
+    "author": "Sbed",
+    "source": "https://game-icons.net/1x1/sbed/death-skull.html"
+  },
+  "stat-score": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/stars-stack.html"
+  },
+  "stat-time": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/hourglass.html"
+  },
+  "trait-greed": {
+    "author": "Willdabeast",
+    "source": "https://game-icons.net/1x1/willdabeast/gold-bar.html"
+  },
+  "trait-power": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/swords-power.html"
+  },
+  "trait-rapidfire": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/lightning-helix.html"
+  },
+  "trait-swiftness": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/sprint.html"
+  },
+  "trait-vitality": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/heart-tower.html"
+  },
+  "ui-breakthrough": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/laurel-crown.html"
+  },
+  "ui-crown": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/crown.html"
+  },
+  "ui-memory": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/crystal-cluster.html"
+  },
+  "ui-reroll": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/perspective-dice-six-faces-random.html"
+  },
+  "ui-sound": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/speaker.html"
+  },
+  "ui-star": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/beveled-star.html"
+  },
+  "ui-treasure": {
+    "author": "Skoll",
+    "source": "https://game-icons.net/1x1/skoll/open-treasure-chest.html"
+  },
+  "ui-upgrade": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/upgrade.html"
+  },
+  "ui-xp-gem": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/gems.html"
+  },
+  "weapon-aura": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/fire-ring.html"
+  },
+  "weapon-aura-evo": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/aura.html"
+  },
+  "weapon-bomb": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/fire-bomb.html"
+  },
+  "weapon-bomb-evo": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/meteor-impact.html"
+  },
+  "weapon-bullet": {
+    "author": "Sbed",
+    "source": "https://game-icons.net/1x1/sbed/rifle.html"
+  },
+  "weapon-bullet-evo": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/plasma-bolt.html"
+  },
+  "weapon-claw": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/claw-slashes.html"
+  },
+  "weapon-claw-evo": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/dragon-breath.html"
+  },
+  "weapon-melee": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/spinning-sword.html"
+  },
+  "weapon-melee-evo": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/whirlwind.html"
+  },
+  "weapon-shuriken": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/thrown-daggers.html"
+  },
+  "weapon-shuriken-evo": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/shuriken.html"
+  },
+  "weapon-trap": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/wolf-trap.html"
+  },
+  "weapon-trap-evo": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/totem.html"
+  }
+}

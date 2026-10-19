@@ -1,5 +1,8 @@
-import { useState, useCallback } from "react";
-import { ArrowLeft, Gift, Star, Sparkles, Check, Lock, Gem } from "lucide-react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { ArrowLeft, Sparkles, Check, Lock } from "lucide-react";
+import { GameIcon } from "@/ui/components/GameIcon";
+import { UI_ICONS, characterIcon } from "@/ui/icons";
+import { readableAccent } from "@/ui/theme";
 import {
   CHARACTERS,
   GACHA_COST,
@@ -46,6 +49,14 @@ export function GachaScreen({ onBack, save, onUpdate }: GachaScreenProps) {
   const [mode, setMode] = useState<"single" | "multi">("single");
   const [results, setResults] = useState<PullResult[]>([]);
   const [rollFlash, setRollFlash] = useState<string>("#22d3ee");
+  const [rollFlashId, setRollFlashId] = useState<string | null>(null);
+  // Guards against a double click starting two rolls from the same save,
+  // and lets us cancel a roll if the screen is left mid-animation (no gold is spent then).
+  const rollingRef = useRef(false);
+  const intervalRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
+  }, []);
 
   const ownedIds = new Set(save.owned.map((o) => o.id));
   const unlockedSpecialIds = new Set(
@@ -62,18 +73,22 @@ export function GachaScreen({ onBack, save, onUpdate }: GachaScreenProps) {
 
   const runRoll = useCallback(
     (count: number, pullMode: "single" | "multi") => {
-      if (save.gold < GACHA_COST * count || pool.length === 0) return;
+      if (rollingRef.current || save.gold < GACHA_COST * count || pool.length === 0) return;
+      rollingRef.current = true;
       setState("rolling");
       setMode(pullMode);
 
       const duration = pullMode === "multi" ? 1500 : 1200;
       let elapsed = 0;
-      const interval = setInterval(() => {
+      intervalRef.current = window.setInterval(() => {
         elapsed += 80;
         const random = pool[Math.floor(Math.random() * pool.length)];
-        setRollFlash(random.color);
+        setRollFlash(readableAccent(random.color));
+        setRollFlashId(random.id);
         if (elapsed >= duration) {
-          clearInterval(interval);
+          if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
+          intervalRef.current = null;
+          rollingRef.current = false;
           let working = { ...save, gold: save.gold - GACHA_COST * count };
           const pulls: PullResult[] = [];
           for (let i = 0; i < count; i++) {
@@ -116,7 +131,7 @@ export function GachaScreen({ onBack, save, onUpdate }: GachaScreenProps) {
             <span className="text-sm">로비로</span>
           </button>
           <div className="flex items-center gap-2 bg-slate-800/60 rounded-lg px-4 py-2 border border-slate-700">
-            <Star className="w-4 h-4 text-amber-400" />
+            <GameIcon name={UI_ICONS.gold} size={16} className="text-amber-400" />
             <span className="text-amber-300 font-mono font-bold tabular-nums">{save.gold}</span>
             <span className="text-slate-500 text-xs">G</span>
           </div>
@@ -125,7 +140,7 @@ export function GachaScreen({ onBack, save, onUpdate }: GachaScreenProps) {
         {/* Title */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-950/40 border-2 border-amber-500/30 mb-4">
-            <Gift className="w-8 h-8 text-amber-400" />
+            <GameIcon name={UI_ICONS.gacha} size={36} className="text-amber-400" />
           </div>
           <h1 className="text-3xl font-bold text-slate-100">캐릭터 뽑기</h1>
           <p className="text-slate-500 text-sm mt-2">
@@ -148,10 +163,10 @@ export function GachaScreen({ onBack, save, onUpdate }: GachaScreenProps) {
                     : "none",
                 }}
               >
-                {state === "rolling" ? (
-                  <Sparkles className="w-12 h-12 animate-pulse" style={{ color: rollFlash }} />
+                {state === "rolling" && rollFlashId ? (
+                  <GameIcon name={characterIcon(rollFlashId)} size={64} color={rollFlash} />
                 ) : (
-                  <Gift className="w-12 h-12 text-slate-500" />
+                  <GameIcon name={UI_ICONS.gacha} size={56} className="text-slate-500" />
                 )}
               </div>
 
@@ -166,10 +181,10 @@ export function GachaScreen({ onBack, save, onUpdate }: GachaScreenProps) {
                       : "bg-slate-800 text-slate-500 cursor-not-allowed"
                     }`}
                 >
-                  <Gift className="w-5 h-5" />
+                  <GameIcon name={UI_ICONS.gacha} size={20} />
                   1회 뽑기
                   <span className="flex items-center gap-1 text-sm">
-                    <Star className="w-4 h-4" />
+                    <GameIcon name={UI_ICONS.gold} size={16} />
                     {GACHA_COST}
                   </span>
                 </button>
@@ -185,7 +200,7 @@ export function GachaScreen({ onBack, save, onUpdate }: GachaScreenProps) {
                   <Sparkles className="w-5 h-5" />
                   10연 뽑기
                   <span className="flex items-center gap-1 text-sm">
-                    <Star className="w-4 h-4" />
+                    <GameIcon name={UI_ICONS.gold} size={16} />
                     {MULTI_PULL_COST}
                   </span>
                 </button>
@@ -239,7 +254,7 @@ export function GachaScreen({ onBack, save, onUpdate }: GachaScreenProps) {
                 )}
                 {totalMemories > 0 && (
                   <span className="flex items-center gap-1 rounded-full bg-violet-950/60 border border-violet-700/50 px-2.5 py-0.5 text-xs font-bold text-violet-300">
-                    <Gem className="w-3 h-3" /> 기억 +{totalMemories}
+                    <GameIcon name={UI_ICONS.memory} size={12} /> 기억 +{totalMemories}
                   </span>
                 )}
               </div>
@@ -262,7 +277,7 @@ export function GachaScreen({ onBack, save, onUpdate }: GachaScreenProps) {
                   <Sparkles className="w-4 h-4" />
                   10연 다시
                   <span className="flex items-center gap-0.5 text-amber-300 text-xs font-mono">
-                    <Star className="w-3 h-3" />
+                    <GameIcon name={UI_ICONS.gold} size={12} />
                     {MULTI_PULL_COST}
                   </span>
                 </button>
@@ -304,12 +319,14 @@ export function GachaScreen({ onBack, save, onUpdate }: GachaScreenProps) {
                     className="w-10 h-10 rounded-full mb-1.5 flex items-center justify-center"
                     style={{
                       backgroundColor: char.color + (isOwned ? "33" : "15"),
-                      border: `2px solid ${char.color}${isOwned ? "" : "55"}`,
+                      border: `2px solid ${readableAccent(char.color)}${isOwned ? "" : "55"}`,
                     }}
                   >
-                    <div
-                      className="w-5 h-5 rounded-full"
-                      style={{ backgroundColor: char.color, opacity: isOwned ? 1 : 0.4 }}
+                    <GameIcon
+                      name={characterIcon(char.id)}
+                      size={24}
+                      color={readableAccent(char.color)}
+                      className={isOwned ? "" : "opacity-40"}
                     />
                   </div>
                   <span className={`text-xs font-semibold ${isOwned ? "text-slate-200" : "text-slate-500"}`}>
@@ -365,20 +382,20 @@ function SingleResult({
         className="w-32 h-32 rounded-full flex items-center justify-center mb-4"
         style={{
           backgroundColor: char.color + "22",
-          border: `2px solid ${char.color}`,
-          boxShadow: `0 0 40px ${char.color}44`,
+          border: `2px solid ${readableAccent(char.color)}`,
+          boxShadow: `0 0 40px ${readableAccent(char.color)}44`,
         }}
       >
-        <div className="w-16 h-16 rounded-full" style={{ backgroundColor: char.color }} />
+        <GameIcon name={characterIcon(char.id)} size={72} color={readableAccent(char.color)} />
       </div>
 
       <div className="flex items-center gap-2 mb-2">
-        <h2 className="text-2xl font-bold" style={{ color: char.color }}>
+        <h2 className="text-2xl font-bold" style={{ color: readableAccent(char.color) }}>
           {char.name}
         </h2>
         {isDupe ? (
           <span className="flex items-center gap-1 rounded-full bg-violet-950/60 border border-violet-700/50 px-2.5 py-0.5 text-xs font-bold text-violet-300">
-            <Gem className="w-3 h-3" /> 기억 +{memoriesGained}
+            <GameIcon name={UI_ICONS.memory} size={12} /> 기억 +{memoriesGained}
           </span>
         ) : (
           <span className="flex items-center gap-1 rounded-full bg-emerald-950/60 border border-emerald-700/50 px-2.5 py-0.5 text-xs font-bold text-emerald-300">
@@ -414,10 +431,10 @@ function SingleResult({
                      hover:border-slate-500 active:scale-95
                      disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <Gift className="w-4 h-4" />
+          <GameIcon name={UI_ICONS.gacha} size={16} />
           {rollAgainLabel}
           <span className="flex items-center gap-0.5 text-amber-300 text-xs font-mono">
-            <Star className="w-3 h-3" />
+            <GameIcon name={UI_ICONS.gold} size={12} />
             {rollAgainCost}
           </span>
         </button>
@@ -440,26 +457,26 @@ function ResultCard({ result }: { result: PullResult }) {
     <div
       className="relative flex flex-col items-center rounded-lg border-2 px-1.5 py-2.5 transition-all"
       style={{
-        borderColor: isDupe ? "#7c3aed66" : `${char.color}`,
+        borderColor: isDupe ? "#7c3aed66" : readableAccent(char.color),
         backgroundColor: isDupe ? "#2a1740aa" : `${char.color}1a`,
-        boxShadow: isDupe ? "none" : `0 0 12px ${char.color}33`,
+        boxShadow: isDupe ? "none" : `0 0 12px ${readableAccent(char.color)}33`,
       }}
     >
       <div
         className="w-9 h-9 rounded-full mb-1.5 flex items-center justify-center"
         style={{
           backgroundColor: char.color + "33",
-          border: `2px solid ${char.color}`,
+          border: `2px solid ${readableAccent(char.color)}`,
         }}
       >
-        <div className="w-4.5 h-4.5 rounded-full" style={{ backgroundColor: char.color, width: 18, height: 18 }} />
+        <GameIcon name={characterIcon(char.id)} size={22} color={readableAccent(char.color)} />
       </div>
       <span className="text-[10px] font-semibold text-slate-200 text-center leading-tight">
         {char.name}
       </span>
       {isDupe ? (
         <span className="flex items-center gap-0.5 mt-1 rounded-full bg-violet-950/80 px-1 py-0.5 text-[9px] font-bold text-violet-300">
-          <Gem className="w-2.5 h-2.5" />+1
+          <GameIcon name={UI_ICONS.memory} size={10} />+1
         </span>
       ) : (
         <span className="flex items-center gap-0.5 mt-1 rounded-full bg-emerald-950/80 px-1 py-0.5 text-[9px] font-bold text-emerald-300">

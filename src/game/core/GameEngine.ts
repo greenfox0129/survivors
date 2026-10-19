@@ -25,6 +25,7 @@ import {
   updateEnemies,
   checkContactDamage,
   renderEnemies,
+  renderEliteMarkers,
   cullDead,
   cullFarEnemies,
   resetEnemyManager,
@@ -53,6 +54,9 @@ import {
 } from "@/game/systems/AccessoryManager";
 import { drawBackground } from "@/game/render/background";
 import { reportFrameTime } from "@/game/render/quality";
+import { preloadGameSprites } from "@/game/render/iconSprites";
+import { resetEffects, spawnKillPop, updateEffects, renderEffects } from "@/game/render/effects";
+import { UI_ICONS, characterIcon } from "@/assets/icons/map";
 
 function getStartWeapon(save: SaveData | null): WeaponType {
   const charId = save?.selectedCharacter ?? "survivor";
@@ -90,6 +94,10 @@ export class GameEngine {
   private capClock = 0;
   /** 일시정지 중 정지 화면을 이미 그렸는지 */
   private frozenFrameDrawn = false;
+  /** Level-ups earned but not yet chosen (multi-level gems, treasure + level-up in one frame) */
+  private pendingLevelUps = 0;
+  /** Pause requested by the player (ESC / window blur) — separate from the level-up pause */
+  private userPaused = false;
 
   constructor(ctx: CanvasRenderingContext2D, callbacks: GameCallbacks, save?: SaveData) {
     this.ctx = ctx;
@@ -107,8 +115,10 @@ export class GameEngine {
       speedMult: this.modifiers.speedMult,
       pickupRangeMult: this.modifiers.pickupRangeMult,
       playerColor: this.modifiers.playerColor,
+      emblem: this.emblem(),
     });
     this.camera = { x: this.player.x, y: this.player.y };
+    preloadGameSprites([UI_ICONS.treasure, UI_ICONS.crown, this.emblem()]);
     this.weaponMgr = new WeaponManager(getStartWeapon(this.save));
     this.accessoryMgr = new AccessoryManager();
     this.baseMaxHp = this.player.maxHp;
@@ -191,6 +201,21 @@ export class GameEngine {
     }
   }
 
+  /** Release all movement keys (call on window blur so keys don't get stuck). */
+  clearInput(): void {
+    this.input.up = this.input.down = this.input.left = this.input.right = false;
+  }
+
+  /** Player pause (pause menu). Has no effect on the level-up pause. */
+  setUserPaused(paused: boolean): void {
+    this.userPaused = paused;
+    if (paused) this.clearInput();
+  }
+
+  isUserPaused(): boolean {
+    return this.userPaused;
+  }
+
   // ---- Lifecycle ----
   start(): void {
     if (this.running) return;
@@ -219,6 +244,7 @@ export class GameEngine {
       speedMult: this.modifiers.speedMult,
       pickupRangeMult: this.modifiers.pickupRangeMult,
       playerColor: this.modifiers.playerColor,
+      emblem: this.emblem(),
     });
     this.camera = { x: this.player.x, y: this.player.y };
     this.enemies = [];
@@ -238,8 +264,25 @@ export class GameEngine {
     this.kills = 0;
     this.score = 0;
     this.paused = false;
+    this.userPaused = false;
+    this.pendingLevelUps = 0;
+    this.clearInput();
     resetEnemyManager();
     resetGemManager();
+    resetEffects();
+  }
+
+  /** Icon name of the selected character's emblem (drawn on the player). */
+  private emblem(): string {
+    return characterIcon(this.save?.selectedCharacter ?? "survivor");
+  }
+
+  /** Drop the reward of a newly killed enemy exactly once (+ cosmetic kill pop). */
+  private dropReward(e: EnemyState): void {
+    if (e.gemDropped) return;
+    this.gems.push(e.isElite ? dropTreasure(e) : dropGem(e));
+    e.gemDropped = true;
+    spawnKillPop(e.x, e.y, e.isElite ? "#fbbf24" : e.color, e.radius);
   }
 
   private loop = (now: number): void => {
@@ -260,7 +303,7 @@ export class GameEngine {
     const dt = Math.min(frameMs / 1000, 0.05);
     this.lastTime = now;
 
-    if (!this.paused && this.player.alive) {
+    if (!this.paused && !this.userPaused && this.player.alive) {
       reportFrameTime(frameMs);
       this.update(dt);
       this.render();
@@ -318,12 +361,7 @@ export class GameEngine {
                 e.alive = false;
               }
               this.kills++;
-              if (e.isElite) {
-                this.gems.push(dropTreasure(e));
-              } else {
-                this.gems.push(dropGem(e));
-              }
-              e.gemDropped = true;
+              this.dropReward(e);
             }
           }
         }
@@ -342,15 +380,9 @@ export class GameEngine {
 
     // Single pass for gem drops from newly dead enemies
     for (const e of this.enemies) {
-      if ((!e.alive || e.dying) && !e.gemDropped) {
-        if (e.isElite) {
-          this.gems.push(dropTreasure(e));
-        } else {
-          this.gems.push(dropGem(e));
-        }
-        e.gemDropped = true;
-      }
+      if ((!e.alive || e.dying) && !e.gemDropped) this.dropReward(e);
     }
+    updateEffects(dt);
 
     this.enemies = cullDead(this.enemies);
     this.enemies = cullFarEnemies(this.enemies, this.player.x, this.player.y);
@@ -367,14 +399,14 @@ export class GameEngine {
 
     if (xpGained > 0) {
       playXpPickupSound(xpGained);
-      const leveledUp = gainXp(this.player, xpGained);
-      if (leveledUp) {
-        this.pauseForLevelUp();
-      }
+      this.pendingLevelUps += gainXp(this.player, xpGained);
     }
 
-    if (treasurePicked) {
-      this.pauseForLevelUp();
+    // Treasure chest = one extra level-up choice regardless of XP
+    if (treasurePicked) this.pendingLevelUps++;
+
+    if (this.pendingLevelUps > 0 && this.player.alive) {
+      this.openNextLevelUp();
     }
 
     // Throttle stat emission to every ~8 frames to reduce per-frame garbage
@@ -385,6 +417,7 @@ export class GameEngine {
     }
 
     if (!this.player.alive) {
+      playGameOverSound(); // same sound as giving up (was missing on a real death)
       this.callbacks.onGameOver(this.getStats());
     }
   }
@@ -398,11 +431,24 @@ export class GameEngine {
   }
 
   // ---- Level up ----
-  private pauseForLevelUp(): void {
+  /**
+   * Show the next queued level-up choice. Each queued level-up gives exactly one pick.
+   * If nothing is left to offer (everything maxed), the queue is dropped instead of
+   * opening an empty modal (which would soft-lock the game).
+   */
+  private openNextLevelUp(): void {
+    const options = pickUpgrades(this.weaponMgr, this.accessoryMgr);
+    if (options.length === 0) {
+      this.pendingLevelUps = 0;
+      this.paused = false;
+      return;
+    }
+    this.pendingLevelUps--;
     this.paused = true;
     playLevelUpSound();
     if (this.passive === "extraReroll") this.rerollsLeft += 1 + (this.breakthrough >= 3 ? 2 : 0);
-    this.callbacks.onLevelUp(pickUpgrades(this.weaponMgr, this.accessoryMgr));
+    this.emitStats(); // so the modal shows the up-to-date reroll count
+    this.callbacks.onLevelUp(options);
   }
 
   /** Reroll the current level-up options. Returns new options or null if no rerolls left. */
@@ -436,7 +482,18 @@ export class GameEngine {
         this.applyAccessoryMods();
         break;
     }
-    this.paused = false;
+    if (this.pendingLevelUps > 0) {
+      // More level-ups were earned in the same frame — stay paused and offer the next pick.
+      // Callers must update their UI state *before* calling applyUpgrade (see GameCanvas).
+      this.openNextLevelUp();
+    } else {
+      this.paused = false;
+    }
+  }
+
+  /** Level-up choices still waiting after the current one (for the UI). */
+  getPendingLevelUps(): number {
+    return this.pendingLevelUps;
   }
 
   // ---- Stats ----
@@ -492,6 +549,8 @@ export class GameEngine {
     ctx.translate(-camX, -camY);
     renderGems(ctx, this.gems);
     renderEnemies(ctx, this.enemies);
+    renderEffects(ctx);
+    renderEliteMarkers(ctx, this.enemies);
     this.weaponMgr.render(ctx, this.player);
     renderPlayer(ctx, this.player);
     ctx.restore();

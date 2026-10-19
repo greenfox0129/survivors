@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { ArrowLeft, Star, ChevronUp, RotateCcw, X } from "lucide-react";
+import { ArrowLeft, ChevronUp, RotateCcw, X } from "lucide-react";
+import { GameIcon } from "@/ui/components/GameIcon";
+import { UI_ICONS, traitIcon } from "@/ui/icons";
 import { TRAITS, TRAIT_UPGRADE_COST, traitTotalSpent } from "@/game/data/progression";
 import type { SaveData } from "@/game/core/storage";
 
@@ -58,7 +60,7 @@ export function TraitsScreen({ onBack, save, onUpdate }: TraitsScreenProps) {
             <span className="text-sm">로비로</span>
           </button>
           <div className="flex items-center gap-2 bg-slate-800/60 rounded-lg px-4 py-2 border border-slate-700">
-            <Star className="w-4 h-4 text-amber-400" />
+            <GameIcon name={UI_ICONS.gold} size={16} className="text-amber-400" />
             <span className="text-amber-300 font-mono font-bold tabular-nums">{save.gold}</span>
             <span className="text-slate-500 text-xs">G</span>
           </div>
@@ -84,9 +86,22 @@ export function TraitsScreen({ onBack, save, onUpdate }: TraitsScreenProps) {
                 className="rounded-xl border-2 border-slate-700 bg-slate-900/40 p-5 flex flex-col"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-slate-100 font-bold text-base">{trait.name}</h3>
-                    <p className="text-slate-500 text-xs mt-1 leading-snug">{trait.desc}</p>
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border ${
+                        level > 0 ? "border-emerald-500/40 bg-emerald-950/40" : "border-slate-700 bg-slate-800/60"
+                      }`}
+                    >
+                      <GameIcon
+                        name={traitIcon(trait.id)}
+                        size={24}
+                        className={level > 0 ? "text-emerald-300" : "text-slate-500"}
+                      />
+                    </span>
+                    <div>
+                      <h3 className="text-slate-100 font-bold text-base">{trait.name}</h3>
+                      <p className="text-slate-500 text-xs mt-1 leading-snug">{trait.desc}</p>
+                    </div>
                   </div>
                   <div className="flex flex-col items-end">
                     <span className="text-slate-300 font-mono text-sm font-bold whitespace-nowrap">
@@ -140,7 +155,7 @@ export function TraitsScreen({ onBack, save, onUpdate }: TraitsScreenProps) {
                       <span>MAX</span>
                     ) : (
                       <span className="flex items-center gap-1">
-                        <Star className="w-3 h-3" />
+                        <GameIcon name={UI_ICONS.gold} size={12} />
                         {cost}
                       </span>
                     )}
@@ -199,7 +214,7 @@ export function TraitsScreen({ onBack, save, onUpdate }: TraitsScreenProps) {
             <div className="rounded-lg bg-slate-800/60 px-4 py-3 mb-5 flex items-center justify-between">
               <span className="text-slate-300 text-sm">환불 예정</span>
               <span className="text-amber-300 font-mono font-bold flex items-center gap-1">
-                <Star className="w-4 h-4" />
+                <GameIcon name={UI_ICONS.gold} size={16} />
                 +{totalSpent} G
               </span>
             </div>

@@ -12,10 +12,6 @@ export const GAME_INFO = {
   tagline: "끝없이 몰려오는 적을 처치하고 살아남으세요",
   /** package.json 의 version (빌드 시 Vite가 주입) */
   version: __APP_VERSION__,
-  /** GitHub 저장소 "owner/name" — 업데이트 확인·링크에 사용 */
+  /** GitHub repository "owner/name" (docs/links only — the game makes no network calls) */
   repo: "pokochy/survivors-proto",
-  /** 로비에서 GitHub Releases 최신 버전을 확인할지 여부 */
-  updateCheck: true,
 } as const;
-
-export const REPO_URL = `https://github.com/${GAME_INFO.repo}`;

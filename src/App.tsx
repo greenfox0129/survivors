@@ -24,7 +24,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      {screen === "lobby" && <Lobby onNavigate={setScreen} />}
+      {screen === "lobby" && <Lobby onNavigate={setScreen} save={save} />}
       {screen === "game" && <GameCanvas onExit={goLobby} save={save} />}
       {screen === "gacha" && (
         <GachaScreen onBack={goLobby} save={save} onUpdate={handleSaveUpdate} />

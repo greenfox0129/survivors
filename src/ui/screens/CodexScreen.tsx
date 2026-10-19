@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { ArrowLeft, BookOpen, Skull, Sword, ChevronRight, ChevronLeft, Sparkles, Flame, Gem } from "lucide-react";
+import { ArrowLeft, Skull, Sword, ChevronRight, ChevronLeft, Sparkles, Flame, Gem } from "lucide-react";
 import { CONFIG } from "@/game/data/config";
 import { allWeaponTypes, weaponName, weaponDesc, weaponMaxLevel } from "@/game/systems/WeaponManager";
 import { allAccessoryTypes, accessoryName, accessoryDesc, accessoryMaxLevel } from "@/game/systems/AccessoryManager";
 import { EVOLUTIONS } from "@/game/data/evolutions";
 import { bulletBurstCount, bulletBurstPause } from "@/game/weapons/BulletWeapon";
 import { weaponLevelEffectAt } from "@/game/weapons/registry";
-import { ACCESSORY_COLORS, accessoryIcon as getAccessoryIcon } from "@/ui/theme";
+import { accessoryColor, weaponColor } from "@/ui/theme";
+import { GameIcon } from "@/ui/components/GameIcon";
+import { EnemyShape } from "@/ui/components/EnemyShape";
+import { accessoryIconName, enemyIcon, weaponIcon } from "@/ui/icons";
 import type { WeaponType, WeaponInstance, AccessoryType } from "@/game/core/types";
 
 type Category = "enemies" | "weapons" | "evolutions" | "accessories";
@@ -73,7 +76,7 @@ export function CodexScreen({ onBack }: CodexScreenProps) {
         {/* Title */}
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-950/40 border-2 border-emerald-500/30 mb-3">
-            <BookOpen className="w-7 h-7 text-emerald-400" />
+            <GameIcon name="menu-codex" size={30} className="text-emerald-400" />
           </div>
           <h1 className="text-2xl font-bold text-slate-100">도감</h1>
         </div>
@@ -123,14 +126,21 @@ export function CodexScreen({ onBack }: CodexScreenProps) {
                   {enemy.shape === "sprite" ? (
                     <img src="/assets/enemy/Wolf.png" alt={enemy.name}
                       className="absolute left-0 top-0 max-w-none"
-                      style={{ width: "400%", height: "1400%" }}
+                      style={{ width: "400%", height: "1400%", imageRendering: "pixelated" }}
                     />
                   ) : (
-                    <div className="w-6 h-6 rounded-full" style={{ backgroundColor: enemy.color }} />
+                    <GameIcon name={enemyIcon(enemy.id)} size={28} color={enemy.color} />
                   )}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-slate-100 font-bold text-sm">{enemy.name}</h3>
+                  <h3 className="flex items-center gap-2 text-slate-100 font-bold text-sm">
+                    {enemy.name}
+                    {enemy.shape !== "sprite" && (
+                      <span title="게임 내 모습">
+                        <EnemyShape shape={enemy.shape} color={enemy.color} borderColor={enemy.borderColor} size={14} />
+                      </span>
+                    )}
+                  </h3>
                   <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">{enemy.desc}</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-slate-600" />
@@ -159,7 +169,7 @@ export function CodexScreen({ onBack }: CodexScreenProps) {
                     className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
                     style={{ backgroundColor: wcfg.color + "22", border: `2px solid ${wcfg.color}` }}
                   >
-                    <div className="w-5 h-5 rounded-md" style={{ backgroundColor: wcfg.color }} />
+                    <GameIcon name={weaponIcon(type)} size={28} color={wcfg.color} />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-slate-100 font-bold text-sm">{wcfg.name}</h3>
@@ -193,7 +203,7 @@ export function CodexScreen({ onBack }: CodexScreenProps) {
                     className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
                     style={{ backgroundColor: "#f59e0b22", border: `2px solid #f59e0b` }}
                   >
-                    <Flame className="w-6 h-6 text-amber-400" />
+                    <GameIcon name={weaponIcon(type, true)} size={30} color={weaponColor(type)} />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-amber-200 font-bold text-sm">{evo.evolvedName}</h3>
@@ -217,8 +227,7 @@ export function CodexScreen({ onBack }: CodexScreenProps) {
           <div className="grid grid-cols-1 gap-3">
             {allAccessoryTypes().map((type) => {
               const def = CONFIG.accessories[type];
-              const icon = getAccessoryIcon(type);
-              const Icon = icon;
+              const color = accessoryColor(type);
               return (
                 <button
                   key={type}
@@ -228,9 +237,9 @@ export function CodexScreen({ onBack }: CodexScreenProps) {
                 >
                   <div
                     className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: ACCESSORY_COLORS[type] + "22", border: `2px solid ${ACCESSORY_COLORS[type]}` }}
+                    style={{ backgroundColor: color + "22", border: `2px solid ${color}` }}
                   >
-                    <Icon className="w-5 h-5" style={{ color: ACCESSORY_COLORS[type] }} />
+                    <GameIcon name={accessoryIconName(type)} size={28} color={color} />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-slate-100 font-bold text-sm">{accessoryName(type)}</h3>
@@ -276,16 +285,22 @@ function EnemyDetail({ enemy, onBack }: { enemy: EnemyInfo; onBack: () => void }
           {enemy.shape === "sprite" ? (
             <img src="/assets/enemy/Wolf.png" alt={enemy.name}
               className="absolute left-0 top-0 max-w-none"
-              style={{ width: "400%", height: "1400%" }}
+              style={{ width: "400%", height: "1400%", imageRendering: "pixelated" }}
             />
           ) : (
-            <div className="w-8 h-8 rounded-full" style={{ backgroundColor: enemy.color }} />
+            <GameIcon name={enemyIcon(enemy.id)} size={40} color={enemy.color} />
           )}
         </div>
         <div className="flex-1">
           <h2 className="text-xl font-bold text-slate-100">{enemy.name}</h2>
           <p className="text-slate-400 text-sm mt-1 leading-relaxed">{enemy.desc}</p>
         </div>
+        {enemy.shape !== "sprite" && (
+          <div className="flex flex-col items-center gap-1 rounded-xl border border-slate-700/60 bg-[#0a0a12] px-3 py-2">
+            <EnemyShape shape={enemy.shape} color={enemy.color} borderColor={enemy.borderColor} size={36} />
+            <span className="text-[10px] text-slate-500">게임 내 모습</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -346,7 +361,7 @@ function WeaponDetail({ type, onBack }: { type: WeaponType; onBack: () => void }
           className="flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center"
           style={{ backgroundColor: wcfg.color + "22", border: `2px solid ${wcfg.color}` }}
         >
-          <div className="w-8 h-8 rounded-md" style={{ backgroundColor: wcfg.color }} />
+          <GameIcon name={weaponIcon(type)} size={40} color={wcfg.color} />
         </div>
         <div className="flex-1">
           <h2 className="text-xl font-bold text-slate-100">{weaponName(type)}</h2>
@@ -489,7 +504,7 @@ function EvolutionDetail({ type, onBack }: { type: WeaponType; onBack: () => voi
           className="flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center"
           style={{ backgroundColor: "#f59e0b22", border: `2px solid #f59e0b` }}
         >
-          <Flame className="w-8 h-8 text-amber-400" />
+          <GameIcon name={weaponIcon(type, true)} size={40} color={weaponColor(type)} />
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
@@ -568,8 +583,7 @@ function EvolutionDetail({ type, onBack }: { type: WeaponType; onBack: () => voi
 function AccessoryDetail({ type, onBack }: { type: AccessoryType; onBack: () => void }) {
   const def = CONFIG.accessories[type];
   const maxLv = accessoryMaxLevel(type);
-  const Icon = getAccessoryIcon(type);
-  const color = ACCESSORY_COLORS[type];
+  const color = accessoryColor(type);
 
   const levels = Array.from({ length: maxLv }, (_, i) => i + 1);
 
@@ -612,7 +626,7 @@ function AccessoryDetail({ type, onBack }: { type: AccessoryType; onBack: () => 
           className="flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center"
           style={{ backgroundColor: color + "22", border: `2px solid ${color}` }}
         >
-          <Icon className="w-8 h-8" style={{ color }} />
+          <GameIcon name={accessoryIconName(type)} size={40} color={color} />
         </div>
         <div className="flex-1">
           <h2 className="text-xl font-bold text-slate-100">{accessoryName(type)}</h2>

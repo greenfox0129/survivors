@@ -51,7 +51,8 @@ function walk(dir) {
     return e.isDirectory() ? walk(p) : [p];
   });
 }
-const files = walk(dist);
+// public/README.md 같은 문서는 실행기에 넣지 않는다
+const files = walk(dist).filter((f) => !f.toLowerCase().endsWith(".md"));
 const resourceArgs = files.map((abs) => {
   const rel = path.relative(dist, abs).split(path.sep).join("/");
   if (rel.includes(",")) fail(`리소스 파일 이름에 쉼표를 쓸 수 없습니다: ${rel}`);

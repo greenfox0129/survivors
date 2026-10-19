@@ -23,6 +23,8 @@ export interface PlayerState extends Entity {
   invulnTimer: number;
   pickupRadius: number;
   color: string;
+  /** Character emblem icon name (src/assets/icons) drawn on the player circle */
+  emblem?: string;
 }
 
 export interface EnemyState extends Entity {

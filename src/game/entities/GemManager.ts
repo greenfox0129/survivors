@@ -5,6 +5,8 @@
 import { CONFIG } from "@/game/data/config";
 import type { EnemyState, Gem, PlayerState } from "@/game/core/types";
 import { isLowQuality } from "@/game/render/quality";
+import { getIconSprite, drawSpriteCentered } from "@/game/render/iconSprites";
+import { UI_ICONS } from "@/assets/icons/map";
 
 let idCounter = 9000;
 
@@ -262,6 +264,12 @@ export function renderGems(ctx: CanvasRenderingContext2D, gems: Gem[]): void {
       ctx.arc(g.x, g.y, g.radius + 8, 0, Math.PI * 2);
       ctx.fill();
 
+      const chest = getIconSprite(UI_ICONS.treasure, "#fbbf24", Math.round(g.radius * 2.6));
+      if (chest) {
+        drawSpriteCentered(ctx, chest, g.x, g.y);
+        continue;
+      }
+      // Fallback while the chest image loads: original golden orb
       ctx.fillStyle = "#fbbf24";
       ctx.beginPath();
       ctx.arc(g.x, g.y, g.radius, 0, Math.PI * 2);

@@ -112,7 +112,8 @@ export function updateAura(
       if (knockback) {
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist > 0.1) {
-          const force = 40;
+          // Evolved (Judgement Flame) has a stronger knockback, as its description promises
+          const force = w.evolved ? 60 : 40;
           e.x += (dx / dist) * force;
           e.y += (dy / dist) * force;
         }

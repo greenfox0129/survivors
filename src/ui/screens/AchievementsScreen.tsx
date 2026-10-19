@@ -1,4 +1,8 @@
-import { ArrowLeft, Trophy, Star, Check, Lock } from "lucide-react";
+import { ArrowLeft, Check, Lock } from "lucide-react";
+import { GameIcon } from "@/ui/components/GameIcon";
+import { UI_ICONS, weaponIcon } from "@/ui/icons";
+import { weaponColor } from "@/ui/theme";
+import type { WeaponType } from "@/game/core/types";
 import { ACHIEVEMENTS } from "@/game/data/progression";
 import { weaponName } from "@/game/systems/WeaponManager";
 import type { SaveData } from "@/game/core/storage";
@@ -8,7 +12,7 @@ interface AchievementsScreenProps {
   save: SaveData;
 }
 
-const ACHIEVEMENT_WEAPON_MAP: Record<string, string> = {
+const ACHIEVEMENT_WEAPON_MAP: Record<string, WeaponType> = {
   evo_bullet: "bullet",
   evo_melee: "melee",
   evo_bomb: "bomb",
@@ -36,7 +40,7 @@ export function AchievementsScreen({ onBack, save }: AchievementsScreenProps) {
             <span className="text-sm">로비로</span>
           </button>
           <div className="flex items-center gap-2 bg-slate-800/60 rounded-lg px-4 py-2 border border-slate-700">
-            <Star className="w-4 h-4 text-cyan-400 fill-cyan-400" />
+            <GameIcon name={UI_ICONS.star} size={16} className="text-cyan-400" />
             <span className="text-cyan-300 font-mono font-bold tabular-nums">{save.stars}</span>
             <span className="text-slate-500 text-xs">별</span>
           </div>
@@ -45,7 +49,7 @@ export function AchievementsScreen({ onBack, save }: AchievementsScreenProps) {
         {/* Title */}
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-rose-950/40 border-2 border-rose-500/30 mb-3">
-            <Trophy className="w-7 h-7 text-rose-400" />
+            <GameIcon name={UI_ICONS.achievements} size={30} className="text-rose-400" />
           </div>
           <h1 className="text-2xl font-bold text-slate-100">업적</h1>
           <p className="text-slate-500 text-sm mt-2">
@@ -74,7 +78,7 @@ export function AchievementsScreen({ onBack, save }: AchievementsScreenProps) {
           {ACHIEVEMENTS.map((ach) => {
             const isDone = completed.has(ach.id);
             const weaponType = ACHIEVEMENT_WEAPON_MAP[ach.id];
-            const weaponDisplayName = weaponType ? weaponName(weaponType as "bullet") : "";
+            const weaponDisplayName = weaponType ? weaponName(weaponType) : "";
 
             return (
               <div
@@ -93,10 +97,17 @@ export function AchievementsScreen({ onBack, save }: AchievementsScreenProps) {
                       : "bg-slate-800/60 border border-slate-700"
                     }`}
                 >
-                  {isDone ? (
-                    <Trophy className="w-6 h-6 text-amber-400" />
+                  {weaponType ? (
+                    <span className="relative">
+                      <GameIcon
+                        name={weaponIcon(weaponType, true)}
+                        size={28}
+                        color={isDone ? weaponColor(weaponType) : "#475569"}
+                      />
+                      {!isDone && <Lock className="absolute -bottom-1 -right-1.5 w-3.5 h-3.5 text-slate-400" />}
+                    </span>
                   ) : (
-                    <Lock className="w-5 h-5 text-slate-600" />
+                    <GameIcon name={UI_ICONS.achievements} size={24} className={isDone ? "text-amber-400" : "text-slate-600"} />
                   )}
                 </div>
 
@@ -123,7 +134,7 @@ export function AchievementsScreen({ onBack, save }: AchievementsScreenProps) {
                 {/* Reward */}
                 <div className={`flex-shrink-0 flex items-center gap-1 rounded-lg px-3 py-2
                   ${isDone ? "bg-cyan-500/15 border border-cyan-500/30" : "bg-slate-800/40 border border-slate-700/50"}`}>
-                  <Star className={`w-4 h-4 ${isDone ? "text-cyan-400 fill-cyan-400" : "text-slate-600"}`} />
+                  <GameIcon name={UI_ICONS.star} size={16} className={isDone ? "text-cyan-400" : "text-slate-600"} />
                   <span className={`text-sm font-mono font-bold ${isDone ? "text-cyan-300" : "text-slate-500"}`}>
                     +{ach.reward}
                   </span>

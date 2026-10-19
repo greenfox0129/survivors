@@ -7,57 +7,35 @@
 //
 //  규칙: 게임플레이에 필요한 정보(공격 범위, 적, 투사체)는 low에서도 반드시 그린다.
 //        low에서 빼도 되는 "장식"만 isLowQuality()로 감싼다.
+//  The setting itself lives in core/settings.ts (shared with the sound settings).
 // ============================================================
 
 import { CONFIG } from "@/game/data/config";
+import { getSettings, updateSettings, type QualitySetting } from "@/game/core/settings";
 
-export type QualitySetting = "auto" | "high" | "low";
+export type { QualitySetting } from "@/game/core/settings";
 
-const SETTINGS_KEY = "survivors_proto_settings";
-
-interface StoredSettings {
-  quality?: QualitySetting;
-}
-
-function readSettings(): StoredSettings {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    return raw ? (JSON.parse(raw) as StoredSettings) : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeSettings(next: StoredSettings): void {
-  try {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...readSettings(), ...next }));
-  } catch {
-    // 저장 실패는 무시 (시크릿 모드 등)
-  }
-}
-
-let setting: QualitySetting = readSettings().quality ?? "auto";
 let autoLow = false;
 let frameMsAvg = 1000 / 60;
 let slowSeconds = 0;
 
 export function getQualitySetting(): QualitySetting {
-  return setting;
+  return getSettings().quality;
 }
 
 export function setQualitySetting(next: QualitySetting): void {
-  setting = next;
-  writeSettings({ quality: next });
+  updateSettings({ quality: next });
 }
 
 /** 현재 프레임에서 장식 효과를 생략해야 하는지 */
 export function isLowQuality(): boolean {
-  return setting === "low" || (setting === "auto" && autoLow);
+  const q = getSettings().quality;
+  return q === "low" || (q === "auto" && autoLow);
 }
 
 /** auto 모드에서 low로 내려갔는지 (UI 표시용) */
 export function isAutoDowngraded(): boolean {
-  return setting === "auto" && autoLow;
+  return getSettings().quality === "auto" && autoLow;
 }
 
 /**
@@ -65,10 +43,13 @@ export function isAutoDowngraded(): boolean {
  * @param frameMs 직전 렌더 프레임과의 간격(ms)
  */
 export function reportFrameTime(frameMs: number): void {
-  // 탭 전환 등으로 생긴 큰 간격은 무시
-  const ms = Math.min(frameMs, 100);
+  // Gaps over 100ms are hiccups or browser throttling (hidden/occluded tab), not render
+  // cost — ignore them entirely so they can't trigger a false "low" downgrade.
+  if (frameMs > 100) return;
+  if (typeof document !== "undefined" && document.hidden) return;
+  const ms = frameMs;
   frameMsAvg = frameMsAvg * 0.9 + ms * 0.1;
-  if (setting !== "auto" || autoLow) return;
+  if (getSettings().quality !== "auto" || autoLow) return;
   if (frameMsAvg > CONFIG.render.autoLowFrameMs) {
     slowSeconds += ms / 1000;
     if (slowSeconds >= CONFIG.render.autoLowAfterSec) autoLow = true;

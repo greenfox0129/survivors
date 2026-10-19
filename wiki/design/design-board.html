@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Design Board — Survivors Prototype</title>
+<!--
+  디자인 보드: 게임의 색 토큰 · 아이콘 후보 · 이펙트 후보 · 픽셀 타일 레퍼런스를 한 장에 모은 페이지.
+  보는 법: npm run dev 후 http://localhost:5173/wiki/design/design-board.html
+  (아이콘은 CSS mask 로 색을 입히므로 file:// 이 아니라 http 로 열어야 한다)
+  스크린샷: wiki/design/design-board.png
+-->
+<style>
+  :root {
+    --bg: #020617; --panel: #0f172a; --line: #1e293b; --text: #e2e8f0; --muted: #64748b;
+    --world: #0a0a12;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 32px 20px 60px; }
+  h1 { font-size: 30px; margin: 0; letter-spacing: -.02em; }
+  h1 small { display: block; font-size: 13px; color: #22d3ee; letter-spacing: .3em; font-weight: 600; }
+  h2 { font-size: 15px; margin: 34px 0 12px; color: #94a3b8; letter-spacing: .08em; text-transform: uppercase; }
+  p.note { color: var(--muted); margin: 6px 0 0; font-size: 12.5px; }
+  .grid { display: grid; gap: 10px; }
+  .swatches { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  .sw { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+  .sw i { display: block; height: 46px; }
+  .sw div { padding: 6px 8px; font-size: 11.5px; }
+  .sw code { color: var(--muted); font-size: 11px; }
+  .icons { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
+  .card { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 12px;
+          background: var(--panel); border: 1px solid var(--line); }
+  .ico { width: 34px; height: 34px; flex: none; background: var(--c);
+         -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
+  .card b { display: block; font-size: 12.5px; font-weight: 600; }
+  .card span { display: block; font-size: 11px; color: var(--muted); }
+  .evo { border-color: #f59e0b55; box-shadow: inset 0 0 0 1px #f59e0b22; }
+  .fx { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  .fx div { aspect-ratio: 1; border-radius: 12px; background: var(--world); border: 1px solid var(--line);
+            display: grid; place-items: center; position: relative; }
+  .fx div i { width: 72%; height: 72%; background: var(--c);
+              -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
+  .fx div span { position: absolute; bottom: 4px; font-size: 10px; color: var(--muted); }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+  .pixel { image-rendering: pixelated; border-radius: 10px; border: 1px solid var(--line); background: var(--world); }
+  .type { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .type .t1 { font-size: 40px; font-weight: 800; letter-spacing: -.02em; }
+  .type .t2 { font-size: 15px; font-weight: 600; letter-spacing: .3em; color: #22d3ee; }
+  .type .mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-weight: 700; }
+  .world { background: var(--world); border-radius: 12px; border: 1px solid var(--line); height: 150px; position: relative; overflow: hidden;
+           background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+           background-size: 40px 40px; }
+  .dot { position: absolute; border-radius: 50%; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Survivors <small>DESIGN BOARD · v0.1</small></h1>
+  <p class="note">현재 게임의 시각 언어(어두운 월드 + 채도 높은 기하 도형 + 16px 픽셀 스프라이트)를 유지하는 전제로 모은 토큰·후보 에셋. 라이선스: <code>assets/CREDITS.md</code></p>
+
+  <h2>1 · 월드 & 엔티티 색 토큰 (src/game/data/config.ts)</h2>
+  <div class="grid swatches" id="world-sw"></div>
+
+  <h2>2 · 무기 아이콘 후보 — 기본 / 진화 (game-icons.net, CC BY 3.0)</h2>
+  <div class="grid icons" id="weapons"></div>
+
+  <h2>3 · 장신구 아이콘 후보</h2>
+  <div class="grid icons" id="accs"></div>
+
+  <h2>4 · 적 아이콘 후보 (도감·HUD 용)</h2>
+  <div class="grid icons" id="enemies"></div>
+
+  <h2>5 · UI 글리프 후보</h2>
+  <div class="grid icons" id="ui"></div>
+
+  <h2>6 · 이펙트 텍스처 후보 (Kenney Particle Pack, CC0 · 128px로 축소)</h2>
+  <div class="grid fx" id="fx"></div>
+  <p class="note">흰색 알파 텍스처라 drawImage 한 번 + 미리 색을 입힌 오프스크린 캔버스로 쓰면 shadowBlur·그라디언트보다 싸다 (render/sprites.ts 방식).</p>
+
+  <h2>7 · 픽셀 스프라이트 레퍼런스 (Kenney Tiny Dungeon, CC0 · 16×16)</h2>
+  <div class="row">
+    <img class="pixel" src="assets/tiny-dungeon/tilemap_packed_x4.png" width="384" alt="tiny dungeon tileset x4" />
+    <img class="pixel" src="assets/references/kenney-tiny-dungeon-sample.png" width="320" alt="tiny dungeon sample" />
+    <img class="pixel" src="assets/references/kenney-1bit-fantasy-sample.png" width="320" alt="1-bit fantasy sample" />
+  </div>
+  <p class="note">기존 늑대 스프라이트(public/assets/enemy/Wolf.png)도 16×16 프레임 — 같은 해상도 계열이라 섞어도 어색하지 않다.</p>
+
+  <h2>8 · 타이포그래피 & 월드 미리보기</h2>
+  <div class="row">
+    <div class="type" style="flex:1 1 320px">
+      <div class="t1">Survivors</div>
+      <div class="t2">PROTOTYPE</div>
+      <p style="margin:10px 0 4px;color:#94a3b8">본문: 시스템 산세리프 (Tailwind 기본 · 한글은 맑은 고딕 폴백)</p>
+      <p class="mono" style="margin:0;color:#67e8f9">숫자/HUD: 모노스페이스 tabular-nums — 0:42 · 128 처치 · Lv 12</p>
+    </div>
+    <div class="world" style="flex:1 1 360px">
+      <i class="dot" style="left:47%;top:42%;width:28px;height:28px;background:#22d3ee;outline:2px solid #0e7490"></i>
+      <i class="dot" style="left:20%;top:25%;width:24px;height:24px;background:#ef4444"></i>
+      <i class="dot" style="left:75%;top:60%;width:18px;height:18px;background:#a78bfa;border-radius:2px;transform:rotate(45deg)"></i>
+      <i class="dot" style="left:30%;top:70%;width:14px;height:14px;background:#3b82f6"></i>
+      <i class="dot" style="left:62%;top:30%;width:10px;height:10px;background:#fbbf24"></i>
+      <i class="dot" style="left:84%;top:18%;width:40px;height:40px;background:#fbbf24;box-shadow:0 0 0 6px #fbbf2433"></i>
+    </div>
+  </div>
+
+  <footer>Icons: game-icons.net — Lorc, Delapouite, Skoll, Sbed (CC BY 3.0) · Particles & tiles: Kenney.nl (CC0)</footer>
+</main>
+<script>
+  const sw = [
+    ["world bg", "#0a0a12"], ["player", "#22d3ee"], ["player edge", "#0e7490"], ["xp gem", "#3b82f6"],
+    ["elite / treasure", "#fbbf24"], ["slime", "#ef4444"], ["bat", "#a78bfa"], ["skeleton", "#e2e8f0"],
+    ["ghost", "#67e8f9"], ["brute", "#f97316"], ["wraith", "#f43f5e"], ["wolf", "#94a3b8"],
+    ["ui bg", "#020617"], ["ui panel", "#0f172a"], ["ui line", "#1e293b"], ["hp ok/warn/low", "linear-gradient(90deg,#22c55e 33%,#eab308 33% 66%,#ef4444 66%)"],
+  ];
+  document.getElementById("world-sw").innerHTML = sw.map(([n, c]) =>
+    `<div class="sw"><i style="background:${c}"></i><div>${n}<br><code>${c.startsWith("#") ? c : "3-step"}</code></div></div>`).join("");
+
+  const card = (file, color, title, sub, evo) =>
+    `<div class="card${evo ? " evo" : ""}"><i class="ico" style="--c:${color};--m:url('../../src/assets/icons/${file}.svg')"></i><div><b>${title}</b><span>${sub}</span></div></div>`;
+
+  const weapons = [
+    ["bullet", "#fbbf24", "라이플", "플라즈마 라이플"], ["melee", "#f472b6", "근접 회전검", "폭풍의 칼날"],
+    ["bomb", "#fb923c", "폭발탄", "운석 폭격"], ["trap", "#34d399", "설치형 트랩", "영혼의 토템"],
+    ["aura", "#f87171", "화염 오오라", "심판의 화염"], ["shuriken", "#c4b5fd", "비도", "환영 비도"],
+    ["claw", "#84cc16", "야생의 발톱", "브레스"],
+  ];
+  document.getElementById("weapons").innerHTML = weapons.map(([id, c, n, e]) =>
+    card(`weapon-${id}`, c, n, id) + card(`weapon-${id}-evo`, c, e, "진화", true)).join("");
+
+  const accs = [
+    ["swiftBoots", "#22d3ee", "질풍의 부츠"], ["vitalRing", "#fb7185", "생명의 반지"], ["magnetCharm", "#60a5fa", "자석 부적"],
+    ["powerAmulet", "#f59e0b", "전투의 부적"], ["hastePendant", "#a78bfa", "질주의 목걸이"], ["xpcrystal", "#34d399", "지혜의 결정"],
+    ["thornArmor", "#f472b6", "가시 갑옷"], ["shieldForge", "#94a3b8", "수호의 방패"], ["natureBlessing", "#4ade80", "자연의 축복"],
+  ];
+  document.getElementById("accs").innerHTML = accs.map(([id, c, n]) => card(`acc-${id}`, c, n, id)).join("");
+
+  const enemies = [
+    ["slime", "#ef4444", "슬라임"], ["bat", "#a78bfa", "박쥐"], ["skeleton", "#e2e8f0", "스켈레톤"], ["ghost", "#67e8f9", "고스트"],
+    ["brute", "#f97316", "브루트"], ["wraith", "#f43f5e", "래쓰"], ["wolf", "#94a3b8", "늑대"], ["elite", "#fbbf24", "엘리트"],
+  ];
+  document.getElementById("enemies").innerHTML = enemies.map(([id, c, n]) => card(`enemy-${id}`, c, n, id)).join("");
+
+  const ui = [
+    ["ui-reroll", "#e2e8f0", "리롤", "레벨업 모달"], ["ui-treasure", "#fbbf24", "보물 상자", "엘리트 보상"],
+    ["ui-xp-gem", "#3b82f6", "경험치 보석", "HUD"], ["ui-star", "#22d3ee", "별(각성 재화)", "업적 보상"],
+    ["ui-upgrade", "#34d399", "강화", "캐릭터/특성"], ["char-linya", "#c4b5fd", "리냐", "고양이 수인"],
+    ["char-mage", "#a855f7", "메이지", "캐릭터"],
+  ];
+  document.getElementById("ui").innerHTML = ui.map(([f, c, n, s]) => card(f, c, n, s)).join("");
+
+  const fx = [
+    ["slash_02", "#84cc16"], ["scratch_01", "#e2e8f0"], ["flame_01", "#fb923c"], ["fire_01", "#f87171"],
+    ["magic_02", "#c4b5fd"], ["spark_04", "#fbbf24"], ["star_06", "#22d3ee"], ["circle_05", "#f87171"],
+    ["light_02", "#fde68a"], ["smoke_04", "#94a3b8"], ["scorch_02", "#fb923c"], ["trace_04", "#fbbf24"],
+    ["twirl_02", "#f472b6"], ["muzzle_02", "#fbbf24"],
+  ];
+  document.getElementById("fx").innerHTML = fx.map(([f, c]) =>
+    `<div><i style="--c:${c};--m:url('assets/particles/${f}.png')"></i><span>${f}</span></div>`).join("");
+</script>
+</body>
+</html>

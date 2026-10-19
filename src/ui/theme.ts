@@ -1,22 +1,9 @@
 // ============================================================
-//  ui/theme.ts — UI 공용 색상·아이콘 매핑 (단일 출처)
-//  무기 색은 게임 데이터(CONFIG.weapons[type].color)를 그대로 쓰고,
-//  장신구 색·아이콘은 여기서만 정의한다. (예전엔 HUD/도감/업그레이드 모달에 중복)
+//  ui/theme.ts — UI color mapping (single source).
+//  Weapon colors come straight from game data (CONFIG.weapons[type].color);
+//  accessory colors are defined only here. Icons: see ui/icons.ts.
 // ============================================================
 
-import {
-  Gem,
-  Heart,
-  Leaf,
-  Magnet,
-  Shield,
-  ShieldCheck,
-  Sparkles,
-  Sword,
-  Wind,
-  Zap,
-  type LucideIcon,
-} from "lucide-react";
 import { CONFIG } from "@/game/data/config";
 import type { AccessoryType, WeaponType } from "@/game/core/types";
 
@@ -32,26 +19,25 @@ export const ACCESSORY_COLORS: Record<AccessoryType, string> = {
   natureBlessing: "#4ade80",
 };
 
-export const ACCESSORY_ICONS: Record<AccessoryType, LucideIcon> = {
-  swiftBoots: Wind,
-  vitalRing: Heart,
-  magnetCharm: Magnet,
-  powerAmulet: Sword,
-  hastePendant: Zap,
-  xpcrystal: Gem,
-  thornArmor: Shield,
-  shieldForge: ShieldCheck,
-  natureBlessing: Leaf,
-};
-
 export function accessoryColor(type?: AccessoryType): string {
   return (type && ACCESSORY_COLORS[type]) ?? "#888888";
 }
 
-export function accessoryIcon(type?: AccessoryType): LucideIcon {
-  return (type && ACCESSORY_ICONS[type]) ?? Sparkles;
-}
-
 export function weaponColor(type: WeaponType): string {
   return CONFIG.weapons[type]?.color ?? "#888888";
+}
+
+/**
+ * Character colors are also used as in-game player colors and some are very dark
+ * (e.g. Linya #1f2937). For icons/borders on the dark UI, lift too-dark colors.
+ */
+export function readableAccent(hex: string): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance < 0.25 ? "#cbd5e1" : hex;
 }
