@@ -53,6 +53,8 @@ export interface EnemyState extends Entity {
   dyingTimer: number;
   isElite: boolean;
   gemDropped: boolean;
+  /** Seconds left to kill this elite. Missing on normal enemies. */
+  eliteLife?: number;
   /** Facing column toward the player (pixel sprites): 0 down, 1 up, 2 left, 3 right */
   facing: number;
 }
@@ -234,6 +236,9 @@ export interface BreathState {
 }
 
 // ---- Gems ----
+/** Ground pickup dropped rarely on a kill. Effect happens when the player walks over it. */
+export type SpecialPickup = "magnet" | "heart" | "bomb";
+
 export interface Gem {
   id: number;
   x: number;
@@ -242,6 +247,10 @@ export interface Gem {
   value: number;
   alive: boolean;
   isTreasure?: boolean;
+  /** Magnet, heart, or bomb. Never merged into an XP gem. */
+  pickup?: SpecialPickup;
+  /** Magnet pickup: this XP gem flies to the player from anywhere on the map. */
+  attracted?: boolean;
 }
 
 // ---- Upgrades ----
@@ -293,6 +302,10 @@ export interface GameStats {
   weapons: { type: WeaponType; name: string; level: number; evolved: boolean }[];
   accessories: { type: AccessoryType; name: string; level: number }[];
   rerolls: number;
+  /** Soonest elite kill timer, or null when no elite is alive. */
+  eliteSeconds: number | null;
+  /** The run ended because an elite outlasted its timer. */
+  failedElite: boolean;
 }
 
 export interface Camera {

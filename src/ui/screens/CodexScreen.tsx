@@ -317,9 +317,9 @@ function EnemyDetail({ enemy, onBack }: { enemy: EnemyInfo; onBack: () => void }
         <p className="text-slate-400 text-xs leading-relaxed">
           등장 시간: {Math.floor(enemy.unlockedTime / 60)}분 {enemy.unlockedTime % 60}초 이후
           <br />
-          스폰 간격: {CONFIG.enemy.spawnInterval}초 ~ 최소 {CONFIG.enemy.spawnMinInterval}초 (점점 빨라짐)
+          스폰 간격: {CONFIG.enemy.spawnInterval}초에서 시작. 처음 1분은 초당 ×{CONFIG.enemy.spawnDecayPerSecond}, 이후 분당 ×{CONFIG.enemy.spawnDecayPerMinute}
           <br />
-          동시 최대 수: {CONFIG.enemy.maxCount}마리
+          동시 최대 수: {CONFIG.enemy.maxCount}마리에서 시작, 분당 100%p씩 증가
           <br />
           접촉 피해 쿨다운: {CONFIG.enemy.contactDamageCooldown}초
         </p>

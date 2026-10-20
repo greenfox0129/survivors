@@ -28,14 +28,18 @@ import {
   renderEliteMarkers,
   cullDead,
   cullFarEnemies,
+  eliteSecondsLeft,
   resetEnemyManager,
   setElapsedTime,
+  setEnemyConstraints,
+  tickEliteLife,
 } from "@/game/entities/EnemyManager";
 import { WeaponManager, weaponFormName } from "@/game/systems/WeaponManager";
 import { pickUpgrades } from "@/game/systems/upgrades";
 import {
   dropGem,
   dropTreasure,
+  rollSpecialDrop,
   updateGems,
   renderGems,
   cullGems,
@@ -44,6 +48,7 @@ import {
   resetGemManager,
 } from "@/game/entities/GemManager";
 import { computeModifiers, type GameModifiers } from "@/game/systems/traitHelper";
+import { resolveRunConstraints, type RunConstraints } from "@/game/data/constraints";
 import { playHurtSound, playLevelUpSound, playXpPickupSound, playGameOverSound } from "@/game/core/audio";
 import { CHARACTERS, type PassiveType } from "@/game/data/progression";
 import type { SaveData } from "@/game/core/storage";
@@ -91,6 +96,8 @@ export class GameEngine {
   private modifiers: GameModifiers;
   private passive: PassiveType;
   private xpMult: number;
+  private constraints: RunConstraints = resolveRunConstraints(undefined);
+  private failedElite = false;
   private save: SaveData | null;
   private rerollsLeft: number = 0;
   private breakthrough: number = 0;
@@ -108,6 +115,7 @@ export class GameEngine {
     this.ctx = ctx;
     this.callbacks = callbacks;
     this.save = save ?? null;
+    this.constraints = resolveRunConstraints(this.save?.constraintLevels);
     this.modifiers = save ? computeModifiers(save) : computeModifiers({
       gold: 0,
       owned: [{ id: "survivor", level: 1, stars: 0, memories: 0, breakthrough: 0 }],
@@ -164,8 +172,15 @@ export class GameEngine {
     const basePickup = CONFIG.player.pickupRadius * this.modifiers.pickupRangeMult * swiftLooterBonus;
     this.player.pickupRadius = basePickup * accMods.pickupMult;
 
-    // XP multiplier: character base × accessory bonus
-    this.xpMult = this.modifiers.xpMult * accMods.xpMult;
+    // XP multiplier: character base × accessory bonus × constraint
+    this.xpMult = this.modifiers.xpMult * accMods.xpMult * this.constraints.xp;
+    setEnemyConstraints({
+      hp: this.constraints.enemyHp,
+      damage: this.constraints.enemyDamage,
+      speed: this.constraints.enemySpeed,
+      hpGrowth: this.constraints.hpGrowth,
+      spawn: this.constraints.spawnInterval,
+    });
 
     this.updateWeaponMods();
   }
@@ -173,7 +188,7 @@ export class GameEngine {
   /** Recompute weapon damage/cooldown/crit mods only (called each frame for dynamic passives). */
   private updateWeaponMods(accMods?: AccessoryMods): void {
     const mods = accMods ?? this.accessoryMgr.computeMods();
-    let dmgMult = this.modifiers.damageMult * mods.damageMult;
+    let dmgMult = this.modifiers.damageMult * mods.damageMult * this.constraints.playerDamage;
     let critChance = 0;
 
     if (this.passive === "spellPower") dmgMult *= this.breakthrough >= 3 ? 1.25 : 1.15;
@@ -246,6 +261,7 @@ export class GameEngine {
   }
 
   reset(): void {
+    this.constraints = resolveRunConstraints(this.save?.constraintLevels);
     if (this.save) {
       this.modifiers = computeModifiers(this.save);
       this.xpMult = this.modifiers.xpMult;
@@ -275,6 +291,7 @@ export class GameEngine {
     this.elapsed = 0;
     this.kills = 0;
     this.score = 0;
+    this.failedElite = false;
     this.paused = false;
     this.userPaused = false;
     this.pendingLevelUps = 0;
@@ -293,8 +310,28 @@ export class GameEngine {
   private dropReward(e: EnemyState): void {
     if (e.gemDropped) return;
     this.gems.push(e.isElite ? dropTreasure(e) : dropGem(e));
+    const special = rollSpecialDrop(e);
+    if (special) this.gems.push(special);
     e.gemDropped = true;
     spawnKillPop(e.x, e.y, e.isElite ? "#fbbf24" : e.color, e.radius);
+  }
+
+  /** Bomb pickup: every enemy whose body overlaps the camera view dies. */
+  private detonateScreen(): void {
+    const hw = CONFIG.canvasWidth / 2;
+    const hh = CONFIG.canvasHeight / 2;
+    const cx = this.camera.x;
+    const cy = this.camera.y;
+    for (const e of this.enemies) {
+      if (!e.alive || e.dying) continue;
+      if (Math.abs(e.x - cx) > hw + e.radius) continue;
+      if (Math.abs(e.y - cy) > hh + e.radius) continue;
+      e.hp = 0;
+      e.alive = false;
+      this.kills++;
+      this.dropReward(e);
+    }
+    playHurtSound();
   }
 
   private loop = (now: number): void => {
@@ -343,6 +380,10 @@ export class GameEngine {
     this.camera.x = this.player.x;
     this.camera.y = this.player.y;
     updateEnemies(this.enemies, this.player, dt);
+    if (tickEliteLife(this.enemies, dt)) {
+      this.failedElite = true;
+      this.player.alive = false;
+    }
 
     const contactDmg = checkContactDamage(this.enemies, this.player);
     if (contactDmg > 0) {
@@ -364,14 +405,7 @@ export class GameEngine {
           if (dx * dx + dy * dy < collideR * collideR) {
             e.hp -= reflectDmg;
             if (e.hp <= 0 && !e.dying) {
-              if (e.shape === "sprite") {
-                e.dying = true;
-                e.dyingTimer = 0;
-                e.spriteFrame = 0;
-                e.spriteTimer = 0;
-              } else {
-                e.alive = false;
-              }
+              e.alive = false;
               this.kills++;
               this.dropReward(e);
             }
@@ -400,6 +434,16 @@ export class GameEngine {
     this.enemies = cullFarEnemies(this.enemies, this.player.x, this.player.y);
 
     const gemResult = updateGems(this.gems, this.player, dt);
+    if (gemResult.heart) {
+      this.player.hp = this.player.maxHp;
+      playLevelUpSound();
+    }
+    if (gemResult.magnet) {
+      for (const g of this.gems) {
+        if (g.alive && !g.isTreasure && !g.pickup) g.attracted = true;
+      }
+    }
+    if (gemResult.bomb) this.detonateScreen();
     const treasurePicked = gemResult.treasure;
     const xpGained = gemResult.xp * this.xpMult;
     this.gems = cullGems(this.gems);
@@ -423,7 +467,8 @@ export class GameEngine {
 
     // Throttle stat emission to every ~8 frames to reduce per-frame garbage
     this.statEmitTimer += dt;
-    if (this.statEmitTimer >= 0.15) {
+    // The elite countdown is shown as whole seconds, so emit every frame while it runs.
+    if (eliteSecondsLeft(this.enemies) != null || this.statEmitTimer >= 0.15) {
       this.statEmitTimer = 0;
       this.emitStats();
     }
@@ -533,6 +578,8 @@ export class GameEngine {
         level: a.level,
       })),
       rerolls: this.rerollsLeft,
+      eliteSeconds: eliteSecondsLeft(this.enemies),
+      failedElite: this.failedElite,
     };
   }
 
