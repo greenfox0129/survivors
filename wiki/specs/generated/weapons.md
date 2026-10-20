@@ -1,7 +1,7 @@
 # 무기 수치표 (Weapons)
 
 > ⚙ **자동 생성 문서** — `npm run docs:spec` 으로 다시 만든다. 직접 수정하지 말 것.
-> 기준: v0.2.0 · 출처: `src/game/data/*.ts`, `src/game/weapons/*.ts`
+> 기준: v0.3.0 · 출처: `src/game/data/*.ts`, `src/game/weapons/*.ts`
 
 공통: 실제 피해 = 표의 피해 × 캐릭터/특성/장신구/패시브 배율 (`GameEngine.updateWeaponMods`). 쿨다운도 동일하게 배율 적용.
 진화 행은 진화 무기 수치다 — 최대 레벨 수치에 진화 배율을 곱한 최종형이며 더 이상 레벨업하지 않는다.

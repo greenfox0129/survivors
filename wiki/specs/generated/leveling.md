@@ -1,7 +1,7 @@
 # 레벨·경험치 (Leveling)
 
 > ⚙ **자동 생성 문서** — `npm run docs:spec` 으로 다시 만든다. 직접 수정하지 말 것.
-> 기준: v0.2.0 · 출처: `src/game/data/*.ts`, `src/game/weapons/*.ts`
+> 기준: v0.3.0 · 출처: `src/game/data/*.ts`, `src/game/weapons/*.ts`
 
 공식: L≤10 은 `floor(5 × 1.6^(L-1))`, 그 이후는 `floor(5 × 1.6^9 × 1.4^(L-10))` · 일반 보석 1개 = 1 XP (병합 보석은 합산)
 
