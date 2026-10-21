@@ -400,6 +400,36 @@ try {
     const one = fistDamage(evo);
     const expected = one * 6 + one * 2.5;
     if (Math.abs(100000 - foe.hp - expected) > 1e-4) fail(`fist combo ${100000 - foe.hp} expected ${expected}`);
+    const near = { ...dummy, id: 6, x: 40, y: 30, hp: 100000 };
+    const far = { ...dummy, id: 7, x: 2400, y: -800, hp: 100000 };
+    const sup = { ...evo, super: true };
+    const twin = createFistState(sup);
+    updateFist(twin, [near, far], 0, 0, sup, 0.05, () => {});
+    const jabDmg = fistDamage(sup);
+    if (Math.abs(100000 - near.hp - jabDmg) > 1e-4) fail(`super near jab ${100000 - near.hp}`);
+    if (Math.abs(100000 - far.hp - jabDmg) > 1e-4) fail(`super far jab ${100000 - far.hp}`);
+    const left = { ...dummy, id: 9, x: -900, y: 400, hp: 100000 };
+    const right = { ...dummy, id: 10, x: 1400, y: 200, hp: 100000 };
+    const back = { ...dummy, id: 11, x: 1800, y: -700, hp: 100000 };
+    const extras = [left, right, back];
+    const skips = [0, 0, 0];
+    for (let n = 0; n < 60; n++) {
+      near.hp = 100000;
+      for (const e of extras) e.hp = 100000;
+      updateFist(createFistState(sup), [near, left, right, back], 0, 0, sup, 0.05, () => {});
+      if (Math.abs(100000 - near.hp - jabDmg) > 1e-4) fail(`super random trial near ${100000 - near.hp}`);
+      let hits = 0;
+      extras.forEach((e, i) => {
+        if (e.hp < 100000) hits++;
+        else skips[i]++;
+      });
+      if (hits !== 2) fail(`super random trial hit ${hits} extra enemies`);
+    }
+    if (skips.some((n) => n === 0)) fail(`super random skips ${skips.join(",")}`);
+    const plain = { ...dummy, id: 8, x: 2400, y: 0, hp: 100000 };
+    const normal = createFistState(evo);
+    updateFist(normal, [plain], 0, 0, evo, 0.05, () => {});
+    if (plain.hp !== 100000) fail(`evolved fist reached ${100000 - plain.hp} past its range`);
   }
 
   // ---------------------------------------------------------------- 8. new accessories

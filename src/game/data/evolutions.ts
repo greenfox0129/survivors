@@ -119,6 +119,12 @@ export const SUPER_EVOLUTIONS: SuperEvolutionDef[] = [
     name: "레인보우 브레스",
     desc: "길이·각도 1.5배 · 끊기지 않는 무지개 숨결 · 화상",
   },
+  {
+    characterId: "cheon",
+    weapon: "fist",
+    name: "쌍폭권",
+    desc: "거리 제한 없음 · 가까운 곳과 무작위 둘",
+  },
 ];
 
 export function superEvolutionFor(

@@ -1,6 +1,7 @@
 // ============================================================
 //  weapons/FistWeapon.ts — Short combo of punches at the nearest enemy.
 //  Each jab hits once. The evolved form follows the combo with one wide hit.
+//  Cheon's super form ignores reach: the nearest enemy plus two random others.
 // ============================================================
 
 import { CONFIG } from "@/game/data/config";
@@ -26,6 +27,15 @@ export interface FistState {
   hitX: number;
   hitY: number;
   hitR: number;
+  /** Extra impacts. Only the super form fills these. */
+  hit2X: number;
+  hit2Y: number;
+  hit2R: number;
+  show2: number;
+  hit3X: number;
+  hit3Y: number;
+  hit3R: number;
+  show3: number;
   damage: number;
   cooldown: number;
   reach: number;
@@ -87,6 +97,14 @@ export function createFistState(w: WeaponInstance): FistState {
     hitX: 0,
     hitY: 0,
     hitR: 0,
+    hit2X: 0,
+    hit2Y: 0,
+    hit2R: 0,
+    show2: 0,
+    hit3X: 0,
+    hit3Y: 0,
+    hit3R: 0,
+    show3: 0,
     damage: 0,
     cooldown: 0,
     reach: 0,
@@ -125,6 +143,55 @@ function aimAt(enemies: EnemyState[], px: number, py: number, range: number, fal
   return Math.atan2(best.y - py, best.x - px);
 }
 
+const RANDOM_TARGETS = 2;
+
+/** Nearest living enemy, plus up to two other living enemies chosen at random. */
+function nearestAndRandom(enemies: EnemyState[], px: number, py: number): { near: EnemyState | null; others: EnemyState[] } {
+  let near: EnemyState | null = null;
+  let best = Infinity;
+  for (const e of enemies) {
+    if (!e.alive || e.dying) continue;
+    const dx = e.x - px;
+    const dy = e.y - py;
+    const d2 = dx * dx + dy * dy;
+    if (d2 >= best) continue;
+    best = d2;
+    near = e;
+  }
+  const others: EnemyState[] = [];
+  let count = 0;
+  for (const e of enemies) {
+    if (e === near || !e.alive || e.dying) continue;
+    count++;
+    if (others.length < RANDOM_TARGETS) {
+      others.push(e);
+      continue;
+    }
+    const j = Math.floor(Math.random() * count);
+    if (j < RANDOM_TARGETS) others[j] = e;
+  }
+  return { near, others };
+}
+
+function punchAt(
+  enemies: EnemyState[],
+  x: number,
+  y: number,
+  radius: number,
+  damage: number,
+  critChance: number | undefined,
+  onKill: () => void,
+): void {
+  for (const e of enemies) {
+    if (!e.alive || e.dying) continue;
+    const dx = e.x - x;
+    const dy = e.y - y;
+    const collide = radius + e.radius;
+    if (dx * dx + dy * dy >= collide * collide) continue;
+    if (damageEnemy(e, damage, critChance)) onKill();
+  }
+}
+
 function strike(
   state: FistState,
   enemies: EnemyState[],
@@ -135,15 +202,51 @@ function strike(
   cone: number,
   damage: number,
   finisher: boolean,
+  unlimited: boolean,
   critChance: number | undefined,
   onKill: () => void,
 ): void {
+  const hitR = finisher ? hitRadius * 1.7 : hitRadius;
+  state.finisherShown = finisher;
+  state.show2 = 0;
+  state.show3 = 0;
+  if (unlimited) {
+    const targets = nearestAndRandom(enemies, px, py);
+    if (!targets.near) {
+      state.show = 0;
+      return;
+    }
+    const first = targets.near;
+    state.aim = Math.atan2(first.y - py, first.x - px);
+    state.hitX = first.x;
+    state.hitY = first.y;
+    state.hitR = hitR;
+    state.show = SHOW_TIME;
+    punchAt(enemies, first.x, first.y, hitR, damage, critChance, onKill);
+    const second = targets.others[0];
+    if (second) {
+      state.hit2X = second.x;
+      state.hit2Y = second.y;
+      state.hit2R = hitR;
+      state.show2 = SHOW_TIME;
+      punchAt(enemies, second.x, second.y, hitR, damage, critChance, onKill);
+    }
+    const third = targets.others[1];
+    if (third) {
+      state.hit3X = third.x;
+      state.hit3Y = third.y;
+      state.hit3R = hitR;
+      state.show3 = SHOW_TIME;
+      punchAt(enemies, third.x, third.y, hitR, damage, critChance, onKill);
+    }
+    return;
+  }
+
   state.aim = aimAt(enemies, px, py, reach + 70, state.aim);
   state.hitX = px + Math.cos(state.aim) * reach * 0.72;
   state.hitY = py + Math.sin(state.aim) * reach * 0.72;
-  state.hitR = finisher ? hitRadius * 1.7 : hitRadius;
+  state.hitR = hitR;
   state.show = SHOW_TIME;
-  state.finisherShown = finisher;
   const maxR = reach + (finisher ? hitRadius * 0.8 : 0);
   for (const e of enemies) {
     if (!e.alive || e.dying) continue;
@@ -171,6 +274,8 @@ export function updateFist(
 ): void {
   if (state.cachedLevel !== w.level || state.cachedEvolved !== w.evolved) refreshFist(state, w);
   if (state.show > 0) state.show -= dt;
+  if (state.show2 > 0) state.show2 -= dt;
+  if (state.show3 > 0) state.show3 -= dt;
 
   const dmgMult = mods?.damageMult ?? 1;
   const cdMult = mods?.cooldownMult ?? 1;
@@ -188,14 +293,14 @@ export function updateFist(
   } else if (state.phase === "windup") {
     state.timer -= dt;
     if (state.timer <= 0) {
-      strike(state, enemies, px, py, state.reach * 1.35, state.hitRadius, FINISHER_CONE, dmg * FINISHER_DAMAGE_MULT, true, mods?.critChance, onKill);
+      strike(state, enemies, px, py, state.reach * 1.35, state.hitRadius, FINISHER_CONE, dmg * FINISHER_DAMAGE_MULT, true, w.super, mods?.critChance, onKill);
       state.phase = "cooldown";
       state.timer = state.cooldown * cdMult;
     }
   }
 
   if (state.phase !== "jab") return;
-  strike(state, enemies, px, py, state.reach, state.hitRadius, JAB_CONE, dmg, false, mods?.critChance, onKill);
+  strike(state, enemies, px, py, state.reach, state.hitRadius, JAB_CONE, dmg, false, w.super, mods?.critChance, onKill);
   state.jabsLeft--;
   if (state.jabsLeft > 0) {
     state.phase = "gap";
@@ -210,8 +315,17 @@ export function updateFist(
 }
 
 export function renderFist(ctx: CanvasRenderingContext2D, state: FistState): void {
-  if (state.show <= 0) return;
-  const size = state.hitR * 2;
-  const icon = getIconSprite("weapon-fist", CONFIG.weapons.fist.color, size);
-  if (icon) drawSpriteCentered(ctx, icon, state.hitX, state.hitY);
+  const color = CONFIG.weapons.fist.color;
+  if (state.show > 0) {
+    const icon = getIconSprite("weapon-fist", color, state.hitR * 2);
+    if (icon) drawSpriteCentered(ctx, icon, state.hitX, state.hitY);
+  }
+  if (state.show2 > 0) {
+    const icon = getIconSprite("weapon-fist", color, state.hit2R * 2);
+    if (icon) drawSpriteCentered(ctx, icon, state.hit2X, state.hit2Y);
+  }
+  if (state.show3 > 0) {
+    const icon = getIconSprite("weapon-fist", color, state.hit3R * 2);
+    if (icon) drawSpriteCentered(ctx, icon, state.hit3X, state.hit3Y);
+  }
 }
