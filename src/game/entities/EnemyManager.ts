@@ -51,7 +51,6 @@ function getWolfImage(): HTMLImageElement | null {
 
 let idCounter = 1000;
 let spawnTimer = 0;
-let eliteTimer = 0;
 let eliteSpawned = 0;
 
 /** Set from the active run's constraints. Defaults leave spawning unchanged. */
@@ -70,7 +69,6 @@ export function setEnemyConstraints(mods: {
 export function resetEnemyManager(): void {
   spawnTimer = 0;
   idCounter = 1000;
-  eliteTimer = 0;
   eliteSpawned = 0;
 }
 
@@ -186,12 +184,15 @@ export function updateEnemies(
     }
   }
 
-  // Elite spawn every interval
-  eliteTimer += dt;
-  if (eliteTimer >= CONFIG.elite.spawnInterval) {
-    eliteTimer = 0;
-    eliteSpawned++;
-    enemies.push(createEliteEnemy(_elapsedTime, player.x, player.y));
+  // On the survival clock: 1:00, 2:00, 3:00… A free-running timer lived in this
+  // module and kept its leftover into the next run, so elites showed up off the minute.
+  const eliteInterval = CONFIG.elite.spawnInterval;
+  if (eliteInterval > 0) {
+    const due = Math.floor(_elapsedTime / eliteInterval);
+    while (eliteSpawned < due) {
+      eliteSpawned++;
+      enemies.push(createEliteEnemy(_elapsedTime, player.x, player.y));
+    }
   }
 
   for (const e of enemies) {
@@ -395,22 +396,21 @@ function renderWolfSprite(
   );
   if (crisp) ctx.imageSmoothingEnabled = true;
 
-  // HP bar if damaged
-  if (e.hp < e.maxHp && !e.dying) {
+  if ((e.isElite || e.hp < e.maxHp) && !e.dying) {
     const barW = e.radius * 2.5;
     const barH = 3;
     const bx = e.x - barW / 2;
     const by = e.y - drawSize / 2 - 5;
     ctx.fillStyle = "#333";
     ctx.fillRect(bx, by, barW, barH);
-    ctx.fillStyle = "#f87171";
+    ctx.fillStyle = e.isElite ? "#fbbf24" : "#f87171";
     ctx.fillRect(bx, by, barW * (e.hp / e.maxHp), barH);
   }
 }
 
 /** HP bar above an enemy (gameplay info, every quality). `top` = y of the sprite's top edge. */
 function drawHpBar(ctx: CanvasRenderingContext2D, e: EnemyState, top: number): void {
-  if (e.hp >= e.maxHp || e.dying) return;
+  if (e.dying || (!e.isElite && e.hp >= e.maxHp)) return;
   const barW = Math.max(16, e.radius * 2);
   const bx = e.x - barW / 2;
   const by = top - 5;
@@ -431,15 +431,8 @@ function renderEnemySprite(ctx: CanvasRenderingContext2D, e: EnemyState, now: nu
   const size = e.radius * ENEMY_SPRITE_PER_RADIUS;
   const scale = size / 16;
   const frame = Math.floor(now * 0.001 * ENEMY_WALK_FPS + e.id * 0.37);
-  if (e.isElite) {
-    ctx.strokeStyle = "#fbbf24";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(e.x, e.y + size * 0.42, e.radius * 0.9, e.radius * 0.35, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  }
   const ok = drawUnit(ctx, sheet, e.facing, frame, e.x, e.y, scale,
-    e.isElite ? { tint: "#fbbf24", tintAmount: 0.3 } : undefined);
+    e.isElite ? { tint: "#fbbf24", tintAmount: 0.55 } : undefined);
   if (!ok) return false;
   drawHpBar(ctx, e, e.y - size / 2);
   return true;
@@ -448,69 +441,118 @@ function renderEnemySprite(ctx: CanvasRenderingContext2D, e: EnemyState, now: nu
 export function renderEnemies(ctx: CanvasRenderingContext2D, enemies: EnemyState[]): void {
   const low = isLowQuality();
   const now = performance.now();
-  const pulse = 0.6 + Math.sin(now * 0.005) * 0.2;
-  for (const e of enemies) {
-    if (!e.alive && !e.dying) continue;
-
-    if (!low && e.shape !== "sprite" && renderEnemySprite(ctx, e, now)) continue;
-    if (!low && e.shape === "sprite") drawShadow(ctx, e.x, e.y + e.radius * 1.1, e.radius / 8);
-
-    if (e.isElite) {
-      // Golden glow aura for elite enemies (ring always; soft fill is decoration)
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, e.radius + 8, 0, Math.PI * 2);
-      if (!low) {
-        ctx.fillStyle = `rgba(251, 191, 36, ${pulse * 0.25})`;
-        ctx.fill();
-      }
-      ctx.strokeStyle = `rgba(251, 191, 36, ${pulse})`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    if (e.shape === "sprite") {
-      renderWolfSprite(ctx, e);
-      continue;
-    }
-
-    // Dying sprite-based enemies skip shape draw (handled above)
-    drawShape(ctx, e.shape, e.x, e.y, e.radius);
-    ctx.fillStyle = e.color;
-    ctx.fill();
-
-    ctx.strokeStyle = e.isElite ? "#fbbf24" : e.borderColor;
-    ctx.lineWidth = e.isElite ? 2.5 : 1.5;
-    ctx.stroke();
-
-    // Emblem inside the shape (decoration — the shape/color already identify the enemy)
-    if (!low) {
-      const emblem = getIconSprite(`enemy-${e.enemyType}`, e.borderColor, Math.round(e.radius * 1.25), null);
-      if (emblem) drawSpriteCentered(ctx, emblem, e.x, e.y + (e.shape === "triangle" ? e.radius * 0.15 : 0));
-    }
-
-    if (e.hp < e.maxHp) {
-      const barW = e.radius * 2;
-      const barH = 3;
-      const bx = e.x - e.radius;
-      const by = e.y - e.radius - 6;
-      ctx.fillStyle = "#333";
-      ctx.fillRect(bx, by, barW, barH);
-      ctx.fillStyle = e.isElite ? "#fbbf24" : "#f87171";
-      ctx.fillRect(bx, by, barW * (e.hp / e.maxHp), barH);
+  // Normals first, elites after, so a crowd cannot paint over the elite body.
+  for (const elitePass of [false, true]) {
+    for (const e of enemies) {
+      if ((!e.alive && !e.dying) || e.isElite !== elitePass) continue;
+      drawEnemyBody(ctx, e, low, now);
     }
   }
 }
 
-/** Crown above elites so they are recognizable even inside a crowd (gameplay info: drawn on every quality). */
-export function renderEliteMarkers(ctx: CanvasRenderingContext2D, enemies: EnemyState[]): void {
+function drawEnemyBody(ctx: CanvasRenderingContext2D, e: EnemyState, low: boolean, now: number): void {
+  if (!low && e.shape !== "sprite" && renderEnemySprite(ctx, e, now)) return;
+  if (!low && e.shape === "sprite") drawShadow(ctx, e.x, e.y + e.radius * 1.1, e.radius / 8);
+
+  if (e.shape === "sprite") {
+    renderWolfSprite(ctx, e);
+    return;
+  }
+
+  // Dying sprite-based enemies skip shape draw (handled above)
+  drawShape(ctx, e.shape, e.x, e.y, e.radius);
+  ctx.fillStyle = e.color;
+  ctx.fill();
+
+  ctx.strokeStyle = e.isElite ? "#fbbf24" : e.borderColor;
+  ctx.lineWidth = e.isElite ? 3 : 1.5;
+  ctx.stroke();
+
+  // Emblem inside the shape (decoration — the shape/color already identify the enemy)
+  if (!low) {
+    const emblem = getIconSprite(`enemy-${e.enemyType}`, e.borderColor, Math.round(e.radius * 1.25), null);
+    if (emblem) drawSpriteCentered(ctx, emblem, e.x, e.y + (e.shape === "triangle" ? e.radius * 0.15 : 0));
+  }
+
+  if (e.isElite || e.hp < e.maxHp) {
+    const barW = e.radius * 2;
+    const barH = 3;
+    const bx = e.x - e.radius;
+    const by = e.y - e.radius - 6;
+    ctx.fillStyle = "#333";
+    ctx.fillRect(bx, by, barW, barH);
+    ctx.fillStyle = e.isElite ? "#fbbf24" : "#f87171";
+    ctx.fillRect(bx, by, barW * (e.hp / e.maxHp), barH);
+  }
+}
+
+const ELITE_CROWN = 28;
+
+/** Point on the screen edge, inset, along the ray from the camera to the elite. */
+function eliteEdgePoint(camX: number, camY: number, ex: number, ey: number): { x: number; y: number } {
+  const hw = CONFIG.canvasWidth / 2 - 36;
+  const hh = CONFIG.canvasHeight / 2 - 36;
+  const dx = ex - camX;
+  const dy = ey - camY;
+  const ax = Math.abs(dx);
+  const ay = Math.abs(dy);
+  let scale = 1;
+  if (ax * hh > ay * hw && ax > 0) scale = hw / ax;
+  else if (ay > 0) scale = hh / ay;
+  return { x: camX + dx * scale, y: camY + dy * scale };
+}
+
+/**
+ * Gold ring and crown. Drawn after weapons so a crowd or a blade cannot hide them.
+ * Off-screen elites keep a crown on the screen edge, with a tick toward them.
+ */
+export function renderEliteMarkers(
+  ctx: CanvasRenderingContext2D,
+  enemies: EnemyState[],
+  camX: number,
+  camY: number
+): void {
   let crown: HTMLCanvasElement | null | undefined;
   const pixel = !isLowQuality();
+  const left = camX - CONFIG.canvasWidth / 2;
+  const top = camY - CONFIG.canvasHeight / 2;
+  const right = camX + CONFIG.canvasWidth / 2;
+  const bottom = camY + CONFIG.canvasHeight / 2;
+  const margin = 48;
   for (const e of enemies) {
     if (!e.isElite || !e.alive || e.dying) continue;
-    if (crown === undefined) crown = getIconSprite(UI_ICONS.crown, "#fbbf24", 18);
-    if (!crown) return;
-    const top = e.shape === "sprite" ? e.radius * 1.75 : pixel ? e.radius * ENEMY_SPRITE_PER_RADIUS * 0.5 + 4 : e.radius;
-    drawSpriteCentered(ctx, crown, e.x, e.y - top - 16);
+
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, e.radius + 14, 0, Math.PI * 2);
+    ctx.strokeStyle = "#fbbf24";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    if (crown === undefined) crown = getIconSprite(UI_ICONS.crown, "#fbbf24", ELITE_CROWN);
+    if (!crown) continue;
+
+    const onScreen =
+      e.x > left + margin && e.x < right - margin &&
+      e.y > top + margin && e.y < bottom - margin;
+    if (onScreen) {
+      const head = e.shape === "sprite" ? e.radius * 1.75 : pixel ? e.radius * ENEMY_SPRITE_PER_RADIUS * 0.5 + 4 : e.radius;
+      drawSpriteCentered(ctx, crown, e.x, e.y - head - 22);
+      continue;
+    }
+
+    const edge = eliteEdgePoint(camX, camY, e.x, e.y);
+    const dx = e.x - camX;
+    const dy = e.y - camY;
+    const mag = Math.hypot(dx, dy) || 1;
+    const ux = dx / mag;
+    const uy = dy / mag;
+    ctx.beginPath();
+    ctx.moveTo(edge.x - ux * 16, edge.y - uy * 16);
+    ctx.lineTo(edge.x + ux * 10, edge.y + uy * 10);
+    ctx.strokeStyle = "#fbbf24";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    drawSpriteCentered(ctx, crown, edge.x - ux * 18, edge.y - uy * 18);
   }
 }
 

@@ -15,6 +15,9 @@ const ALL_ACCESSORY_TYPES: AccessoryType[] = [
   "thornArmor",
   "shieldForge",
   "natureBlessing",
+  "keenRing",
+  "goldPurse",
+  "vampireFang",
 ];
 
 export function allAccessoryTypes(): AccessoryType[] {
@@ -44,6 +47,9 @@ export interface AccessoryMods {
   xpMult: number;
   reflectDamage: number;
   damageReduction: number; // 0..1, e.g. 0.05 = 5% less damage
+  critChance: number;
+  goldMult: number;
+  killHeal: number;
 }
 
 export class AccessoryManager {
@@ -99,6 +105,9 @@ export class AccessoryManager {
       xpMult: 1,
       reflectDamage: 0,
       damageReduction: 0,
+      critChance: 0,
+      goldMult: 1,
+      killHeal: 0,
     };
 
     for (const a of this.accessories) {
@@ -131,6 +140,15 @@ export class AccessoryManager {
           break;
         case "natureBlessing":
           mods.regenPerSec += def.baseRegenPerSec! + def.growthRegen! * (lvl - 1);
+          break;
+        case "keenRing":
+          mods.critChance += def.baseCritChance! + def.growthCritChance! * (lvl - 1);
+          break;
+        case "goldPurse":
+          mods.goldMult *= def.baseGoldMult! + def.growthGoldMult! * (lvl - 1);
+          break;
+        case "vampireFang":
+          mods.killHeal += def.baseKillHeal! + def.growthKillHeal! * (lvl - 1);
           break;
       }
     }
@@ -174,6 +192,12 @@ export class AccessoryManager {
         return `피해감소 ${Math.round((def.baseDamageReduction! + def.growthDamageReduction! * lvl) * 100)}%`;
       case "natureBlessing":
         return `체력재생 ${(def.baseRegenPerSec! + def.growthRegen! * lvl).toFixed(1)}/s`;
+      case "keenRing":
+        return `치명타 +${Math.round((def.baseCritChance! + def.growthCritChance! * lvl) * 100)}%`;
+      case "goldPurse":
+        return `골드 +${Math.round((def.baseGoldMult! + def.growthGoldMult! * lvl) * 100 - 100)}%`;
+      case "vampireFang":
+        return `처치 회복 ${(def.baseKillHeal! + def.growthKillHeal! * lvl).toFixed(1)}`;
     }
   }
 }

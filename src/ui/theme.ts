@@ -17,6 +17,9 @@ export const ACCESSORY_COLORS: Record<AccessoryType, string> = {
   thornArmor: "#f472b6",
   shieldForge: "#94a3b8",
   natureBlessing: "#4ade80",
+  keenRing: "#facc15",
+  goldPurse: "#eab308",
+  vampireFang: "#be123c",
 };
 
 export function accessoryColor(type?: AccessoryType): string {

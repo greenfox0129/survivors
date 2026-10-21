@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import type { GameStats } from "@/game/core/types";
 import { CONFIG } from "@/game/data/config";
 import { accessoryColor, weaponColor } from "@/ui/theme";
@@ -28,6 +29,18 @@ export function HUD({ stats }: HUDProps) {
   const xpPercent = stats.xpToNext > 0 ? Math.min(100, (stats.xp / stats.xpToNext) * 100) : 0;
   const hpPercent = stats.maxHp > 0 ? Math.max(0, Math.min(100, (stats.hp / stats.maxHp) * 100)) : 0;
   const emptyWeaponSlots = Math.max(0, CONFIG.maxWeapons - stats.weapons.length);
+  const [eliteBanner, setEliteBanner] = useState(false);
+  const prevElite = useRef<number | null>(stats.eliteSeconds);
+  useEffect(() => {
+    const prev = prevElite.current;
+    prevElite.current = stats.eliteSeconds;
+    if (prev == null && stats.eliteSeconds != null) setEliteBanner(true);
+  }, [stats.eliteSeconds]);
+  useEffect(() => {
+    if (!eliteBanner) return;
+    const id = window.setTimeout(() => setEliteBanner(false), 2200);
+    return () => window.clearTimeout(id);
+  }, [eliteBanner]);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10">
@@ -65,6 +78,13 @@ export function HUD({ stats }: HUDProps) {
           <span className={`font-mono text-lg font-bold tabular-nums ${stats.eliteSeconds <= 10 ? "text-red-200" : "text-amber-200"}`}>
             {Math.ceil(stats.eliteSeconds)}
           </span>
+        </div>
+      )}
+
+      {eliteBanner && (
+        <div className="absolute left-1/2 top-16 flex -translate-x-1/2 items-center gap-2 rounded-lg border-2 border-amber-300 bg-slate-950/95 px-4 py-2">
+          <GameIcon name={UI_ICONS.crown} size={22} className="text-amber-300" />
+          <span className="text-lg font-bold tracking-wide text-amber-100">엘리트 출현</span>
         </div>
       )}
 

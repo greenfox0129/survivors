@@ -41,7 +41,7 @@ export function PixelFace({ kind, id, size, color, className = "", dimmed }: Fac
       draggable={false}
       width={size}
       height={size}
-      className={`shrink-0 ${dimmed ? "opacity-50 grayscale" : ""} ${className}`}
+      className={`shrink-0 ${dimmed ? "opacity-80" : ""} ${className}`}
       style={PIXELATED}
     />
   );

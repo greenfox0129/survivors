@@ -167,15 +167,18 @@ export const CONFIG = {
   // ---- Gems ----
   gem: {
     radius: 7,
+    magnetSpeed: 280, // px/s at base move speed; faster players pull this much harder
     color: "#7dd3fc", // bright sky; merged gems step toward deep blue in GemManager
-    magnetSpeed: 280, // px/s when being pulled
   },
 
   // Rare kill drop. One roll per kill; the three pickups are equally likely.
+  // After dropDecayAfter, the chance is multiplied by dropDecayPerMinute each minute.
   special: {
     dropChance: 1 / 300,
+    dropDecayAfter: 300,
+    dropDecayPerMinute: 0.8,
     radius: 13,
-    pullSpeed: 720, // px/s, magnet pickup yanks every XP gem on the map
+    pullSpeed: 720, // px/s at base move speed; the magnet pickup scales the same way
   },
 
   // ---- Max weapons a player can hold ----
@@ -257,6 +260,30 @@ export const CONFIG = {
       icon: "leaf",
       baseRegenPerSec: 0.5,
       growthRegen: 0.8 / 3,
+      maxLevel: 5,
+    },
+    keenRing: {
+      name: "예리한 반지",
+      desc: "치명타 확률이 오른다",
+      icon: "sword",
+      baseCritChance: 0.06,
+      growthCritChance: 0.04,
+      maxLevel: 5,
+    },
+    goldPurse: {
+      name: "황금 주머니",
+      desc: "판이 끝난 뒤 골드를 더 받는다",
+      icon: "coin",
+      baseGoldMult: 1.12,
+      growthGoldMult: 0.08,
+      maxLevel: 5,
+    },
+    vampireFang: {
+      name: "흡혈 송곳니",
+      desc: "적을 잡을 때마다 체력을 조금 회복한다",
+      icon: "fang",
+      baseKillHeal: 0.4,
+      growthKillHeal: 0.25,
       maxLevel: 5,
     },
   } as Record<string, AccessoryDef>,
@@ -367,6 +394,22 @@ export const CONFIG = {
       radiusGrowth: 1.06,
       maxLevel: 8,
     },
+    fist: {
+      name: "주먹",
+      desc: "가까운 적을 향해 주먹을 연타한다",
+      color: "#f43f5e",
+      baseDamage: 12,
+      baseCooldown: 0.95,
+      baseReach: 80,
+      baseHitRadius: 48,
+      baseJabCount: 2,
+      jabInterval: 0.12,
+      finisherMult: 2.5,
+      damageGrowth: 1.22,
+      cooldownGrowth: 0.94,
+      reachGrowth: 1.05,
+      maxLevel: 8,
+    },
   } as const,
 
 };
@@ -394,6 +437,12 @@ interface AccessoryDef {
   growthReflectDamage?: number;
   baseDamageReduction?: number;
   growthDamageReduction?: number;
+  baseCritChance?: number;
+  growthCritChance?: number;
+  baseGoldMult?: number;
+  growthGoldMult?: number;
+  baseKillHeal?: number;
+  growthKillHeal?: number;
 }
 
 // Derived helper: XP required to go from `level` to `level+1`.
@@ -417,6 +466,13 @@ export function enemyHpScale(elapsedSeconds: number, growthMult = 1): number {
 /** Elite HP at spawn. 500 at 0:00, 1000 at 1:00, 2000 at 2:00. Does not use the type's HP. */
 export function eliteHp(elapsedSeconds: number, growthMult = 1): number {
   return CONFIG.elite.hp * Math.pow(CONFIG.elite.hpPerMinute * growthMult, elapsedSeconds / 60);
+}
+
+/** Special-item chance per kill. Flat until 5:00, then ×0.8 each minute. */
+export function specialDropChance(elapsedSeconds: number): number {
+  const { dropChance, dropDecayAfter, dropDecayPerMinute } = CONFIG.special;
+  const lateMinutes = Math.max(0, elapsedSeconds - dropDecayAfter) / 60;
+  return dropChance * Math.pow(dropDecayPerMinute, lateMinutes);
 }
 
 /**

@@ -169,7 +169,7 @@ export function Lobby({ onNavigate, save }: LobbyProps) {
         className="group mb-6 flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-2.5 transition-colors hover:border-slate-600"
       >
         <span
-          className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg"
+          className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg bg-[#2f4a1f]"
           style={{ border: `2px solid ${readableAccent(charDef.color)}` }}
         >
           <PixelFace kind="char" id={charDef.id} size={40} color={readableAccent(charDef.color)} />
@@ -234,7 +234,7 @@ export function Lobby({ onNavigate, save }: LobbyProps) {
         WASD / 방향키 — 이동 · 공격은 자동 · ESC — 일시정지
       </p>
       <p className="mt-2 text-[11px] text-slate-700">
-        v{GAME_INFO.version} · Icons by {ICON_AUTHORS} (game-icons.net, CC BY 3.0) · Pixel art: Ninja Adventure by Pixel-boy &amp; AAA (CC0) · 리냐·에우로안: Universal LPC (CC BY-SA 3.0)
+        v{GAME_INFO.version} · Icons by {ICON_AUTHORS} (game-icons.net, CC BY 3.0) · Pixel art: Ninja Adventure by Pixel-boy &amp; AAA (CC0) · 리냐·에우로안·천: Universal LPC (CC BY-SA 3.0)
       </p>
 
     </div>

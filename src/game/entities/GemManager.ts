@@ -2,7 +2,7 @@
 //  GemManager.ts — XP gem drops, magnet pickup, rendering
 // ============================================================
 
-import { CONFIG } from "@/game/data/config";
+import { CONFIG, specialDropChance } from "@/game/data/config";
 import type { EnemyState, Gem, PlayerState, SpecialPickup } from "@/game/core/types";
 import { isLowQuality } from "@/game/render/quality";
 import { getIconSprite, drawSpriteCentered } from "@/game/render/iconSprites";
@@ -63,9 +63,16 @@ export function dropTreasure(enemy: EnemyState): Gem {
 
 const SPECIALS: SpecialPickup[] = ["magnet", "heart", "bomb"];
 
-/** About 1/300 kills. The three kinds are equally likely. Null when the roll misses. */
-export function rollSpecialDrop(enemy: EnemyState): Gem | null {
-  if (Math.random() >= CONFIG.special.dropChance) return null;
+/** Keep the base pull when the player is at or below base speed, and scale it up when they are faster. */
+function pullSpeed(player: PlayerState, attracted: boolean): number {
+  const ratio = Math.max(1, player.speed / CONFIG.player.speed);
+  const base = attracted ? CONFIG.special.pullSpeed : CONFIG.gem.magnetSpeed;
+  return base * ratio;
+}
+
+/** Base chance is 1/300, then ×0.8 per minute after 5:00. The three kinds are equally likely. */
+export function rollSpecialDrop(enemy: { x: number; y: number }, elapsedSeconds = 0): Gem | null {
+  if (Math.random() >= specialDropChance(elapsedSeconds)) return null;
   const pickup = SPECIALS[Math.floor(Math.random() * SPECIALS.length)];
   return {
     id: ++idCounter,
@@ -105,8 +112,8 @@ export function updateGems(gems: Gem[], player: PlayerState, dt: number): GemUpd
       if (pdist2 < pickupR2) {
         const dist = Math.sqrt(pdist2);
         if (dist > 0.1) {
-          g.x += (pdx / dist) * CONFIG.gem.magnetSpeed * dt;
-          g.y += (pdy / dist) * CONFIG.gem.magnetSpeed * dt;
+          g.x += (pdx / dist) * pullSpeed(player, false) * dt;
+          g.y += (pdy / dist) * pullSpeed(player, false) * dt;
         }
       }
       const collectR = player.radius + g.radius + 4;
@@ -128,8 +135,8 @@ export function updateGems(gems: Gem[], player: PlayerState, dt: number): GemUpd
       if (tdist2 < pickupR2) {
         const dist = Math.sqrt(tdist2);
         if (dist > 0.1) {
-          g.x += (tdx / dist) * CONFIG.gem.magnetSpeed * dt;
-          g.y += (tdy / dist) * CONFIG.gem.magnetSpeed * dt;
+          g.x += (tdx / dist) * pullSpeed(player, false) * dt;
+          g.y += (tdy / dist) * pullSpeed(player, false) * dt;
         }
       }
       const collectR = player.radius + g.radius + 5;
@@ -145,7 +152,7 @@ export function updateGems(gems: Gem[], player: PlayerState, dt: number): GemUpd
     const dist2 = dx * dx + dy * dy;
 
     // Magnet pull. A magnet pickup marks the gem so it comes from anywhere on the map.
-    const speed = g.attracted ? CONFIG.special.pullSpeed : CONFIG.gem.magnetSpeed;
+    const speed = pullSpeed(player, !!g.attracted);
     if (g.attracted || dist2 < player.pickupRadius * player.pickupRadius) {
       const dist = Math.sqrt(dist2);
       if (dist > 0.1) {

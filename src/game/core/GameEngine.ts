@@ -29,6 +29,7 @@ import {
   cullDead,
   cullFarEnemies,
   eliteSecondsLeft,
+  getEliteSpawned,
   resetEnemyManager,
   setElapsedTime,
   setEnemyConstraints,
@@ -49,7 +50,7 @@ import {
 } from "@/game/entities/GemManager";
 import { computeModifiers, type GameModifiers } from "@/game/systems/traitHelper";
 import { resolveRunConstraints, type RunConstraints } from "@/game/data/constraints";
-import { playHurtSound, playLevelUpSound, playXpPickupSound, playGameOverSound } from "@/game/core/audio";
+import { playHurtSound, playLevelUpSound, playXpPickupSound, playGameOverSound, playEliteSound } from "@/game/core/audio";
 import { CHARACTERS, type PassiveType } from "@/game/data/progression";
 import type { SaveData } from "@/game/core/storage";
 import {
@@ -150,6 +151,10 @@ export class GameEngine {
       this.accessoryMgr.addAccessory(this.modifiers.startAccessory);
     }
     this.applyAccessoryMods();
+    // Spawn clocks live on EnemyManager, not on this instance. Clear them or the
+    // previous run's leftover shifts every elite off the minute marks.
+    resetEnemyManager();
+    setElapsedTime(0);
   }
 
   /** Recompute accessory modifiers and apply them to player + weapon mods. */
@@ -192,6 +197,7 @@ export class GameEngine {
     let critChance = 0;
 
     if (this.passive === "spellPower") dmgMult *= this.breakthrough >= 3 ? 1.25 : 1.15;
+    if (this.passive === "physicalApex") dmgMult *= this.breakthrough >= 3 ? 1.3 : 1.2;
 
     if (this.passive === "swiftLooter") {
       const speedRatio = this.modifiers.speedMult - 1.0;
@@ -209,6 +215,7 @@ export class GameEngine {
     if (this.passive === "critStrike") {
       critChance = this.breakthrough >= 3 ? 0.25 : 0.15;
     }
+    critChance = Math.min(0.6, critChance + mods.critChance);
 
     this.weaponMgr.setMods({
       damageMult: dmgMult,
@@ -289,6 +296,7 @@ export class GameEngine {
     }
     this.applyAccessoryMods();
     this.elapsed = 0;
+    setElapsedTime(0);
     this.kills = 0;
     this.score = 0;
     this.failedElite = false;
@@ -307,28 +315,37 @@ export class GameEngine {
   }
 
   /** Drop the reward of a newly killed enemy exactly once (+ cosmetic kill pop). */
+  /** A kill counts for score and, with the fang, gives a little HP back. */
+  private noteKill(): void {
+    this.kills++;
+    if (!this.player.alive) return;
+    const heal = this.accessoryMgr.computeMods().killHeal;
+    if (heal <= 0 || this.player.hp >= this.player.maxHp) return;
+    this.player.hp = Math.min(this.player.maxHp, this.player.hp + heal);
+  }
+
   private dropReward(e: EnemyState): void {
     if (e.gemDropped) return;
     this.gems.push(e.isElite ? dropTreasure(e) : dropGem(e));
-    const special = rollSpecialDrop(e);
+    const special = rollSpecialDrop(e, this.elapsed);
     if (special) this.gems.push(special);
     e.gemDropped = true;
     spawnKillPop(e.x, e.y, e.isElite ? "#fbbf24" : e.color, e.radius);
   }
 
-  /** Bomb pickup: every enemy whose body overlaps the camera view dies. */
+  /** Bomb pickup: on-screen enemies die. Elites are left alive. */
   private detonateScreen(): void {
     const hw = CONFIG.canvasWidth / 2;
     const hh = CONFIG.canvasHeight / 2;
     const cx = this.camera.x;
     const cy = this.camera.y;
     for (const e of this.enemies) {
-      if (!e.alive || e.dying) continue;
+      if (!e.alive || e.dying || e.isElite) continue;
       if (Math.abs(e.x - cx) > hw + e.radius) continue;
       if (Math.abs(e.y - cy) > hh + e.radius) continue;
       e.hp = 0;
       e.alive = false;
-      this.kills++;
+      this.noteKill();
       this.dropReward(e);
     }
     playHurtSound();
@@ -379,7 +396,9 @@ export class GameEngine {
     // Camera follows player — player stays centered on screen
     this.camera.x = this.player.x;
     this.camera.y = this.player.y;
+    const elitesBefore = getEliteSpawned();
     updateEnemies(this.enemies, this.player, dt);
+    if (getEliteSpawned() > elitesBefore) playEliteSound();
     if (tickEliteLife(this.enemies, dt)) {
       this.failedElite = true;
       this.player.alive = false;
@@ -406,7 +425,7 @@ export class GameEngine {
             e.hp -= reflectDmg;
             if (e.hp <= 0 && !e.dying) {
               e.alive = false;
-              this.kills++;
+              this.noteKill();
               this.dropReward(e);
             }
           }
@@ -421,7 +440,7 @@ export class GameEngine {
 
     // Weapons — onKill just counts kills; gem drops handled in single pass below
     this.weaponMgr.update(this.enemies, this.player, dt, () => {
-      this.kills++;
+      this.noteKill();
     });
 
     // Single pass for gem drops from newly dead enemies
@@ -619,8 +638,8 @@ export class GameEngine {
     renderGems(ctx, this.gems);
     renderEnemies(ctx, this.enemies);
     renderEffects(ctx);
-    renderEliteMarkers(ctx, this.enemies);
     this.weaponMgr.render(ctx, this.player);
+    renderEliteMarkers(ctx, this.enemies, this.camera.x, this.camera.y);
     renderPlayer(ctx, this.player);
     ctx.restore();
   }

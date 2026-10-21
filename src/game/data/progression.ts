@@ -2,7 +2,7 @@
 //  data.ts — Character & trait definitions for meta-progression
 // ============================================================
 
-export type StartWeaponType = "bullet" | "melee" | "bomb" | "trap" | "aura" | "shuriken" | "claw";
+export type StartWeaponType = "bullet" | "melee" | "bomb" | "trap" | "aura" | "shuriken" | "claw" | "fist";
 
 export type PassiveType =
   | "none"
@@ -11,7 +11,8 @@ export type PassiveType =
   | "guardianWall"      // flat damage reduction + contact reflect
   | "swiftLooter"       // movespeed-based bonus damage + larger pickup
   | "spellPower"        // all damage +15%
-  | "critStrike";       // 15% chance to deal 2x damage
+  | "critStrike"        // 15% chance to deal 2x damage
+  | "physicalApex";     // flat damage bonus — Cheon's body-only fighting style
 
 export interface CharacterDef {
   id: string;
@@ -154,6 +155,22 @@ export const CHARACTERS: CharacterDef[] = [
     unlockAchievement: "evo_claw",
     passive: "guardianWall",
     passiveDesc: "받는 피해 15% 감소 · 근접 적에게 반사 피해",
+  },
+  {
+    id: "cheon",
+    name: "천",
+    color: "#1e293b",
+    desc: "검은 머리의 사내. 몸만 믿고 주먹으로 밀고 나간다.",
+    hpMult: 1.15,
+    speedMult: 1.2,
+    damageMult: 1.2,
+    cooldownMult: 0.92,
+    projectileColor: "#f43f5e",
+    startWeapon: "fist",
+    special: true,
+    unlockAchievement: "evo_fist",
+    passive: "physicalApex",
+    passiveDesc: "모든 공격 피해 +20%",
   },
 ];
 
@@ -314,6 +331,12 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     id: "evo_claw",
     name: "광폭한 야수",
     desc: "야생의 발톱을 진화시키기",
+    reward: 1,
+  },
+  {
+    id: "evo_fist",
+    name: "폭권의 달인",
+    desc: "주먹을 진화시키기",
     reward: 1,
   },
 ];

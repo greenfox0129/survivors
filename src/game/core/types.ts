@@ -61,7 +61,7 @@ export interface EnemyState extends Entity {
 
 // ---- Weapon types ----
 
-export type WeaponType = "bullet" | "melee" | "bomb" | "trap" | "aura" | "shuriken" | "claw";
+export type WeaponType = "bullet" | "melee" | "bomb" | "trap" | "aura" | "shuriken" | "claw" | "fist";
 
 export interface WeaponInstance {
   type: WeaponType;
@@ -281,7 +281,10 @@ export type AccessoryType =
   | "xpcrystal"     // XP gain multiplier
   | "thornArmor"    // contact damage reflection
   | "shieldForge"   // damage reduction
-  | "natureBlessing"; // HP regen focus
+  | "natureBlessing" // HP regen focus
+  | "keenRing"      // crit chance
+  | "goldPurse"     // end-of-run gold
+  | "vampireFang";  // heal on kill
 
 export interface AccessoryInstance {
   type: AccessoryType;

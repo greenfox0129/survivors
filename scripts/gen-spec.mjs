@@ -38,6 +38,7 @@ try {
   const A = await load("/src/game/weapons/AuraWeapon.ts");
   const S = await load("/src/game/weapons/ShurikenWeapon.ts");
   const C = await load("/src/game/weapons/ClawWeapon.ts");
+  const F = await load("/src/game/weapons/FistWeapon.ts");
   const BR = await load("/src/game/weapons/BreathWeapon.ts");
   const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf-8"));
 
@@ -129,6 +130,14 @@ try {
           const c = C.createClawState(w);
           return [lvLabel(w), n(c.damage), n(c.cooldown, 2), n(c.radius), C.clawSlashCount(w), C.clawLevelEffect(w) ?? ""];
         }),
+      ),
+    fist: () =>
+      table(
+        ["Lv", "연타 피해", "쿨다운(s)", "연타", "사거리", "강타", "도달 시 효과"],
+        levels("fist").map((w) => [
+          lvLabel(w), n(F.fistDamage(w)), n(F.fistCooldown(w), 2), F.fistJabCount(w), n(F.fistReach(w)),
+          w.evolved ? `×${CONFIG.weapons.fist.finisherMult}` : "—", F.fistLevelEffect(w) ?? "",
+        ]),
       ),
   };
 
@@ -252,7 +261,7 @@ try {
         ["이동 속도", `${CONFIG.player.speed}px/s`],
         ["피격 무적", `${CONFIG.player.invulnTime}s`],
         ["보석 흡수 반경", `${CONFIG.player.pickupRadius}px`],
-        ["보석 끌림 속도", `${CONFIG.gem.magnetSpeed}px/s`],
+        ["보석 끌림 속도", `${CONFIG.gem.magnetSpeed}px/s (기본 이동속도 기준, 더 빠르면 같은 배율)`],
         ["무기 슬롯 / 장신구 슬롯", `${CONFIG.maxWeapons} / ${CONFIG.maxAccessories}`],
         ["스코어", "처치 × 10 + 생존초 × 5"],
         ["획득 골드", "floor(스코어 / 10)"],

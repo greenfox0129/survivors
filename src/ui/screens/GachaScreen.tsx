@@ -317,7 +317,7 @@ export function GachaScreen({ onBack, save, onUpdate }: GachaScreenProps) {
                     <Lock className={`absolute top-1.5 right-1.5 w-3 h-3 ${isLockedSpecial ? "text-amber-600" : "text-slate-600"}`} />
                   )}
                   <div
-                    className="w-10 h-10 rounded-lg mb-1.5 flex items-center justify-center overflow-hidden"
+                    className="w-10 h-10 rounded-lg mb-1.5 flex items-center justify-center overflow-hidden bg-[#2f4a1f]"
                     style={{ border: `2px solid ${readableAccent(char.color)}${isOwned ? "" : "55"}` }}
                   >
                     <PixelFace kind="char" id={char.id} size={36} color={readableAccent(char.color)} dimmed={!isOwned} />
@@ -456,7 +456,7 @@ function ResultCard({ result }: { result: PullResult }) {
       }}
     >
       <div
-        className="w-9 h-9 rounded-lg mb-1.5 flex items-center justify-center overflow-hidden"
+        className="w-9 h-9 rounded-lg mb-1.5 flex items-center justify-center overflow-hidden bg-[#2f4a1f]"
         style={{ border: `2px solid ${readableAccent(char.color)}` }}
       >
         <PixelFace kind="char" id={char.id} size={32} color={readableAccent(char.color)} />

@@ -146,7 +146,7 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
                   </span>
                 )}
                 <div
-                  className="w-12 h-12 rounded-lg mb-2 flex items-center justify-center overflow-hidden"
+                  className="w-12 h-12 rounded-lg mb-2 flex items-center justify-center overflow-hidden bg-[#2f4a1f]"
                   style={{ border: `2px solid ${readableAccent(char.color)}` }}
                 >
                   <PixelFace kind="char" id={char.id} size={44} color={readableAccent(char.color)} dimmed={!isOwned} />
@@ -543,6 +543,10 @@ const PASSIVE_ENHANCEMENTS: Record<string, { before: string; after: string }> = 
   critStrike: {
     before: "15% 확률로 치명타 (2배 피해)",
     after: "25% 확률로 치명타 (2배 피해)",
+  },
+  physicalApex: {
+    before: "모든 공격 피해 +20%",
+    after: "모든 공격 피해 +30%",
   },
   none: {
     before: "고유 특성 없음",

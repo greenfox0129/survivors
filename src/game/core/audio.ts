@@ -131,6 +131,12 @@ export function playLevelUpSound(): void {
   setTimeout(() => playTone(660, 990, 0.2, 0.065, "sine"), 90);
 }
 
+/** Two-note sting when an elite enters. Distinct from the level-up chime. */
+export function playEliteSound(): void {
+  playTone(311, 466, 0.14, 0.08, "triangle");
+  setTimeout(() => playTone(466, 622, 0.2, 0.07, "triangle"), 120);
+}
+
 export function playGameOverSound(): void {
   playTone(220, 90, 0.4, 0.07, "sawtooth");
 }

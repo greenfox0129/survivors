@@ -436,6 +436,13 @@ function WeaponDetail({ type, onBack }: { type: WeaponType; onBack: () => void }
               쿨다운: {CONFIG.weapons.claw.baseCooldown}초 · 진화 시 출혈 지속 데미지 추가
             </>
           )}
+          {type === "fist" && (
+            <>
+              사거리: {CONFIG.weapons.fist.baseReach}px · 연타: {CONFIG.weapons.fist.baseJabCount}회 · 간격: {CONFIG.weapons.fist.jabInterval}초
+              <br />
+              쿨다운: {CONFIG.weapons.fist.baseCooldown}초 · 진화 시 연타 뒤 강타 {CONFIG.weapons.fist.finisherMult}배
+            </>
+          )}
         </p>
       </div>
 

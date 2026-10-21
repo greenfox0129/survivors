@@ -1,7 +1,15 @@
 {
+  "acc-goldPurse": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/money-stack.html"
+  },
   "acc-hastePendant": {
     "author": "Lorc",
     "source": "https://game-icons.net/1x1/lorc/stopwatch.html"
+  },
+  "acc-keenRing": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/piercing-sword.html"
   },
   "acc-magnetCharm": {
     "author": "Lorc",
@@ -27,6 +35,10 @@
     "author": "Lorc",
     "source": "https://game-icons.net/1x1/lorc/spiked-armor.html"
   },
+  "acc-vampireFang": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/dripping-knife.html"
+  },
   "acc-vitalRing": {
     "author": "Delapouite",
     "source": "https://game-icons.net/1x1/delapouite/power-ring.html"
@@ -38,6 +50,10 @@
   "char-berserker": {
     "author": "Delapouite",
     "source": "https://game-icons.net/1x1/delapouite/barbarian.html"
+  },
+  "char-cheon": {
+    "author": "Delapouite",
+    "source": "https://game-icons.net/1x1/delapouite/muscular-torso.html"
   },
   "char-euroan": {
     "author": "Delapouite",
@@ -270,6 +286,10 @@
   "weapon-claw-evo": {
     "author": "Lorc",
     "source": "https://game-icons.net/1x1/lorc/dragon-breath.html"
+  },
+  "weapon-fist": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/punch.html"
   },
   "weapon-melee": {
     "author": "Lorc",

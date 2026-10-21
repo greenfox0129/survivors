@@ -34,7 +34,7 @@ export const EVOLUTIONS: Record<WeaponType, EvolutionDef> = {
     weapon: "melee",
     pairedAccessory: "swiftBoots",
     evolvedName: "폭풍의 칼날",
-    desc: "칼날 8개 · 회전 속도 2배 · 넉백 추가",
+    desc: "칼날 8개 · 회전 속도 2배",
     damageMult: 1.5,
     cooldownMult: 1.0,
     effect: "more_blades",
@@ -83,6 +83,15 @@ export const EVOLUTIONS: Record<WeaponType, EvolutionDef> = {
     damageMult: 1.6,
     cooldownMult: 0.6,
     effect: "breath",
+  },
+  fist: {
+    weapon: "fist",
+    pairedAccessory: "thornArmor",
+    evolvedName: "폭권",
+    desc: "연타 뒤 넓은 강타",
+    damageMult: 1.45,
+    cooldownMult: 0.8,
+    effect: "finisher",
   },
 };
 

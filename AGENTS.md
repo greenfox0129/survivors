@@ -56,7 +56,7 @@
   render 함수는 `if (!isLowQuality() && <픽셀 경로 성공>) return/continue;` 다음에 원래 코드를 둔다 (로딩 중 자동 폴백). 저사양 경로는 고치지 않는다.
 - 픽셀 아트는 `imageSmoothingEnabled=false` 로 그리고 복구, 타일 바닥은 청크 캐시만 쓴다(타일 단위 매 프레임 그리기 금지).
 - 이펙트는 `render/effects.ts` 에 — 개수 상한, 짧은 수명, 저사양 생략.
-- 엔티티는 항상 불투명. 그리는 순서: 배경 → 보석 → 적 → 이펙트 → 엘리트 표식 → 무기 → 플레이어.
+- 엔티티는 항상 불투명. 그리는 순서: 배경 → 보석 → 적(엘리트는 맨 뒤) → 이펙트 → 무기 → 엘리트 표식 → 플레이어.
 
 ### 1-4. AI가 개발하기 편하게
 - 작은 파일, 한 파일 한 책임. 폴더마다 `README.md` (새 폴더를 만들면 README도).
@@ -130,12 +130,12 @@ src/
 ### 새 적
 `config.ts` `enemyTypes` (등장 시간·가중치·모양) → 도감 설명 `CodexScreen.tsx` `ENEMY_DESCS` → 아이콘 `enemy-<id>.svg`(저사양)
 → 픽셀 시트·초상 `units/enemy-<id>`, `faces/enemy-<id>` (`scripts/sync-pixel-assets.mjs` 에 한 줄, `npm run assets:pixel`).
-스프라이트 적은 늑대 구현(16×16 시트, 지연 로딩)을 따른다.
+스프라이트는 `art/` 에서 고른다 ([art/README.md](art/README.md) 의 찾는 표). 늑대 구현(16×16 시트, 지연 로딩)을 따른다.
 
 ### 새 캐릭터
 `progression.ts` `CHARACTERS` (패시브는 `PassiveType` + `GameEngine.updateWeaponMods`/`applyAccessoryMods`) → 엠블럼 `char-<id>.svg`(저사양)
 → 픽셀 걷기 시트·초상 (`scripts/sync-pixel-assets.mjs` 캐릭터 목록에 `[id, Ninja Adventure 폴더명]`, `npm run assets:pixel`).
-팩에 없으면 [Universal LPC Spritesheet Character Generator](https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator) 에서도 찾는다. 레이어 라이선스는 그 저장소 `CREDITS.csv` 를 보고, 쓴 레이어만 크레딧한다.
+시트가 `art/` 에 없으면 [art/README.md](art/README.md) 의 찾는 표를 보고, 사람형 걷기 주기만 [Universal LPC Spritesheet Character Generator](https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator) 에서 찾는다. 레이어 라이선스는 그 저장소 `CREDITS.csv` 를 보고, 쓴 레이어만 크레딧한다.
 특수 캐릭터는 `special: true` + `unlockAchievement`.
 
 ### 새 아이콘·에셋

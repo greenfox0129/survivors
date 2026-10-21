@@ -7,6 +7,8 @@
 import type { AccessoryType, UpgradeOption, WeaponType } from "@/game/core/types";
 
 export function weaponIcon(type: WeaponType, evolved = false): string {
+  // Evolved fist keeps the plain punch icon.
+  if (type === "fist") return "weapon-fist";
   return `weapon-${type}${evolved ? "-evo" : ""}`;
 }
 

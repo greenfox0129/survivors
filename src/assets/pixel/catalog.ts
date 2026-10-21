@@ -3,7 +3,7 @@
 //
 //  Unit sheets (units/*): 4 columns × 4 rows. Default frame is 16×16 (64×64 sheet).
 //    column = facing (0 down, 1 up, 2 left, 3 right), row = walk frame.
-//    Linya and Euroan are 32×32 LPC frames (see UNIT_FRAME_PX).
+//    Linya, Euroan, and Cheon are 32×32 LPC frames (see UNIT_FRAME_PX).
 //  Faces (faces/*): 38×38 portrait used by the UI.
 //  Strips (proj/*, fx/*, items/*): frames laid out horizontally; the frame width
 //    is listed below and the frame height is the image height.
@@ -20,6 +20,7 @@ export const UNIT_FRAMES = 4;
 export const UNIT_FRAME_PX: Record<string, number> = {
   "units/char-linya": 32,
   "units/char-euroan": 32,
+  "units/char-cheon": 32,
 };
 
 /**
@@ -29,6 +30,7 @@ export const UNIT_FRAME_PX: Record<string, number> = {
 export const UNIT_DRAW_SCALE: Record<string, number> = {
   "units/char-linya": 1.2,
   "units/char-euroan": 1.2,
+  "units/char-cheon": 1.2,
 };
 
 /** Facing column in a unit sheet. */

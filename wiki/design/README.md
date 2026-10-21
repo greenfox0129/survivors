@@ -6,7 +6,7 @@
 | [art-direction.md](art-direction.md) | 아트 디렉션 — 현재 스타일 분석과 앞으로의 방향 |
 | [design-board.html](design-board.html) / [design-board.png](design-board.png) | 실제 사용 중인 아이콘·색·후보 에셋 한 장 보기 (`npm run dev` 후 `/wiki/design/design-board.html`) |
 | [assets/](assets/) | 후보 에셋 (Kenney 파티클·타일·샘플) + [CREDITS.md](assets/CREDITS.md) |
-| [`art/`](../../art/README.md) | 픽셀 아트 원본 팩 (Ninja Adventure 전체, 0x72 DungeonTileset II). 여기에 없으면 [Universal LPC 생성기](https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator)도 본다. 게임은 필요한 프레임만 복사해 씀 |
+| [`art/`](../../art/README.md) | 픽셀 아트 원본 라이브러리. Ninja Adventure, 0x72, Kenney 던전·마을·캐릭터·투사체·파티클. 여기 표를 먼저 보고, 사람형 걷기만 LPC 생성기에서 찾는다. 게임은 필요한 프레임만 복사해 씀 |
 | [screenshots/](screenshots/) | 현재 화면 캡처 |
 
 ![design board](design-board.png)
@@ -20,12 +20,12 @@
 | 플레이어(기본) | `#22d3ee` + 외곽 `#0e7490` | `CONFIG.player`, 캐릭터별 `CHARACTERS[].color` |
 | 경험치 | `#3b82f6` → 병합 단계 보라·초록·분홍·금 | `GemManager` |
 | 엘리트·보물·골드 | `#fbbf24` | `CONFIG.elite.color` |
-| 무기 7색 | 라이플 `#fbbf24` · 회전검 `#f472b6` · 폭발탄 `#fb923c` · 트랩 `#34d399` · 오오라 `#f87171` · 비도 `#c4b5fd` · 발톱 `#84cc16` | `CONFIG.weapons[].color` |
-| 장신구 9색 | `ui/theme.ts` 의 `ACCESSORY_COLORS` | 단일 출처 |
+| 무기 8색 | 라이플 `#fbbf24` · 회전검 `#f472b6` · 폭발탄 `#fb923c` · 트랩 `#34d399` · 오오라 `#f87171` · 비도 `#c4b5fd` · 발톱 `#84cc16` · 주먹 `#f43f5e` | `CONFIG.weapons[].color` |
+| 장신구 12색 | `ui/theme.ts` 의 `ACCESSORY_COLORS` | 단일 출처 |
 | HP | >50% `#22c55e` · >25% `#eab308` · 그 이하 `#ef4444` | HUD |
 | 강조 | 시안(진행·선택) · 호박(강화·진화) · 보라(장신구·기억·돌파) · 에메랄드(신규·특성) · 로즈(위험·업적) | 화면 공통 |
 
-**어두운 캐릭터 색**(리냐 `#1f2937`)은 UI 아이콘·테두리에서 `readableAccent()` 로 밝게 보정한다. 게임 속 원 색은 그대로.
+**어두운 캐릭터 색**(리냐 `#1f2937`, 천 `#1e293b`)은 UI 아이콘·테두리에서 `readableAccent()` 로 밝게 보정한다. 게임 속 원 색은 그대로.
 
 ## 2. 타이포그래피
 

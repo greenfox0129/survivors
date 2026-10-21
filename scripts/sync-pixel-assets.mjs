@@ -37,6 +37,9 @@ const FILES = [
   // Euroan is a red-haired man composited from Universal LPC (see art/euroan/README.md).
   ["units/char-euroan.png", "art/euroan/char-euroan-walk.png"],
   ["faces/char-euroan.png", "art/euroan/char-euroan-face.png"],
+  // Cheon is a black-haired man composited from Universal LPC (see art/cheon/README.md).
+  ["units/char-cheon.png", "art/cheon/char-cheon-walk.png"],
+  ["faces/char-cheon.png", "art/cheon/char-cheon-face.png"],
 
   // ---- Enemies: same 4×4 layout (wolf keeps its original public/assets/enemy/Wolf.png)
   ...[

@@ -68,6 +68,7 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
   const [pendingAfter, setPendingAfter] = useState(0);
   const [goldEarned, setGoldEarned] = useState(0);
   const [constraintBonus, setConstraintBonus] = useState({ score: 0, multiplier: 1 });
+  const [purseMult, setPurseMult] = useState(1);
   const [newAchievements, setNewAchievements] = useState<AchievementDef[]>([]);
 
   // Keep a ref in sync so window listeners always see the current phase
@@ -95,9 +96,15 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
         setStats(s);
         const score = constraintScore(saveRef.current.constraintLevels);
         const multiplier = constraintGoldMultiplier(score);
-        const earned = Math.floor(scoreToGold(s.score) * multiplier);
+        const purse = s.accessories.find((a) => a.type === "goldPurse");
+        const purseDef = CONFIG.accessories.goldPurse;
+        const purseBonus = purse
+          ? (purseDef.baseGoldMult ?? 1) + (purseDef.growthGoldMult ?? 0) * (purse.level - 1)
+          : 1;
+        const earned = Math.floor(scoreToGold(s.score) * multiplier * purseBonus);
         setGoldEarned(earned);
         setConstraintBonus({ score, multiplier });
+        setPurseMult(purseBonus);
 
         // Achievements: weapon evolved during this run
         const alreadyCompleted = new Set(saveRef.current.completedAchievements);
@@ -206,6 +213,7 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
     setStats(initialStats(saveRef.current));
     setGoldEarned(0);
     setConstraintBonus({ score: 0, multiplier: 1 });
+    setPurseMult(1);
     setNewAchievements([]);
   }, [setPhase]);
 
@@ -307,6 +315,12 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-orange-300">제약 {constraintBonus.score}점</span>
                   <span className="text-orange-300 font-mono font-bold">골드 ×{constraintBonus.multiplier.toFixed(2)}</span>
+                </div>
+              )}
+              {purseMult > 1 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-amber-200">황금 주머니</span>
+                  <span className="text-amber-200 font-mono font-bold">골드 ×{purseMult.toFixed(2)}</span>
                 </div>
               )}
               {starsGained > 0 && (

@@ -28,8 +28,6 @@ export function createMeleeBlades(w: WeaponInstance): MeleeBlade[] {
 // Blade count: 2 base, +1 every 2 levels (5 at Lv7, +1 at Lv8 = 6).
 // Evolved (Storm Blade) has 8 blades, as its description promises.
 export const MELEE_EVOLVED_BLADES = 8;
-// Evolved blades push enemies away from the player on hit (px).
-export const MELEE_EVOLVED_KNOCKBACK = 24;
 
 export function meleeBladeCount(w: WeaponInstance): number {
   if (w.evolved) return MELEE_EVOLVED_BLADES;
@@ -117,16 +115,6 @@ export function updateMelee(
       if (dx * dx + dy * dy < collideR * collideR) {
         blade.hitTimers.set(e.id, hitCd);
         if (damageEnemy(e, dmg, mods?.critChance)) onKill();
-        else if (w.evolved && !e.dying) {
-          // Knockback away from the player (evolved only)
-          const kx = e.x - px;
-          const ky = e.y - py;
-          const kd = Math.sqrt(kx * kx + ky * ky);
-          if (kd > 0.1) {
-            e.x += (kx / kd) * MELEE_EVOLVED_KNOCKBACK;
-            e.y += (ky / kd) * MELEE_EVOLVED_KNOCKBACK;
-          }
-        }
       }
     }
   }

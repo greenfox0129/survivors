@@ -36,7 +36,7 @@ const fail = (msg) => failures.push(msg);
 try {
   const { GameEngine } = await server.ssrLoadModule("/src/game/core/GameEngine.ts");
   const { CHARACTERS } = await server.ssrLoadModule("/src/game/data/progression.ts");
-  const { CONFIG, enemyCap, eliteHp, regularSpawnInterval } = await server.ssrLoadModule("/src/game/data/config.ts");
+  const { CONFIG, enemyCap, eliteHp, regularSpawnInterval, specialDropChance } = await server.ssrLoadModule("/src/game/data/config.ts");
   const atOneMinute = 0.8 * 0.98 ** 60;
   if (
     Math.abs(regularSpawnInterval(0) - 0.8) > 1e-9 ||
@@ -51,6 +51,15 @@ try {
   if (enemyCap(0, 2) !== 240) fail(`enemy cap x2 ${enemyCap(0, 2)}`);
   if (eliteHp(0) !== 500 || eliteHp(60) !== 1000 || eliteHp(120) !== 2000) {
     fail(`elite hp ${eliteHp(0)}/${eliteHp(60)}/${eliteHp(120)}`);
+  }
+  const baseDrop = 1 / 300;
+  if (
+    Math.abs(specialDropChance(0) - baseDrop) > 1e-12 ||
+    Math.abs(specialDropChance(300) - baseDrop) > 1e-12 ||
+    Math.abs(specialDropChance(360) - baseDrop * 0.8) > 1e-12 ||
+    Math.abs(specialDropChance(420) - baseDrop * 0.64) > 1e-12
+  ) {
+    fail(`special drop ${specialDropChance(0)}/${specialDropChance(300)}/${specialDropChance(360)}/${specialDropChance(420)}`);
   }
   const { constraintScore, constraintGoldMultiplier, resolveRunConstraints } = await server.ssrLoadModule("/src/game/data/constraints.ts");
   if (constraintScore(undefined) !== 0 || constraintGoldMultiplier(0) !== 1 || constraintGoldMultiplier(30) !== 1.3) {
@@ -225,7 +234,7 @@ try {
 
   // ---------------------------------------------------------------- 4. special pickups
   {
-    const { rollSpecialDrop, consolidateGems } = await server.ssrLoadModule("/src/game/entities/GemManager.ts");
+    const { rollSpecialDrop, consolidateGems, updateGems } = await server.ssrLoadModule("/src/game/entities/GemManager.ts");
     const prevChance = CONFIG.special.dropChance;
     CONFIG.special.dropChance = 1;
     const kinds = new Set();
@@ -247,7 +256,12 @@ try {
     for (const w of engine.weaponMgr.weapons) w.cooldownTimer = 999;
     const near = enemy(engine.player.x + 80, engine.player.y);
     const far = enemy(engine.player.x + 700, engine.player.y);
-    engine.enemies.push(near, far);
+    const elite = enemy(engine.player.x + 40, engine.player.y);
+    elite.id = 99;
+    elite.isElite = true;
+    elite.hp = 500;
+    elite.maxHp = 500;
+    engine.enemies.push(near, far, elite);
     const px = engine.player.x;
     const py = engine.player.y;
     engine.gems.push(
@@ -263,6 +277,7 @@ try {
     if (!orb || !orb.attracted) fail("magnet did not mark the far XP gem");
     if (near.alive || !near.gemDropped) fail("bomb left the on-screen enemy alive");
     if (!far.alive) fail("bomb killed an enemy outside the screen");
+    if (!elite.alive || elite.hp !== 500 || elite.gemDropped) fail("bomb killed an elite");
     if (engine.kills !== killsBefore + 1) fail(`bomb kill count ${engine.kills - killsBefore}`);
     const x0 = orb.x;
     engine.update(DT);
@@ -272,10 +287,44 @@ try {
       { id: 10, x: 5, y: 0, radius: 7, value: 1, alive: true },
     ], 1, 500);
     if (!kept.some((g) => g.pickup === "bomb" && g.alive)) fail("special pickup was merged into an XP gem");
+    const speed = CONFIG.player.speed * 3;
+    const chased = { id: 11, x: -30, y: 0, radius: 7, value: 1, alive: true };
+    let chaseX = 0;
+    for (let i = 0; i < 180; i++) {
+      chaseX += speed * DT;
+      updateGems([chased], { x: chaseX, y: 0, radius: 14, pickupRadius: 50, speed }, DT);
+    }
+    if (chased.alive) fail("fast player outran an XP gem");
     engine.stop();
   }
 
-  // ---------------------------------------------------------------- 5. elite kill timer
+  // ---------------------------------------------------------------- 5. elites on the survival clock, including a fresh run
+  {
+    const { getEliteSpawned } = await server.ssrLoadModule("/src/game/entities/EnemyManager.ts");
+    const callbacks = { onStatsUpdate() {}, onLevelUp() {}, onGameOver() {} };
+    const runUntil = (engine, seconds) => {
+      let guard = 0;
+      while (engine.elapsed < seconds && guard++ < 20000) {
+        engine.player.hp = engine.player.maxHp;
+        engine.player.alive = true;
+        engine.update(DT);
+      }
+    };
+    const first = new GameEngine(ctxStub, callbacks, makeSave("survivor", 0));
+    runUntil(first, 70);
+    if (getEliteSpawned() !== 1) fail(`first run elites ${getEliteSpawned()} at ${first.elapsed}`);
+    first.stop();
+
+    const second = new GameEngine(ctxStub, callbacks, makeSave("survivor", 0));
+    if (getEliteSpawned() !== 0) fail(`new run kept elite count ${getEliteSpawned()}`);
+    runUntil(second, 59.5);
+    if (getEliteSpawned() !== 0) fail(`elite early at ${second.elapsed} count ${getEliteSpawned()}`);
+    runUntil(second, 60.2);
+    if (getEliteSpawned() !== 1) fail(`elite at 1:00 count ${getEliteSpawned()} t=${second.elapsed}`);
+    second.stop();
+  }
+
+  // ---------------------------------------------------------------- 5b. elite kill timer
   {
     let overs = 0;
     const engine = new GameEngine(ctxStub, { onStatsUpdate() {}, onLevelUp() {}, onGameOver() { overs++; } }, makeSave("survivor", 0));
@@ -325,6 +374,46 @@ try {
     if (enemy.hp !== 99990) fail(`overlapping burn first tick hp ${enemy.hp}`);
     updateBomb(bombs, [enemy], 0, 0, hold, 0.5, () => {});
     if (enemy.hp !== 99980) fail(`overlapping burn second tick hp ${enemy.hp}`);
+  }
+
+  // ---------------------------------------------------------------- 7. fist combo then finisher
+  {
+    const { createFistState, updateFist, fistDamage } = await server.ssrLoadModule("/src/game/weapons/FistWeapon.ts");
+    const dummy = {
+      id: 3, x: 36, y: 0, radius: 12, hp: 100000, maxHp: 100000, alive: true,
+      speed: 0, baseSpeed: 0, damage: 0, contactTimer: 9,
+      enemyType: "slime", color: "#fff", borderColor: "#fff", shape: "circle",
+      spriteFrame: 0, spriteTimer: 0, facingRight: true, dying: false, dyingTimer: 0,
+      isElite: false, gemDropped: false, facing: 0,
+    };
+    const w1 = { type: "fist", level: 1, cooldownTimer: 0, burstShotsLeft: 0, burstTimer: 0, evolved: false, super: false };
+    const jab = createFistState(w1);
+    updateFist(jab, [dummy], 0, 0, w1, 0.05, () => {});
+    if (Math.abs(100000 - dummy.hp - fistDamage(w1)) > 1e-6) fail(`fist jab dealt ${100000 - dummy.hp}`);
+    const evo = { ...w1, level: 8, evolved: true };
+    const foe = { ...dummy, id: 4, hp: 100000 };
+    const st = createFistState(evo);
+    let guard = 0;
+    while (!(st.finisherShown && st.phase === "cooldown") && guard++ < 200) {
+      updateFist(st, [foe], 0, 0, evo, 0.02, () => {});
+    }
+    const one = fistDamage(evo);
+    const expected = one * 6 + one * 2.5;
+    if (Math.abs(100000 - foe.hp - expected) > 1e-4) fail(`fist combo ${100000 - foe.hp} expected ${expected}`);
+  }
+
+  // ---------------------------------------------------------------- 8. new accessories
+  {
+    const { AccessoryManager } = await server.ssrLoadModule("/src/game/systems/AccessoryManager.ts");
+    const am = new AccessoryManager();
+    for (const id of ["keenRing", "goldPurse", "vampireFang"]) {
+      am.addAccessory(id);
+      for (let i = 0; i < 4; i++) am.levelUpAccessory(id);
+    }
+    const m = am.computeMods();
+    if (Math.abs(m.critChance - 0.22) > 1e-9 || Math.abs(m.goldMult - 1.44) > 1e-9 || Math.abs(m.killHeal - 1.4) > 1e-9) {
+      fail(`accessory mods crit=${m.critChance} gold=${m.goldMult} heal=${m.killHeal}`);
+    }
   }
 } catch (err) {
   fail(`setup: ${err && err.stack ? err.stack : err}`);

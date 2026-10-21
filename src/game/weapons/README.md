@@ -1,6 +1,6 @@
 # src/game/weapons/
 
-무기 7종의 로직·렌더와, 그것들을 한 표로 묶는 **등록표(`registry.ts`)**.
+무기 8종의 로직·렌더와, 그것들을 한 표로 묶는 **등록표(`registry.ts`)**.
 
 | 파일 | 무기 | 진화 |
 |---|---|---|
@@ -11,6 +11,7 @@
 | `AuraWeapon.ts` | 화염 오오라 — 주변 틱 피해 + 화상 | 심판의 화염 |
 | `ShurikenWeapon.ts` | 비도 — 관통 투척, 진화 시 부메랑 | 환영 비도. 리냐만 비도 난무(전방위 20) |
 | `ClawWeapon.ts` | 야생의 발톱 — 전방 부채꼴 베기 | 브레스 (`BreathWeapon.ts`). 에우로안만 레인보우 브레스 |
+| `FistWeapon.ts` | 주먹 — 가까운 적 연타 | 폭권. 연타 뒤 넓은 강타 |
 | `registry.ts` | `WEAPON_MODULES` 등록표 · `ALL_WEAPON_TYPES` · `weaponLevelEffectAt()` | |
 
 ## 무기 모듈 인터페이스 (`WeaponModule<S>`)
