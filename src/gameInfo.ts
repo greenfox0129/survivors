@@ -13,5 +13,5 @@ export const GAME_INFO = {
   /** package.json 의 version (빌드 시 Vite가 주입) */
   version: __APP_VERSION__,
   /** GitHub repository "owner/name" (docs/links only — the game makes no network calls) */
-  repo: "pokochy/survivors-proto",
+  repo: "greenfox0129/survivors",
 } as const;

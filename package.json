@@ -39,6 +39,6 @@
   "description": "Vampire Survivors-like browser roguelite prototype (React + TypeScript + Canvas 2D)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pokochy/survivors-proto.git"
+    "url": "https://github.com/greenfox0129/survivors.git"
   }
 }
