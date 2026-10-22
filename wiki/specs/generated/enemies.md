@@ -1,7 +1,7 @@
 # 적·스폰 수치표 (Enemies & Spawning)
 
 > ⚙ **자동 생성 문서** — `npm run docs:spec` 으로 다시 만든다. 직접 수정하지 말 것.
-> 기준: v0.3.0 · 출처: `src/game/data/*.ts`, `src/game/weapons/*.ts`
+> 기준: v0.4.0 · 출처: `src/game/data/*.ts`, `src/game/weapons/*.ts`
 
 ## 적 종류
 
