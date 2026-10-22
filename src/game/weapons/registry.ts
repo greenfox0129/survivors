@@ -35,6 +35,7 @@ import {
 import { updateClaw, renderClaw, createClawState, resetClaw, clawLevelEffect } from "@/game/weapons/ClawWeapon";
 import { createBreathState, updateBreath, renderBreath } from "@/game/weapons/BreathWeapon";
 import { updateFist, renderFist, createFistState, fistLevelEffect, type FistState } from "@/game/weapons/FistWeapon";
+import { updateAxe, renderAxe, createAxeState, axeLevelEffect, type AxeState } from "@/game/weapons/AxeWeapon";
 
 /** 매 프레임 무기 update에 전달되는 공통 인자 */
 export interface WeaponUpdateArgs {
@@ -175,6 +176,14 @@ const fist = defineWeapon<FistState>({
   levelEffect: fistLevelEffect,
 });
 
+const axe = defineWeapon<AxeState>({
+  renderOrder: 8,
+  createState: (w) => createAxeState(w),
+  update: (s, a) => updateAxe(s, a.enemies, a.px, a.py, a.w, a.dt, a.onKill, a.mods),
+  render: (ctx, s, p, w) => renderAxe(ctx, s, p.x, p.y, w),
+  levelEffect: axeLevelEffect,
+});
+
 // ---- 등록표 ------------------------------------------------------------
 // Record<WeaponType, …> 이므로 WeaponType에 새 무기를 추가하고 여기 등록하지 않으면
 // 타입체크가 실패한다 (누락 방지).
@@ -192,6 +201,7 @@ export const WEAPON_MODULES: Record<WeaponType, AnyWeaponModule> = {
   shuriken,
   claw,
   fist,
+  axe,
 };
 
 /** 등록된 모든 무기 종류 (등록 순서 = 도감·선택지 순서) */

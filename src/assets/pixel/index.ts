@@ -3,7 +3,7 @@
 //
 //  Names are the path under this folder without ".png", e.g. "units/char-survivor".
 //  Files are copied here by `npm run assets:pixel` (scripts/sync-pixel-assets.mjs)
-//  from the source packs in art/ (CC0, plus Linya, Euroan, and Cheon under CC BY-SA).
+//  from the source packs in art/ (CC0, plus Linya, Euroan, Cheon, and Kali under CC BY-SA).
 //  Data only — usable from game and ui.
 // ============================================================
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft, Star, Check, ChevronUp, Lock, RotateCcw, X, Play, Sparkles } from "lucide-react";
-import { PixelFace, PixelWalker } from "@/ui/components/PixelSprite";
+import { PixelFace } from "@/ui/components/PixelSprite";
 import { GameIcon } from "@/ui/components/GameIcon";
 import { UI_ICONS, weaponIcon } from "@/ui/icons";
 import { readableAccent, weaponColor } from "@/ui/theme";
@@ -180,10 +180,10 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
           <div className="rounded-2xl border-2 border-slate-700 bg-slate-900/40 p-6">
             <div className="flex items-start gap-5 mb-5">
               <div
-                className="flex-shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center bg-[#2f4a1f]"
+                className="flex-shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center overflow-hidden bg-[#2f4a1f]"
                 style={{ border: `2px solid ${readableAccent(def.color)}` }}
               >
-                <PixelWalker id={def.id} size={64} />
+                <PixelFace kind="char" id={def.id} size={72} color={readableAccent(def.color)} />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">

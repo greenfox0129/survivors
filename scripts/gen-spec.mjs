@@ -39,6 +39,7 @@ try {
   const S = await load("/src/game/weapons/ShurikenWeapon.ts");
   const C = await load("/src/game/weapons/ClawWeapon.ts");
   const F = await load("/src/game/weapons/FistWeapon.ts");
+  const AX = await load("/src/game/weapons/AxeWeapon.ts");
   const BR = await load("/src/game/weapons/BreathWeapon.ts");
   const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf-8"));
 
@@ -137,6 +138,14 @@ try {
         levels("fist").map((w) => [
           lvLabel(w), n(F.fistDamage(w)), n(F.fistCooldown(w), 2), F.fistJabCount(w), n(F.fistReach(w)),
           w.evolved ? `×${CONFIG.weapons.fist.finisherMult}` : "—", F.fistLevelEffect(w) ?? "",
+        ]),
+      ),
+    axe: () =>
+      table(
+        ["Lv", "피해", "쿨다운(s)", "범위", "호", "휘두르기", "도달 시 효과"],
+        levels("axe").map((w) => [
+          lvLabel(w), n(AX.axeDamage(w)), n(AX.axeCooldown(w), 2), n(AX.axeRadius(w), 0),
+          `${Math.round((AX.axeArc(w) * 180) / Math.PI)}°`, AX.axeSwingCount(w), AX.axeLevelEffect(w) ?? "",
         ]),
       ),
   };

@@ -361,7 +361,7 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
                     w.evolved ? "border-amber-500/60 text-amber-300" : "border-slate-700 text-slate-400"
                   }`}
                 >
-                  <GameIcon name={weaponIcon(w.type, w.evolved)} size={14} color={weaponColor(w.type)} />
+                  <GameIcon name={weaponIcon(w.type, w.evolved, w.super)} size={14} color={weaponColor(w.type)} />
                   {w.evolved ? "MAX" : `Lv${w.level}`}
                 </span>
               ))}

@@ -61,7 +61,7 @@ export interface EnemyState extends Entity {
 
 // ---- Weapon types ----
 
-export type WeaponType = "bullet" | "melee" | "bomb" | "trap" | "aura" | "shuriken" | "claw" | "fist";
+export type WeaponType = "bullet" | "melee" | "bomb" | "trap" | "aura" | "shuriken" | "claw" | "fist" | "axe";
 
 export interface WeaponInstance {
   type: WeaponType;
@@ -269,6 +269,8 @@ export interface UpgradeOption {
   accessoryType?: AccessoryType;
   accessoryName?: string;
   effectDesc?: string;
+  /** This evolve card is a character super form, not the normal evolution. */
+  superForm?: boolean;
 }
 
 // ---- Accessories (passive trinkets that boost stats) ----
@@ -302,7 +304,7 @@ export interface GameStats {
   maxHp: number;
   alive: boolean;
   score: number;
-  weapons: { type: WeaponType; name: string; level: number; evolved: boolean }[];
+  weapons: { type: WeaponType; name: string; level: number; evolved: boolean; super?: boolean }[];
   accessories: { type: AccessoryType; name: string; level: number }[];
   rerolls: number;
   /** Soonest elite kill timer, or null when no elite is alive. */

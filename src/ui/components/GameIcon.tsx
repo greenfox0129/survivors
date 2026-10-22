@@ -20,6 +20,19 @@ interface GameIconProps {
 export function GameIcon({ name, color = "currentColor", size = 20, className = "", title }: GameIconProps) {
   const url = iconUrl(name);
   if (!url) return null;
+  if (url.includes(".png")) {
+    return (
+      <img
+        src={url}
+        alt=""
+        aria-hidden
+        draggable={false}
+        width={size}
+        height={size}
+        className={`inline-block shrink-0 object-contain ${className}`}
+      />
+    );
+  }
   const mask = `url("${url}") center / contain no-repeat`;
   return (
     <span

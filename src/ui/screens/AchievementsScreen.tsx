@@ -21,6 +21,7 @@ const ACHIEVEMENT_WEAPON_MAP: Record<string, WeaponType> = {
   evo_shuriken: "shuriken",
   evo_claw: "claw",
   evo_fist: "fist",
+  evo_axe: "axe",
 };
 
 export function AchievementsScreen({ onBack, save }: AchievementsScreenProps) {

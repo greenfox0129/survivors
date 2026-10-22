@@ -1,7 +1,7 @@
 // ============================================================
 //  weapons/FistWeapon.ts — Short combo of punches at the nearest enemy.
 //  Each jab hits once. The evolved form follows the combo with one wide hit.
-//  Cheon's super form ignores reach: the nearest enemy plus two random others.
+//  Cheon's super form, 벤데타, reaches 300px: the nearest enemy plus two random others.
 // ============================================================
 
 import { CONFIG } from "@/game/data/config";
@@ -144,9 +144,12 @@ function aimAt(enemies: EnemyState[], px: number, py: number, range: number, fal
 }
 
 const RANDOM_TARGETS = 2;
+/** 벤데타 only punches enemies within this distance of the player. */
+const SUPER_REACH = 300;
 
-/** Nearest living enemy, plus up to two other living enemies chosen at random. */
-function nearestAndRandom(enemies: EnemyState[], px: number, py: number): { near: EnemyState | null; others: EnemyState[] } {
+/** Nearest living enemy inside `maxDist`, plus up to two other living enemies in that range. */
+function nearestAndRandom(enemies: EnemyState[], px: number, py: number, maxDist: number): { near: EnemyState | null; others: EnemyState[] } {
+  const maxD2 = maxDist * maxDist;
   let near: EnemyState | null = null;
   let best = Infinity;
   for (const e of enemies) {
@@ -154,7 +157,7 @@ function nearestAndRandom(enemies: EnemyState[], px: number, py: number): { near
     const dx = e.x - px;
     const dy = e.y - py;
     const d2 = dx * dx + dy * dy;
-    if (d2 >= best) continue;
+    if (d2 > maxD2 || d2 >= best) continue;
     best = d2;
     near = e;
   }
@@ -162,6 +165,9 @@ function nearestAndRandom(enemies: EnemyState[], px: number, py: number): { near
   let count = 0;
   for (const e of enemies) {
     if (e === near || !e.alive || e.dying) continue;
+    const dx = e.x - px;
+    const dy = e.y - py;
+    if (dx * dx + dy * dy > maxD2) continue;
     count++;
     if (others.length < RANDOM_TARGETS) {
       others.push(e);
@@ -211,7 +217,7 @@ function strike(
   state.show2 = 0;
   state.show3 = 0;
   if (unlimited) {
-    const targets = nearestAndRandom(enemies, px, py);
+    const targets = nearestAndRandom(enemies, px, py, SUPER_REACH);
     if (!targets.near) {
       state.show = 0;
       return;

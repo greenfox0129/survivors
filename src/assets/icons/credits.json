@@ -63,6 +63,10 @@
     "author": "Delapouite",
     "source": "https://game-icons.net/1x1/delapouite/templar-shield.html"
   },
+  "char-kali": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/fox-head.html"
+  },
   "char-linya": {
     "author": "Lorc",
     "source": "https://game-icons.net/1x1/lorc/cat.html"
@@ -262,6 +266,18 @@
   "weapon-aura-evo": {
     "author": "Lorc",
     "source": "https://game-icons.net/1x1/lorc/aura.html"
+  },
+  "weapon-axe": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/battle-axe.html"
+  },
+  "weapon-axe-evo": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/crossed-axes.html"
+  },
+  "weapon-axe-super": {
+    "author": "사용자 제공",
+    "source": "친우 초진화 도끼. 게임 밖에서 받은 그림이며, 검은 배경만 제거했다."
   },
   "weapon-bomb": {
     "author": "Lorc",

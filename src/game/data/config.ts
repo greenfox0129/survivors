@@ -410,6 +410,18 @@ export const CONFIG = {
       reachGrowth: 1.05,
       maxLevel: 8,
     },
+    axe: {
+      name: "양날도끼",
+      desc: "크게 휘둘러 범위 안의 적을 쓸어버린다",
+      color: "#d97706",
+      baseDamage: 24,
+      baseCooldown: 1.75,
+      baseRadius: 108,
+      damageGrowth: 1.22,
+      cooldownGrowth: 0.93,
+      radiusGrowth: 1.05,
+      maxLevel: 8,
+    },
   } as const,
 
 };

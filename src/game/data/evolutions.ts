@@ -93,6 +93,15 @@ export const EVOLUTIONS: Record<WeaponType, EvolutionDef> = {
     cooldownMult: 0.8,
     effect: "finisher",
   },
+  axe: {
+    weapon: "axe",
+    pairedAccessory: "keenRing",
+    evolvedName: "학살도끼",
+    desc: "두 바퀴 · 범위 1.2배",
+    damageMult: 1.45,
+    cooldownMult: 0.75,
+    effect: "massacre",
+  },
 };
 
 /**
@@ -122,8 +131,14 @@ export const SUPER_EVOLUTIONS: SuperEvolutionDef[] = [
   {
     characterId: "cheon",
     weapon: "fist",
-    name: "쌍폭권",
-    desc: "거리 제한 없음 · 가까운 곳과 무작위 둘",
+    name: "벤데타",
+    desc: "사거리 300 · 가까운 곳과 무작위 둘",
+  },
+  {
+    characterId: "kali",
+    weapon: "axe",
+    name: "친우",
+    desc: "한 바퀴 · 피해 3배 · 전방 충격파",
   },
 ];
 

@@ -1,6 +1,6 @@
 # src/game/weapons/
 
-무기 8종의 로직·렌더와, 그것들을 한 표로 묶는 **등록표(`registry.ts`)**.
+무기 9종의 로직·렌더와, 그것들을 한 표로 묶는 **등록표(`registry.ts`)**.
 
 | 파일 | 무기 | 진화 |
 |---|---|---|
@@ -11,13 +11,14 @@
 | `AuraWeapon.ts` | 화염 오오라 — 주변 틱 피해 + 화상 | 심판의 화염 |
 | `ShurikenWeapon.ts` | 비도 — 관통 투척, 진화 시 부메랑 | 환영 비도. 리냐만 비도 난무(전방위 20) |
 | `ClawWeapon.ts` | 야생의 발톱 — 전방 부채꼴 베기 | 브레스 (`BreathWeapon.ts`). 에우로안만 레인보우 브레스 |
-| `FistWeapon.ts` | 주먹 — 가까운 적 연타 | 폭권. 연타 뒤 넓은 강타 |
+| `FistWeapon.ts` | 주먹 — 가까운 적 연타 | 폭권. 연타 뒤 넓은 강타. 천만 벤데타(사거리 300, 가까운 한 명과 무작위 둘) |
+| `AxeWeapon.ts` | 양날도끼 — 큰 호를 휘둘러 범위 안을 휩쓴다. Lv7부터 같은 방향으로 두 바퀴 | 학살도끼. 두 바퀴, 범위 1.2배. 칼리만 친우(한 바퀴, 피해 3배, 앞으로 날아가는 반달 충격파) |
 | `registry.ts` | `WEAPON_MODULES` 등록표 · `ALL_WEAPON_TYPES` · `weaponLevelEffectAt()` | |
 
 ## 무기 모듈 인터페이스 (`WeaponModule<S>`)
 
 ```ts
-renderOrder        // 작을수록 아래에 그림 (aura 0 … melee 6)
+renderOrder        // 작을수록 아래에 그림 (aura 0 … axe 8)
 createState(w)     // 획득 시 런타임 상태 생성
 onLevelUp?(s, w)   // 레벨업 후 상태 재생성이 필요하면 새 상태 반환
 onEvolve?(s, w)    // 진화 후 상태 교체 (발톱 → 브레스처럼)

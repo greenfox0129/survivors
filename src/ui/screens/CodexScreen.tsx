@@ -443,6 +443,13 @@ function WeaponDetail({ type, onBack }: { type: WeaponType; onBack: () => void }
               쿨다운: {CONFIG.weapons.fist.baseCooldown}초 · 진화 시 연타 뒤 강타 {CONFIG.weapons.fist.finisherMult}배
             </>
           )}
+          {type === "axe" && (
+            <>
+              범위: {CONFIG.weapons.axe.baseRadius}px · 처음에는 앞쪽 반원
+              <br />
+              쿨다운: {CONFIG.weapons.axe.baseCooldown}초 · 진화 시 같은 방향으로 두 바퀴, 범위 1.2배. 칼리는 한 바퀴, 피해 3배, 전방 충격파
+            </>
+          )}
         </p>
       </div>
 
@@ -527,7 +534,8 @@ function EvolutionDetail({ type, onBack }: { type: WeaponType; onBack: () => voi
           {SUPER_EVOLUTIONS.filter((s) => s.weapon === type).map((s) => {
             const who = CHARACTERS.find((c) => c.id === s.characterId)?.name ?? s.characterId;
             return (
-              <p key={s.characterId} className="text-fuchsia-300 text-sm mt-2">
+              <p key={s.characterId} className="text-fuchsia-300 text-sm mt-2 flex items-center gap-2">
+                {s.weapon === "axe" && <GameIcon name="weapon-axe-super" size={36} />}
                 초진화 ({who}): {s.name} — {s.desc}
               </p>
             );

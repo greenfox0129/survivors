@@ -407,17 +407,23 @@ try {
     updateFist(twin, [near, far], 0, 0, sup, 0.05, () => {});
     const jabDmg = fistDamage(sup);
     if (Math.abs(100000 - near.hp - jabDmg) > 1e-4) fail(`super near jab ${100000 - near.hp}`);
-    if (Math.abs(100000 - far.hp - jabDmg) > 1e-4) fail(`super far jab ${100000 - far.hp}`);
-    const left = { ...dummy, id: 9, x: -900, y: 400, hp: 100000 };
-    const right = { ...dummy, id: 10, x: 1400, y: 200, hp: 100000 };
-    const back = { ...dummy, id: 11, x: 1800, y: -700, hp: 100000 };
+    if (far.hp !== 100000) fail(`super far jab reached ${100000 - far.hp}`);
+    const inRange = { ...dummy, id: 12, x: 250, y: 0, hp: 100000 };
+    updateFist(createFistState(sup), [inRange], 0, 0, sup, 0.05, () => {});
+    if (Math.abs(100000 - inRange.hp - jabDmg) > 1e-4) fail(`super 300 jab ${100000 - inRange.hp}`);
+    const left = { ...dummy, id: 9, x: -200, y: 100, hp: 100000 };
+    const right = { ...dummy, id: 10, x: 180, y: -150, hp: 100000 };
+    const back = { ...dummy, id: 11, x: 100, y: 220, hp: 100000 };
+    const outside = { ...dummy, id: 13, x: 400, y: 0, hp: 100000 };
     const extras = [left, right, back];
     const skips = [0, 0, 0];
     for (let n = 0; n < 60; n++) {
       near.hp = 100000;
+      outside.hp = 100000;
       for (const e of extras) e.hp = 100000;
-      updateFist(createFistState(sup), [near, left, right, back], 0, 0, sup, 0.05, () => {});
+      updateFist(createFistState(sup), [near, left, right, back, outside], 0, 0, sup, 0.05, () => {});
       if (Math.abs(100000 - near.hp - jabDmg) > 1e-4) fail(`super random trial near ${100000 - near.hp}`);
+      if (outside.hp !== 100000) fail(`super random trial reached past 300 ${100000 - outside.hp}`);
       let hits = 0;
       extras.forEach((e, i) => {
         if (e.hp < 100000) hits++;
@@ -430,6 +436,64 @@ try {
     const normal = createFistState(evo);
     updateFist(normal, [plain], 0, 0, evo, 0.05, () => {});
     if (plain.hp !== 100000) fail(`evolved fist reached ${100000 - plain.hp} past its range`);
+  }
+
+  // ---------------------------------------------------------------- 9. axe sweep
+  {
+    const { createAxeState, updateAxe, axeDamage } = await server.ssrLoadModule("/src/game/weapons/AxeWeapon.ts");
+    const body = {
+      id: 20, x: 70, y: 0, radius: 12, hp: 100000, maxHp: 100000, alive: true,
+      speed: 0, baseSpeed: 0, damage: 0, contactTimer: 9,
+      enemyType: "slime", color: "#fff", borderColor: "#fff", shape: "circle",
+      spriteFrame: 0, spriteTimer: 0, facingRight: true, dying: false, dyingTimer: 0,
+      isElite: false, gemDropped: false, facing: 0,
+    };
+    const w = { type: "axe", level: 1, cooldownTimer: 0, burstShotsLeft: 0, burstTimer: 0, evolved: false, super: false };
+    const front = { ...body, id: 20, x: 90, y: 0 };
+    const back = { ...body, id: 21, x: -120, y: 0 };
+    const far = { ...body, id: 22, x: 400, y: 0 };
+    const close = { ...body, id: 26, x: 20, y: 0 };
+    const swing = (weapon, foes, frames = 30) => {
+      const state = createAxeState(weapon);
+      for (let i = 0; i < frames; i++) updateAxe(state, foes, 0, 0, weapon, 0.05, () => {});
+    };
+    swing(w, [front, back, far, close]);
+    const one = axeDamage(w);
+    if (Math.abs(100000 - front.hp - one) > 1e-4) fail(`axe front ${100000 - front.hp} expected ${one}`);
+    if (back.hp !== 100000) fail(`axe backswing at lv1 dealt ${100000 - back.hp}`);
+    if (far.hp !== 100000) fail(`axe reached past its range`);
+    if (close.hp !== 100000) fail(`axe hit inside the picture ${100000 - close.hp}`);
+    const wide = { ...w, level: 5 };
+    const around = { ...body, id: 23, x: -90, y: 0, hp: 100000 };
+    const ahead = { ...body, id: 24, x: 70, y: 0, hp: 100000 };
+    swing(wide, [ahead, around]);
+    const wideDmg = axeDamage(wide);
+    if (Math.abs(100000 - ahead.hp - wideDmg) > 1e-4) fail(`axe circle front ${100000 - ahead.hp}`);
+    if (Math.abs(100000 - around.hp - wideDmg) > 1e-4) fail(`axe circle back ${100000 - around.hp}`);
+    const evo = { ...w, level: 8, evolved: true };
+    const victim = { ...body, id: 25, x: 200, y: 0, hp: 100000 };
+    swing(evo, [victim]);
+    const twice = axeDamage(evo) * 2;
+    if (Math.abs(100000 - victim.hp - twice) > 1e-4) fail(`axe evo ${100000 - victim.hp} expected ${twice}`);
+    const plainFar = { ...body, id: 30, x: 320, y: 0, hp: 100000 };
+    swing(evo, [plainFar]);
+    if (plainFar.hp !== 100000) fail(`axe evo reached past its ring ${100000 - plainFar.hp}`);
+    const sup = { ...evo, super: true };
+    const farOnly = { ...body, id: 27, x: 320, y: 0, hp: 100000 };
+    swing(sup, [farOnly], 16);
+    const supDmg = axeDamage(sup);
+    if (Math.abs(100000 - farOnly.hp - supDmg) > 1e-4) fail(`axe super far ${100000 - farOnly.hp} expected ${supDmg}`);
+    const mid = { ...body, id: 29, x: 200, y: 0, hp: 100000 };
+    const side = { ...body, id: 31, x: 0, y: 200, hp: 100000 };
+    swing(sup, [mid, side], 16);
+    if (Math.abs(100000 - mid.hp - supDmg) > 1e-4) fail(`axe super front ${100000 - mid.hp} expected ${supDmg}`);
+    if (Math.abs(100000 - side.hp - supDmg) > 1e-4) fail(`axe super side ${100000 - side.hp} expected ${supDmg}`);
+    const beforeTip = { ...body, id: 32, x: 10, y: 0, hp: 100000 };
+    swing(sup, [beforeTip], 16);
+    if (beforeTip.hp !== 100000) fail(`axe super wave started at the player ${100000 - beforeTip.hp}`);
+    const pastHead = { ...body, id: 33, x: 230, y: 0, hp: 100000 };
+    swing(sup, [pastHead], 16);
+    if (pastHead.hp !== 100000) fail(`axe super hit past the picture ${100000 - pastHead.hp}`);
   }
 
   // ---------------------------------------------------------------- 8. new accessories

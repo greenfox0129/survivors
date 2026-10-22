@@ -113,6 +113,14 @@ export function getStarFxSprite(color: string, size = 48): HTMLCanvasElement | n
   return getFxSprite("star", color, size);
 }
 
+/** Full-color icon (PNG), drawn as-is. Null until it has loaded, or in Node. */
+export function getPlainIcon(name: string): HTMLImageElement | null {
+  if (typeof document === "undefined") return null;
+  const url = iconUrl(name);
+  if (!url) return null;
+  return loadImage(url);
+}
+
 /** Start loading images used during play so the first frames already have them. */
 export function preloadGameSprites(iconNames: string[]): void {
   if (typeof document === "undefined") return;

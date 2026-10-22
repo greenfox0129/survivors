@@ -60,6 +60,7 @@ import {
 } from "@/game/systems/AccessoryManager";
 import { drawBackground } from "@/game/render/background";
 import { renderDecor } from "@/game/render/decor";
+import { subscribeSettings } from "@/game/core/settings";
 import { reportFrameTime, isLowQuality } from "@/game/render/quality";
 import { drawTileWorld } from "@/game/render/tileWorld";
 import { preloadGameSprites } from "@/game/render/iconSprites";
@@ -107,6 +108,7 @@ export class GameEngine {
   private capClock = 0;
   /** 일시정지 중 정지 화면을 이미 그렸는지 */
   private frozenFrameDrawn = false;
+  private unsubscribeSettings: (() => void) | null = null;
   /** Level-ups earned but not yet chosen (multi-level gems, treasure + level-up in one frame) */
   private pendingLevelUps = 0;
   /** Pause requested by the player (ESC / window blur) — separate from the level-up pause */
@@ -115,6 +117,11 @@ export class GameEngine {
   constructor(ctx: CanvasRenderingContext2D, callbacks: GameCallbacks, save?: SaveData) {
     this.ctx = ctx;
     this.callbacks = callbacks;
+    // Quality can change while the run is paused. Drop the frozen frame so the
+    // next loop paints the new look instead of keeping the old one on screen.
+    this.unsubscribeSettings = subscribeSettings(() => {
+      this.frozenFrameDrawn = false;
+    });
     this.save = save ?? null;
     this.constraints = resolveRunConstraints(this.save?.constraintLevels);
     this.modifiers = save ? computeModifiers(save) : computeModifiers({
@@ -135,7 +142,7 @@ export class GameEngine {
     this.camera = { x: this.player.x, y: this.player.y };
     preloadGameSprites([
       UI_ICONS.treasure, UI_ICONS.crown, this.emblem(), "proj-dagger", "proj-blade",
-      "weapon-bomb", "weapon-bomb-evo", "weapon-trap", "weapon-trap-evo", "weapon-shuriken-evo",
+      "weapon-bomb", "weapon-bomb-evo", "weapon-trap", "weapon-trap-evo", "weapon-shuriken-evo", "weapon-axe", "weapon-axe-super",
       ...CONFIG.enemyTypes.map((t) => `enemy-${t.id}`),
     ]);
     preloadPixel(pixelNames()); // ~300 KB of small PNGs, all used in play
@@ -265,6 +272,8 @@ export class GameEngine {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
+    this.unsubscribeSettings?.();
+    this.unsubscribeSettings = null;
   }
 
   reset(): void {
@@ -590,6 +599,7 @@ export class GameEngine {
         name: weaponFormName(w),
         level: w.level,
         evolved: w.evolved,
+        super: w.super,
       })),
       accessories: this.accessoryMgr.accessories.map((a) => ({
         type: a.type,
@@ -627,14 +637,23 @@ export class GameEngine {
       camY = Math.round(camY);
     }
 
-    // Ground: cached tile chunks (high) or background + scrolling grid (low / while loading)
+    // Ground: cached tile chunks (high) or background + scrolling grid (low).
+    // While the high-quality tiles are still loading, keep a flat grass fill.
+    // The low-quality grid here made "높음" look identical to "저사양".
     const tiled = pixel && drawTileWorld(ctx, camX, camY);
-    if (!tiled) drawBackground(ctx, camX, camY);
+    if (!tiled) {
+      if (pixel) {
+        ctx.fillStyle = "#74a334";
+        ctx.fillRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
+      } else {
+        drawBackground(ctx, camX, camY);
+      }
+    }
 
     // World space
     ctx.save();
     ctx.translate(-camX, -camY);
-    if (!tiled) renderDecor(ctx, camX, camY);
+    if (!pixel && !tiled) renderDecor(ctx, camX, camY);
     renderGems(ctx, this.gems);
     renderEnemies(ctx, this.enemies);
     renderEffects(ctx);

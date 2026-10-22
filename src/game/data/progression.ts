@@ -2,7 +2,7 @@
 //  data.ts — Character & trait definitions for meta-progression
 // ============================================================
 
-export type StartWeaponType = "bullet" | "melee" | "bomb" | "trap" | "aura" | "shuriken" | "claw" | "fist";
+export type StartWeaponType = "bullet" | "melee" | "bomb" | "trap" | "aura" | "shuriken" | "claw" | "fist" | "axe";
 
 export type PassiveType =
   | "none"
@@ -172,6 +172,22 @@ export const CHARACTERS: CharacterDef[] = [
     passive: "physicalApex",
     passiveDesc: "모든 공격 피해 +20%",
   },
+  {
+    id: "kali",
+    name: "칼리",
+    color: "#d6b48c",
+    desc: "작은 여우 수인. 베이지 귀와 긴 머리를 달고 도끼를 휘두른다.",
+    hpMult: 0.75,
+    speedMult: 1.35,
+    damageMult: 1.1,
+    cooldownMult: 0.9,
+    projectileColor: "#d97706",
+    startWeapon: "axe",
+    special: true,
+    unlockAchievement: "evo_axe",
+    passive: "critStrike",
+    passiveDesc: "15% 확률로 치명타 (2배 피해)",
+  },
 ];
 
 // ---- Traits ----
@@ -337,6 +353,12 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     id: "evo_fist",
     name: "폭권의 달인",
     desc: "주먹을 진화시키기",
+    reward: 1,
+  },
+  {
+    id: "evo_axe",
+    name: "학살의 도끼",
+    desc: "양날도끼를 진화시키기",
     reward: 1,
   },
 ];

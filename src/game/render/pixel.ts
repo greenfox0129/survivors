@@ -13,20 +13,41 @@ import { STRIP_FRAME_W, UNIT_DRAW_SCALE, UNIT_FRAME, UNIT_FRAME_PX, UNIT_FRAMES 
 
 const images = new Map<string, HTMLImageElement>();
 const tinted = new Map<string, HTMLCanvasElement>();
+/** When a fetch failed, don't hammer the server. Give up after a few tries. */
+const retryAt = new Map<string, number>();
+const retryCount = new Map<string, number>();
+const RETRY_GAP_MS = 400;
+const RETRY_LIMIT = 5;
 
 /** Loaded image for a pixel asset name ("units/char-survivor"), or null while loading / in Node. */
 export function getPixelImage(name: string): HTMLImageElement | null {
   if (typeof document === "undefined") return null;
   let img = images.get(name);
   if (!img) {
+    const wait = retryAt.get(name);
+    if (wait !== undefined && performance.now() < wait) return null;
     const url = pixelUrl(name);
     if (!url) return null;
     img = new Image();
     img.decoding = "async";
+    // A failed load used to stay in the map forever (complete, width 0), so high
+    // quality kept drawing the vector fallback for the rest of the run.
+    img.addEventListener("error", () => {
+      if (images.get(name) !== img) return;
+      images.delete(name);
+      const n = (retryCount.get(name) ?? 0) + 1;
+      retryCount.set(name, n);
+      if (n <= RETRY_LIMIT) retryAt.set(name, performance.now() + RETRY_GAP_MS);
+    });
     img.src = url;
     images.set(name, img);
   }
-  return img.complete && img.naturalWidth > 0 ? img : null;
+  if (img.complete && img.naturalWidth > 0) {
+    retryCount.delete(name);
+    retryAt.delete(name);
+    return img;
+  }
+  return null;
 }
 
 export function preloadPixel(names: Iterable<string>): void {

@@ -6,9 +6,10 @@
 
 import type { AccessoryType, UpgradeOption, WeaponType } from "@/game/core/types";
 
-export function weaponIcon(type: WeaponType, evolved = false): string {
+export function weaponIcon(type: WeaponType, evolved = false, superForm = false): string {
   // Evolved fist keeps the plain punch icon.
   if (type === "fist") return "weapon-fist";
+  if (type === "axe" && superForm) return "weapon-axe-super";
   return `weapon-${type}${evolved ? "-evo" : ""}`;
 }
 
@@ -40,7 +41,7 @@ export function traitIcon(traitId: string): string {
 
 /** Icon for a level-up option card. */
 export function upgradeIcon(opt: UpgradeOption): string {
-  if (opt.weaponType) return weaponIcon(opt.weaponType, opt.kind === "weaponEvolve");
+  if (opt.weaponType) return weaponIcon(opt.weaponType, opt.kind === "weaponEvolve", opt.superForm === true);
   if (opt.accessoryType) return accessoryIconName(opt.accessoryType);
   return "ui-upgrade";
 }

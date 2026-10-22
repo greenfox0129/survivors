@@ -40,6 +40,9 @@ const FILES = [
   // Cheon is a black-haired man composited from Universal LPC (see art/cheon/README.md).
   ["units/char-cheon.png", "art/cheon/char-cheon-walk.png"],
   ["faces/char-cheon.png", "art/cheon/char-cheon-face.png"],
+  // Kali is a small fox beastkin composited from Universal LPC (see art/kali/README.md).
+  ["units/char-kali.png", "art/kali/char-kali-walk.png"],
+  ["faces/char-kali.png", "art/kali/char-kali-face.png"],
 
   // ---- Enemies: same 4×4 layout (wolf keeps its original public/assets/enemy/Wolf.png)
   ...[

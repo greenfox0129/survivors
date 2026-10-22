@@ -32,7 +32,7 @@ Humanoid walk cycles that none of these packs have (a beastkin, a specific hairc
 [Universal LPC Spritesheet Character Generator](https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator)
 (`spritesheets/`). Credits and the license of each layer are in that repo's `CREDITS.csv`.
 Layers are mixed CC0, CC-BY, and CC-BY-SA, so credit every layer that ends up in the
-image and name the resulting license (`art/linya/`, `art/euroan/`, and `art/cheon/` are the examples). Ship only the frames
+image and name the resulting license (`art/linya/`, `art/euroan/`, `art/cheon/`, and `art/kali/` are the examples). Ship only the frames
 the game uses. Do not copy the generator's scripts into this repo.
 
 ## Using a sprite
@@ -45,7 +45,7 @@ the game uses. Do not copy the generator's scripts into this repo.
 4. Draw with `game/render/pixel.ts` (`drawUnit`, `drawStrip`) or `ui/components/PixelSprite.tsx`.
 5. Credit line in `wiki/design/assets/CREDITS.md` if it comes from a new pack.
 
-Only CC0 / CC-BY packs belong here, except `linya/`, `euroan/`, and `cheon/`. Those characters
+Only CC0 / CC-BY packs belong here, except `linya/`, `euroan/`, `cheon/`, and `kali/`. Those characters
 are CC BY-SA 3.0 because the LPC layers are share-alike, and the packs here have
-no cat-person, red-haired male, or black-haired messy walk cycle. Credits are in each folder's README.
+no cat-person, red-haired male, black-haired messy, or fox-person walk cycle. Credits are in each folder's README.
 Images only — no scripts or executables from downloaded packs.

@@ -121,7 +121,7 @@ export function HUD({ stats }: HUDProps) {
                 w.evolved ? "border-amber-500/70" : "border-slate-700"
               }`}
             >
-              <GameIcon name={weaponIcon(w.type, w.evolved)} size={18} color={weaponColor(w.type)} />
+              <GameIcon name={weaponIcon(w.type, w.evolved, w.super)} size={18} color={weaponColor(w.type)} />
               <span className="text-slate-200 text-xs font-medium">{w.name}</span>
               <span className={`text-xs tabular-nums ${w.evolved ? "text-amber-400 font-bold" : "text-slate-500"}`}>
                 {w.evolved ? "MAX" : `Lv${w.level}`}

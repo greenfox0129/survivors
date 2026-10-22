@@ -71,6 +71,7 @@ export function pickUpgrades(wm: WeaponManager, am: AccessoryManager, characterI
       weaponType: w.type,
       weaponName: sup ? sup.name : evo.evolvedName,
       effectDesc: sup ? sup.desc : evo.desc,
+      superForm: sup !== null,
     });
   }
 
