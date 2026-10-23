@@ -8,9 +8,10 @@ import { HUD } from "@/ui/components/HUD";
 import { UpgradeModal } from "@/ui/components/UpgradeModal";
 import { SettingsPanel } from "@/ui/components/SettingsPanel";
 import { GameIcon } from "@/ui/components/GameIcon";
+import { PixelFace } from "@/ui/components/PixelSprite";
 import type { SaveData } from "@/game/core/storage";
 import { saveSave } from "@/game/core/storage";
-import { ACHIEVEMENTS, CHARACTERS, type AchievementDef } from "@/game/data/progression";
+import { ACHIEVEMENTS, CHARACTERS, isAchievementMet, type AchievementDef } from "@/game/data/progression";
 import { constraintGoldMultiplier, constraintScore } from "@/game/data/constraints";
 import { weaponName } from "@/game/systems/WeaponManager";
 import { UI_ICONS, weaponIcon } from "@/ui/icons";
@@ -48,6 +49,7 @@ function initialStats(save: SaveData): GameStats {
     rerolls: 0,
     eliteSeconds: null,
     midBoss: false,
+    midBossKilled: false,
     failedElite: false,
     damageTaken: 0,
     healing: 0,
@@ -116,14 +118,12 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
         setConstraintBonus({ score, multiplier });
         setPurseMult(purseBonus);
 
-        // Achievements: weapon evolved during this run
+        // Achievements settle when the run ends, including a give-up after the kill.
         const alreadyCompleted = new Set(saveRef.current.completedAchievements);
         const unlocked: AchievementDef[] = [];
         for (const ach of ACHIEVEMENTS) {
           if (alreadyCompleted.has(ach.id)) continue;
-          const weaponType = ach.id.replace("evo_", "");
-          const weapon = s.weapons.find((w) => w.type === weaponType);
-          if (weapon && weapon.evolved) unlocked.push(ach);
+          if (isAchievementMet(ach, s)) unlocked.push(ach);
         }
         const starsEarned = unlocked.reduce((sum, a) => sum + a.reward, 0);
 
@@ -399,13 +399,17 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
             {newAchievements.length > 0 && (
               <div className="mb-4 flex max-w-md flex-wrap justify-center gap-2">
                 {newAchievements.map((a) => {
-                  const wt = a.id.replace("evo_", "") as WeaponType;
+                  const wt = a.id.startsWith("evo_") ? (a.id.slice(4) as WeaponType) : null;
                   return (
                     <div
                       key={a.id}
                       className="flex items-center gap-2 rounded-lg border border-amber-500/50 bg-amber-950/40 px-3 py-1.5"
                     >
-                      <GameIcon name={weaponIcon(wt, true)} size={18} color={weaponColor(wt)} />
+                      {a.enemy ? (
+                        <PixelFace kind="enemy" id={a.enemy} size={18} />
+                      ) : (
+                        <GameIcon name={weaponIcon(wt ?? "bullet", true)} size={18} color={weaponColor(wt ?? "bullet")} />
+                      )}
                       <span className="text-xs font-semibold text-amber-200">업적 달성 · {a.name}</span>
                     </div>
                   );

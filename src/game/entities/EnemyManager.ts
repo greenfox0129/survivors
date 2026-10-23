@@ -2,7 +2,7 @@
 //  EnemyManager.ts — Spawning, tracking, collision, death
 // ============================================================
 
-import { CONFIG, eliteHp, enemyCap, enemyDamageScale, enemyHpScale, regularSpawnInterval } from "@/game/data/config";
+import { CONFIG, eliteHp, enemyCap, enemyDamageScale, enemyHpScale, midBossHp, regularSpawnInterval } from "@/game/data/config";
 import { noteDamageDealt } from "@/game/core/runReport";
 import { playHitSound } from "@/game/core/audio";
 import type { EnemyState, PlayerState } from "@/game/core/types";
@@ -134,10 +134,10 @@ function createEliteEnemy(elapsedTime: number, px: number, py: number): EnemySta
   };
 }
 
-function createMidBoss(px: number, py: number): EnemyState {
+function createMidBoss(elapsedTime: number, px: number, py: number): EnemyState {
   const pos = spawnEdgePosition(px, py);
   const c = CONFIG.midBoss;
-  const hp = c.hp * enemyRun.hp;
+  const hp = midBossHp(elapsedTime, enemyRun.hpGrowth) * enemyRun.hp;
   const speed = c.speed * enemyRun.speed;
   return createMidBossState(
     ++idCounter,
@@ -236,7 +236,7 @@ export function updateEnemies(
     while (eliteSpawned < due) {
       eliteSpawned++;
       const at = eliteSpawned * eliteInterval;
-      if (at === CONFIG.midBoss.spawnAt) enemies.push(createMidBoss(player.x, player.y));
+      if (at === CONFIG.midBoss.spawnAt) enemies.push(createMidBoss(_elapsedTime, player.x, player.y));
       else enemies.push(createEliteEnemy(_elapsedTime, player.x, player.y));
     }
   }
@@ -305,6 +305,14 @@ export function updateEnemies(
   moveShots(player, dt);
 }
 
+/** Shot base is not the contact value. Both still take the spawn-time damage scale. */
+function shotDamage(e: EnemyState): number {
+  const type = CONFIG.enemyTypes.find((t) => t.id === e.enemyType);
+  const contactBase = type?.damage ?? 0;
+  if (contactBase <= 0) return CONFIG.ranged.shotDamage;
+  return e.damage * (CONFIG.ranged.shotDamage / contactBase);
+}
+
 function tryShoot(e: EnemyState, dx: number, dy: number, dist: number, dt: number): void {
   if (e.shotTimer > 0) e.shotTimer -= dt;
   const band = CONFIG.ranged;
@@ -317,7 +325,7 @@ function tryShoot(e: EnemyState, dx: number, dy: number, dist: number, dt: numbe
     vx: dx * scale,
     vy: dy * scale,
     radius: band.shotRadius,
-    damage: e.damage,
+    damage: shotDamage(e),
     color: e.color,
   });
   e.shotTimer = band.cooldown;

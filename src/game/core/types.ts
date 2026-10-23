@@ -315,6 +315,8 @@ export interface GameStats {
   eliteSeconds: number | null;
   /** True once the 5:00 midboss has spawned this run. */
   midBoss: boolean;
+  /** True once that midboss has been killed this run. */
+  midBossKilled: boolean;
   /** The run ended because an elite outlasted its timer. */
   failedElite: boolean;
   /** Contact damage that landed, after shields. Invulnerable frames are not counted. */

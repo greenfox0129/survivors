@@ -1,5 +1,6 @@
 import { ArrowLeft, Check, Lock } from "lucide-react";
 import { GameIcon } from "@/ui/components/GameIcon";
+import { PixelFace } from "@/ui/components/PixelSprite";
 import { UI_ICONS, weaponIcon } from "@/ui/icons";
 import { weaponColor } from "@/ui/theme";
 import type { WeaponType } from "@/game/core/types";
@@ -99,7 +100,17 @@ export function AchievementsScreen({ onBack, save }: AchievementsScreenProps) {
                       : "bg-slate-800/60 border border-slate-700"
                     }`}
                 >
-                  {weaponType ? (
+                  {ach.enemy ? (
+                    <span className="relative">
+                      <PixelFace
+                        kind="enemy"
+                        id={ach.enemy}
+                        size={32}
+                        className={isDone ? "" : "grayscale"}
+                      />
+                      {!isDone && <Lock className="absolute -bottom-1 -right-1.5 w-3.5 h-3.5 text-slate-400" />}
+                    </span>
+                  ) : weaponType ? (
                     <span className="relative">
                       <GameIcon
                         name={weaponIcon(weaponType, true)}

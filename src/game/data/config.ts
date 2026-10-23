@@ -175,6 +175,7 @@ export const CONFIG = {
     cooldown: 1.8,    // seconds between shots
     shotSpeed: 240,   // px/s, aimed at the player when fired
     shotRadius: 5,
+    shotDamage: 2,    // base; spawn scale matches contact, the hit does not
     maxShots: 40,
   },
 
@@ -195,11 +196,11 @@ export const CONFIG = {
     borderColor: "#f59e0b",
   },
 
-  // The 5:00 elite slot. Flat numbers: no per-minute HP or damage curve.
-  // Constraint multipliers still apply when the boss is created.
+  // The 5:00 elite slot. HP uses the elite minute curve. Damage stays flat.
+  // 적의 체력, 공격력, and 속도 still apply when the boss is created.
   midBoss: {
     spawnAt: 300,
-    hp: 8000,
+    hp: 400, // × elite hpPerMinute^(minutes), then × 체력 배율 inside the exponent
     radius: 36,
     speed: 80,
     approach: 200,
@@ -537,6 +538,11 @@ export function enemyDamageScale(elapsedSeconds: number): number {
 /** Elite HP at spawn. 500 at 0:00, 1000 at 1:00, 2000 at 2:00. Does not use the type's HP. */
 export function eliteHp(elapsedSeconds: number, growthMult = 1): number {
   return CONFIG.elite.hp * Math.pow(CONFIG.elite.hpPerMinute * growthMult, elapsedSeconds / 60);
+}
+
+/** Midboss HP at spawn. Same per-minute curve as an elite, with its own base. 12800 at 5:00. */
+export function midBossHp(elapsedSeconds: number, growthMult = 1): number {
+  return CONFIG.midBoss.hp * Math.pow(CONFIG.elite.hpPerMinute * growthMult, elapsedSeconds / 60);
 }
 
 /** Special-item chance per kill. Flat until 5:00, then ×0.8 each minute. */

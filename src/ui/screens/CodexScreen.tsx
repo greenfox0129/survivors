@@ -345,7 +345,7 @@ function EnemyDetail({ enemy, onBack }: { enemy: EnemyInfo; onBack: () => void }
         <p className="text-slate-400 text-xs leading-relaxed">
           {enemy.id === "midboss" ? (
             <>
-              등장: 5분 정각, 그 분의 엘리트 자리. 잡아도 판은 끝나지 않는다.
+              등장: 5분 정각, 그 분의 엘리트 자리. 체력은 기본 {CONFIG.midBoss.hp} × {CONFIG.elite.hpPerMinute}^(경과 분). 잡아도 판은 끝나지 않는다.
               <br />
               돌진 피해: {CONFIG.midBoss.dashDamage}. 접촉 피해: {CONFIG.midBoss.contactDamage}, {CONFIG.enemy.contactDamageCooldown}초마다.
               <br />

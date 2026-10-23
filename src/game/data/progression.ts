@@ -2,6 +2,8 @@
 //  data.ts — Character & trait definitions for meta-progression
 // ============================================================
 
+import type { GameStats, WeaponType } from "@/game/core/types";
+
 export type StartWeaponType = "bullet" | "melee" | "bomb" | "trap" | "aura" | "shuriken" | "claw" | "fist" | "axe";
 
 export type PassiveType =
@@ -304,6 +306,8 @@ export interface AchievementDef {
   name: string;
   desc: string;
   reward: number; // star currency
+  /** faces/enemy-<id> portrait. Weapon achievements leave this unset. */
+  enemy?: string;
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -361,7 +365,25 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "양날도끼를 진화시키기",
     reward: 1,
   },
+  {
+    id: "kill_midboss",
+    name: "거대 너구리 사냥",
+    desc: "중간보스를 처치하기",
+    reward: 1,
+    enemy: "midboss",
+  },
 ];
+
+/** Evolution is the held weapon's form. The midboss counts if it died this run. */
+export function isAchievementMet(
+  ach: AchievementDef,
+  stats: Pick<GameStats, "weapons" | "midBossKilled">,
+): boolean {
+  if (ach.id === "kill_midboss") return stats.midBossKilled;
+  if (!ach.id.startsWith("evo_")) return false;
+  const weaponType = ach.id.slice(4) as WeaponType;
+  return stats.weapons.some((w) => w.type === weaponType && w.evolved);
+}
 
 export const DEFAULT_COMPLETED_ACHIEVEMENTS: string[] = [];
 

@@ -10,7 +10,7 @@
 | `screens/CharacterScreen.tsx` | 캐릭터 선택·레벨업·각성(별)·돌파·초기화 |
 | `screens/TraitsScreen.tsx` | 특성 강화·초기화 |
 | `screens/CodexScreen.tsx` | 도감 (적: 아이콘 + 실제 도형 / 무기 / 진화 / 장신구) — 레벨 효과는 무기 등록표에서 |
-| `screens/AchievementsScreen.tsx` | 업적 (진화 무기 아이콘) |
+| `screens/AchievementsScreen.tsx` | 업적 (진화 무기 아이콘, 중간보스는 너구리 초상) |
 | `components/HUD.tsx` | 시간·처치·스코어·레벨·XP·HP·리롤·무기/장신구 칩·빈 슬롯 |
 | `components/UpgradeModal.tsx` | 레벨업 3지선다 + 리롤, 배지(NEW/UP/EVOLVE), 단축키 1/2/3·R, 대기 수 표시 |
 | `components/SettingsPanel.tsx` | 그래픽 품질·배경음·효과음 (일시정지 메뉴·설정 화면 공용) |

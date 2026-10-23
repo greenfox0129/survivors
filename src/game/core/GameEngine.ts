@@ -104,6 +104,7 @@ export class GameEngine {
   private xpMult: number;
   private constraints: RunConstraints = resolveRunConstraints(undefined);
   private failedElite = false;
+  private midBossKilled = false;
   private save: SaveData | null;
   private rerollsLeft: number = 0;
   private breakthrough: number = 0;
@@ -315,6 +316,7 @@ export class GameEngine {
     resetRunReport();
     this.score = 0;
     this.failedElite = false;
+    this.midBossKilled = false;
     this.paused = false;
     this.userPaused = false;
     this.pendingLevelUps = 0;
@@ -347,6 +349,7 @@ export class GameEngine {
 
   private dropReward(e: EnemyState): void {
     if (e.gemDropped) return;
+    if (e.enemyType === "midboss") this.midBossKilled = true;
     this.gems.push(e.isElite || e.enemyType === "midboss" ? dropTreasure(e) : dropGem(e));
     const special = rollSpecialDrop(e, this.elapsed);
     if (special) this.gems.push(special);
@@ -627,6 +630,7 @@ export class GameEngine {
       rerolls: this.rerollsLeft,
       eliteSeconds: eliteSecondsLeft(this.enemies),
       midBoss: getMidBossSpawned() > 0,
+      midBossKilled: this.midBossKilled,
       failedElite: this.failedElite,
       damageTaken: report.taken,
       healing: report.healed,

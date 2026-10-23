@@ -62,12 +62,12 @@
 | HUD | `stat-time`, `stat-kills`, `stat-score`, `ui-upgrade`(레벨), `ui-reroll`, 무기 `weapon-*(-evo)`, 장신구 `acc-*`, 빈 슬롯 프레임 |
 | 레벨업 카드 | 무기/진화/장신구 아이콘 + 배지, 리롤 `ui-reroll` |
 | 일시정지 | 설정 패널(lucide 스피커) |
-| 게임오버 | 통계 아이콘 4종, 골드·별, 받은 피해·회복·무기별 준 피해, 달성 업적 진화 무기 아이콘 |
+| 게임오버 | 통계 아이콘 4종, 골드·별, 받은 피해·회복·무기별 준 피해, 달성 업적 아이콘 |
 | 캐릭터 관리 | 초상 `faces/char-*`(미보유는 회색), 상세는 걷기 애니메이션, 시작 무기 아이콘, `ui-memory`, `ui-breakthrough` |
 | 뽑기 | `menu-gacha`, 굴리는 동안 무작위 초상 깜빡임, 결과 카드 걷기 애니메이션, `stat-gold` 비용 |
 | 특성 | `trait-*` (강화된 특성은 초록) |
 | 도감 | 적 초상 `faces/enemy-*` / 늑대 스프라이트, 상세에 "게임 내 모습"(걷기) + "저사양 모드"(도형), 무기·진화·장신구 아이콘 |
-| 업적 | 진화 무기 아이콘(미달성은 회색 + 자물쇠), `ui-star` 보상 |
+| 업적 | 진화 무기 아이콘, 중간보스는 너구리 초상(미달성은 회색 + 자물쇠), `ui-star` 보상 |
 | 캔버스 — 표식 | 보물 상자 `ui-treasure`, 엘리트 왕관 `ui-crown`, 플레이어 원 안 `char-*` 엠블럼, 적 도형 안 `enemy-*` 엠블럼(저사양 끔) |
 | 캔버스 — 무기 | 회전검 `proj-blade` 칼날, 비도 `proj-dagger`(회귀 중에도 같은 비도), 폭발탄 `weapon-bomb`/운석 `weapon-bomb-evo`, 트랩 `weapon-trap`/토템 `weapon-trap-evo` |
 | 캔버스 — 이펙트 (Kenney, 저사양 끔) | 처치 `star`, 레벨업 `light_02`, 라이플 총구 `muzzle_02`, 폭발 `fire_01`, 잔불 `flame_01` |
