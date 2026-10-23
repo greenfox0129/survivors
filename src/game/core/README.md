@@ -6,7 +6,8 @@
 | `runReport.ts` | 한 판의 받은 피해·회복·무기별 준 피해·반사. `reset()` 때 비운다 |
 | `types.ts` | 엔티티·무기 상태·업그레이드 옵션·`WeaponMods`·`GameStats` 공용 타입. 새 무기/장신구 id 는 여기 유니온에 먼저 추가 |
 | `storage.ts` | 세이브(localStorage `vs_proto_save`), **스키마 버전 + 마이그레이션**, `updatedAt`, 실행기 디스크 미러 훅(`setSaveMirror`) |
-| `settings.ts` | 기기별 설정(그래픽 품질, 로비·인게임 음악과 효과음 볼륨·음소거) — 세이브와 분리, 구독 가능(`subscribeSettings`) |
+| `settings.ts` | 기기별 설정(그래픽 품질, 로비·인게임 음악과 효과음 볼륨·음소거, 브레스 마우스 조준) — 세이브와 분리, 구독 가능(`subscribeSettings`) |
+| `pointer.ts` | 캔버스 위 마우스 위치의 조준 각도. 브레스 설정이 켜졌을 때만 쓴다 |
 | `audio.ts` | WebAudio 합성 효과음, 마스터 게인(설정 반영), 음소거면 노드 생성 안 함, 노이즈 버퍼 캐시 |
 
 ## Notes

@@ -8,7 +8,7 @@
 | `effects.ts` | 처치 이펙트(Kenney 별, 0.18초, 최대 32개, 저사양 생략). `spawnKillPop/updateEffects/renderEffects/resetEffects` |
 | `background.ts` | 월드 배경 + 40px 그리드를 패턴 1장으로 (**저사양**·로딩 중 배경) |
 | `decor.ts` | 저사양이 아닐 때 타일 월드가 아직 없으면 쓰는 실루엣 장식 (원래 구현) |
-| `pixel.ts` | 픽셀 아트 헬퍼 (**높음 품질 전용**): `getPixelImage`(지연 로딩), `drawUnit`(4×4 걷기 시트 한 프레임 + 그림자, 엘리트 금빛 틴트는 1회 캐시), `drawStrip`(가로 프레임 스트립, 회전), `facingFromVector`, `drawShadow`. 스무딩 끄고 그린 뒤 복구. 이미지 로딩 전엔 false → 호출 측이 원래 도형으로 그림 |
+| `pixel.ts` | 픽셀 아트 헬퍼 (**높음 품질 전용**): `getPixelImage`(지연 로딩), `drawUnit`(4×4 걷기 시트 한 프레임 + 그림자, 틴트는 1회 캐시), `drawStrip`(가로 프레임 스트립, 회전), `facingFromVector`, `drawShadow`. 스무딩 끄고 그린 뒤 복구. 이미지 로딩 전엔 false → 호출 측이 원래 도형으로 그림 |
 | `tileWorld.ts` | 포켓몬식 타일 월드: 16×16 타일 청크를 좌표 해시로 생성(풀·흙빈터·키 큰 풀·꽃·돌·그루터기·나무) → 256px 오프스크린에 **한 번** 그려 LRU 24개 캐시 → 프레임당 청크 4–6개 drawImage. 충돌 없음(바닥 장식) |
 
 품질별 그림: **높음** = 타일 월드 + 유닛/무기/보석 픽셀 스프라이트 (`src/assets/pixel`), **저사양** = 원래 벡터 룩

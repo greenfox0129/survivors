@@ -11,6 +11,13 @@ import { getIconSprite, drawSpriteCentered } from "@/game/render/iconSprites";
 import { UI_ICONS } from "@/assets/icons/map";
 import { drawUnit, drawShadow, facingFromVector } from "@/game/render/pixel";
 import { enemySheet } from "@/assets/pixel/catalog";
+import {
+  createMidBossState,
+  isMidBoss,
+  renderMidBoss,
+  resetMidBoss,
+  updateMidBoss,
+} from "@/game/entities/MidBoss";
 
 /** Walk frames per second for pixel-sprite enemies. */
 const ENEMY_WALK_FPS = 6;
@@ -29,7 +36,20 @@ type EnemyTypeConfig = {
   spawnWeight: number;
   unlockedTime: number;
   shape: "circle" | "triangle" | "square" | "diamond" | "hexagon" | "star" | "sprite";
+  ranged?: boolean;
 };
+
+type EnemyShot = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  damage: number;
+  color: string;
+};
+
+const shots: EnemyShot[] = [];
 
 // ---- Sprite sheet constants (Wolf.png) ----
 const WOLF_COLS = 4;
@@ -71,6 +91,8 @@ export function resetEnemyManager(): void {
   spawnTimer = 0;
   idCounter = 1000;
   eliteSpawned = 0;
+  shots.length = 0;
+  resetMidBoss();
 }
 
 export function getEliteSpawned(): number {
@@ -79,25 +101,27 @@ export function getEliteSpawned(): number {
 
 function createEliteEnemy(elapsedTime: number, px: number, py: number): EnemyState {
   const pos = spawnEdgePosition(px, py);
-  const t = pickType(elapsedTime);
   const ec = CONFIG.elite;
   const hp = eliteHp(elapsedTime, enemyRun.hpGrowth) * enemyRun.hp;
+  const speed = ec.speed * ec.speedMult * enemyRun.speed;
   return {
     id: ++idCounter,
     x: pos.x,
     y: pos.y,
-    radius: t.radius * ec.radiusMult,
+    radius: ec.radius * ec.radiusMult,
     hp,
     maxHp: hp,
     alive: true,
-    speed: t.speed * ec.speedMult * enemyRun.speed,
-    baseSpeed: t.speed * ec.speedMult * enemyRun.speed,
-    damage: t.damage * enemyDamageScale(elapsedTime) * ec.damageMult * enemyRun.damage,
+    speed,
+    baseSpeed: speed,
+    damage: ec.damage * enemyDamageScale(elapsedTime) * ec.damageMult * enemyRun.damage,
     contactTimer: 0,
-    enemyType: t.id,
+    shotTimer: 0,
+    ranged: false,
+    enemyType: "elite",
     color: ec.color,
     borderColor: ec.borderColor,
-    shape: t.shape,
+    shape: "circle",
     spriteFrame: 0,
     spriteTimer: 0,
     facingRight: true,
@@ -108,6 +132,22 @@ function createEliteEnemy(elapsedTime: number, px: number, py: number): EnemySta
     eliteLife: CONFIG.elite.killSeconds,
     facing: 0,
   };
+}
+
+function createMidBoss(px: number, py: number): EnemyState {
+  const pos = spawnEdgePosition(px, py);
+  const c = CONFIG.midBoss;
+  const hp = c.hp * enemyRun.hp;
+  const speed = c.speed * enemyRun.speed;
+  return createMidBossState(
+    ++idCounter,
+    pos.x,
+    pos.y,
+    hp,
+    speed,
+    c.contactDamage * enemyRun.damage,
+    c.dashDamage * enemyRun.damage,
+  );
 }
 
 function spawnEdgePosition(px: number, py: number): { x: number; y: number } {
@@ -155,6 +195,8 @@ function createEnemy(elapsedTime: number, px: number, py: number): EnemyState {
     baseSpeed: t.speed * variance * enemyRun.speed,
     damage: t.damage * enemyDamageScale(elapsedTime) * enemyRun.damage,
     contactTimer: 0,
+    shotTimer: t.ranged ? Math.random() * CONFIG.ranged.cooldown : 0,
+    ranged: t.ranged === true,
     enemyType: t.id,
     color: t.color,
     borderColor: t.borderColor,
@@ -185,14 +227,17 @@ export function updateEnemies(
     }
   }
 
-  // On the survival clock: 1:00, 2:00, 3:00… A free-running timer lived in this
-  // module and kept its leftover into the next run, so elites showed up off the minute.
+  // On the survival clock: 1:00, 2:00, 3:00… The 5:00 tick is the midboss.
+  // A free-running timer lived in this module and kept its leftover into the next run,
+  // so elites showed up off the minute.
   const eliteInterval = CONFIG.elite.spawnInterval;
   if (eliteInterval > 0) {
     const due = Math.floor(_elapsedTime / eliteInterval);
     while (eliteSpawned < due) {
       eliteSpawned++;
-      enemies.push(createEliteEnemy(_elapsedTime, player.x, player.y));
+      const at = eliteSpawned * eliteInterval;
+      if (at === CONFIG.midBoss.spawnAt) enemies.push(createMidBoss(player.x, player.y));
+      else enemies.push(createEliteEnemy(_elapsedTime, player.x, player.y));
     }
   }
 
@@ -201,6 +246,10 @@ export function updateEnemies(
 
     // Reset speed to base each frame so trap slow doesn't compound permanently
     e.speed = e.baseSpeed;
+    if (isMidBoss(e)) {
+      updateMidBoss(e, player, dt);
+      continue;
+    }
 
     const dx = player.x - e.x;
     const dy = player.y - e.y;
@@ -228,14 +277,22 @@ export function updateEnemies(
       // Boost starts beyond ~150px and maxes at ~1.8x around the spawn distance (~500px).
       const nearDist = 150;
       const farDist = 500;
+      const chasing = !e.ranged || dist > CONFIG.ranged.range;
       let speedMult = 1;
-      if (dist > nearDist) {
+      if (chasing && dist > nearDist) {
         const t = Math.min((dist - nearDist) / (farDist - nearDist), 1);
         speedMult = 1 + t * 1.6; // up to 2.6x at far distance
       }
-      e.x += (dx / dist) * e.speed * speedMult * dt;
-      e.y += (dy / dist) * e.speed * speedMult * dt;
+      const step = e.speed * speedMult * dt;
+      if (chasing) {
+        e.x += (dx / dist) * step;
+        e.y += (dy / dist) * step;
+      } else if (dist < CONFIG.ranged.backup) {
+        e.x -= (dx / dist) * e.speed * dt;
+        e.y -= (dy / dist) * e.speed * dt;
+      }
     }
+    if (e.ranged) tryShoot(e, dx, dy, dist, dt);
 
     if (e.contactTimer > 0) e.contactTimer -= dt;
 
@@ -244,6 +301,41 @@ export function updateEnemies(
       e.contactTimer = CONFIG.enemy.contactDamageCooldown;
     }
   }
+
+  moveShots(player, dt);
+}
+
+function tryShoot(e: EnemyState, dx: number, dy: number, dist: number, dt: number): void {
+  if (e.shotTimer > 0) e.shotTimer -= dt;
+  const band = CONFIG.ranged;
+  if (dist > band.range || e.shotTimer > 0 || shots.length >= band.maxShots) return;
+  const aim = dist > 0.1 ? dist : 1;
+  const scale = band.shotSpeed / aim;
+  shots.push({
+    x: e.x,
+    y: e.y,
+    vx: dx * scale,
+    vy: dy * scale,
+    radius: band.shotRadius,
+    damage: e.damage,
+    color: e.color,
+  });
+  e.shotTimer = band.cooldown;
+}
+
+function moveShots(player: PlayerState, dt: number): void {
+  const maxDist2 = (CONFIG.canvasWidth * 1.5) * (CONFIG.canvasWidth * 1.5);
+  let write = 0;
+  for (let i = 0; i < shots.length; i++) {
+    const s = shots[i];
+    s.x += s.vx * dt;
+    s.y += s.vy * dt;
+    const dx = s.x - player.x;
+    const dy = s.y - player.y;
+    if (dx * dx + dy * dy > maxDist2) continue;
+    shots[write++] = s;
+  }
+  shots.length = write;
 }
 
 let _elapsedTime = 0;
@@ -258,7 +350,7 @@ export function checkContactDamage(
 ): number {
   let totalDamage = 0;
   for (const e of enemies) {
-    if (!e.alive) continue;
+    if (!e.alive || isMidBoss(e)) continue;
     const dx = player.x - e.x;
     const dy = player.y - e.y;
     const collideR = e.radius + player.radius;
@@ -267,6 +359,25 @@ export function checkContactDamage(
       e.contactTimer = CONFIG.enemy.contactDamageCooldown;
     }
   }
+  return totalDamage;
+}
+
+/** Straight shots from ranged enemies. A hit removes the shot. */
+export function checkShotDamage(player: PlayerState): number {
+  let totalDamage = 0;
+  let write = 0;
+  for (let i = 0; i < shots.length; i++) {
+    const s = shots[i];
+    const dx = s.x - player.x;
+    const dy = s.y - player.y;
+    const r = player.radius + s.radius;
+    if (dx * dx + dy * dy < r * r) {
+      totalDamage += s.damage;
+      continue;
+    }
+    shots[write++] = s;
+  }
+  shots.length = write;
   return totalDamage;
 }
 
@@ -424,7 +535,7 @@ function drawHpBar(ctx: CanvasRenderingContext2D, e: EnemyState, top: number): v
 
 /**
  * High quality: the enemy's own pixel sprite, facing the player, with a shadow.
- * Elites get a gold-tinted copy (built once) + a gold ring under their feet.
+ * The gold ring and crown are drawn later, so the elite sheet stays its own colors.
  * @returns false while the sheet is loading (caller draws the shape instead)
  */
 function renderEnemySprite(ctx: CanvasRenderingContext2D, e: EnemyState, now: number): boolean {
@@ -433,11 +544,26 @@ function renderEnemySprite(ctx: CanvasRenderingContext2D, e: EnemyState, now: nu
   const size = e.radius * ENEMY_SPRITE_PER_RADIUS;
   const scale = size / 16;
   const frame = Math.floor(now * 0.001 * ENEMY_WALK_FPS + e.id * 0.37);
-  const ok = drawUnit(ctx, sheet, e.facing, frame, e.x, e.y, scale,
-    e.isElite ? { tint: "#fbbf24", tintAmount: 0.55 } : undefined);
+  const ok = drawUnit(ctx, sheet, e.facing, frame, e.x, e.y, scale);
   if (!ok) return false;
   drawHpBar(ctx, e, e.y - size / 2);
   return true;
+}
+
+/** Opaque shots. Drawn after enemy bodies so the body does not hide them. */
+export function renderEnemyShots(ctx: CanvasRenderingContext2D): void {
+  if (shots.length === 0) return;
+  ctx.beginPath();
+  for (let i = 0; i < shots.length; i++) {
+    const s = shots[i];
+    ctx.moveTo(s.x + s.radius, s.y);
+    ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+  }
+  ctx.fillStyle = shots[0].color;
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "#1c1917";
+  ctx.stroke();
 }
 
 export function renderEnemies(ctx: CanvasRenderingContext2D, enemies: EnemyState[]): void {
@@ -446,9 +572,13 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, enemies: EnemyState
   // Normals first, elites after, so a crowd cannot paint over the elite body.
   for (const elitePass of [false, true]) {
     for (const e of enemies) {
-      if ((!e.alive && !e.dying) || e.isElite !== elitePass) continue;
+      if ((!e.alive && !e.dying) || e.isElite !== elitePass || isMidBoss(e)) continue;
       drawEnemyBody(ctx, e, low, now);
     }
+  }
+  for (const e of enemies) {
+    if (!isMidBoss(e) || (!e.alive && !e.dying)) continue;
+    renderMidBoss(ctx, e);
   }
 }
 
@@ -603,6 +733,11 @@ export function cullFarEnemies(enemies: EnemyState[], px: number, py: number): E
     if (!e.alive && !e.dying) continue;
     // A living elite has to be killed. Running away does not clear the timer.
     if (e.isElite && e.alive) {
+      if (write !== i) enemies[write] = e;
+      write++;
+      continue;
+    }
+    if (isMidBoss(e) && e.alive) {
       if (write !== i) enemies[write] = e;
       write++;
       continue;

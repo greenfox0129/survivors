@@ -11,6 +11,7 @@ import { accessoryColor, weaponColor } from "@/ui/theme";
 import { GameIcon } from "@/ui/components/GameIcon";
 import { EnemyShape } from "@/ui/components/EnemyShape";
 import { PixelFace, PixelWalker } from "@/ui/components/PixelSprite";
+import { pixelUrl } from "@/assets/pixel";
 import { accessoryIconName, weaponIcon } from "@/ui/icons";
 import type { WeaponType, WeaponInstance, AccessoryType } from "@/game/core/types";
 
@@ -36,23 +37,40 @@ const ENEMY_DESCS: Record<string, string> = {
   skeleton: "단단한 뼈로 이루어져 체력이 높습니다. 느리지만 한 방이 아프습니다. 60초 후부터 등장합니다.",
   ghost: "푸른 빛을 띤 유령. 균형 잡힌 스탯으로 까다롭습니다. 90초 후부터 등장합니다.",
   brute: "거대한 체구와 막강한 체력을 가진 브루트. 느리지만 절대 얕보지 마세요. 120초 후부터 등장합니다.",
+  eye: "거리를 두고 직선 탄을 쏘는 눈알. 2분 후부터 등장합니다.",
   wraith: "매우 빠르고 강한 래쓰. 180초 후부터 등장하는 최위험 적입니다.",
   wolf: "스프라이트로 표현된 날렵한 늑대. 빠르고 강력한 근접 공격으로 위협합니다. 150초 후부터 등장합니다.",
+  midboss: "5분 정각에 엘리트 대신 한 번 나온다. 가까이 걸어온 뒤 몸을 통과하는 돌진을 한다. 체력이 절반 이하면 세 번 연속이다.",
 };
 
-const ENEMY_INFOS: EnemyInfo[] = CONFIG.enemyTypes.map((t) => ({
-  id: t.id,
-  name: t.name,
-  color: t.color,
-  borderColor: t.borderColor,
-  desc: ENEMY_DESCS[t.id] ?? "",
-  hp: t.hp,
-  speed: t.speed,
-  damage: t.damage,
-  radius: t.radius,
-  shape: t.shape,
-  unlockedTime: t.unlockedTime,
-}));
+const ENEMY_INFOS: EnemyInfo[] = [
+  ...CONFIG.enemyTypes.map((t) => ({
+    id: t.id,
+    name: t.name,
+    color: t.color,
+    borderColor: t.borderColor,
+    desc: ENEMY_DESCS[t.id] ?? "",
+    hp: t.hp,
+    speed: t.speed,
+    damage: t.damage,
+    radius: t.radius,
+    shape: t.shape,
+    unlockedTime: t.unlockedTime,
+  })),
+  {
+    id: "midboss",
+    name: "중간보스",
+    color: CONFIG.midBoss.color,
+    borderColor: CONFIG.midBoss.borderColor,
+    desc: ENEMY_DESCS.midboss,
+    hp: CONFIG.midBoss.hp,
+    speed: CONFIG.midBoss.speed,
+    damage: CONFIG.midBoss.contactDamage,
+    radius: CONFIG.midBoss.radius,
+    shape: "circle" as const,
+    unlockedTime: CONFIG.midBoss.spawnAt,
+  },
+];
 
 export function CodexScreen({ onBack }: CodexScreenProps) {
   const [category, setCategory] = useState<Category>("enemies");
@@ -295,7 +313,17 @@ function EnemyDetail({ enemy, onBack }: { enemy: EnemyInfo; onBack: () => void }
         {enemy.shape !== "sprite" && (
           <div className="flex gap-2">
             <div className="flex flex-col items-center gap-1 rounded-xl border border-slate-700/60 bg-[#2f4a1f] px-3 py-2">
-              <PixelWalker kind="enemy" id={enemy.id} size={44} />
+              {enemy.id === "midboss" ? (
+                <div className="h-11 w-11 overflow-hidden">
+                  <img
+                    src={pixelUrl("boss/raccoon-idle")}
+                    alt=""
+                    style={{ width: 44 * 6, height: 44, imageRendering: "pixelated" }}
+                  />
+                </div>
+              ) : (
+                <PixelWalker kind="enemy" id={enemy.id} size={44} />
+              )}
               <span className="text-[10px] text-slate-300">게임 내 모습</span>
             </div>
             <div className="flex flex-col items-center justify-between gap-1 rounded-xl border border-slate-700/60 bg-[#0a0a12] px-3 py-2">
@@ -315,13 +343,25 @@ function EnemyDetail({ enemy, onBack }: { enemy: EnemyInfo; onBack: () => void }
 
       <div className="mt-4 rounded-lg bg-slate-800/40 border border-slate-700/50 px-4 py-3">
         <p className="text-slate-400 text-xs leading-relaxed">
-          등장 시간: {Math.floor(enemy.unlockedTime / 60)}분 {enemy.unlockedTime % 60}초 이후
-          <br />
-          스폰 간격: {CONFIG.enemy.spawnInterval}초에서 시작. 처음 1분은 초당 ×{CONFIG.enemy.spawnDecayPerSecond}, 이후 분당 ×{CONFIG.enemy.spawnDecayPerMinute}
-          <br />
-          동시 최대 수: {CONFIG.enemy.maxCount}마리에서 시작, 분당 100%p씩 증가
-          <br />
-          접촉 피해 쿨다운: {CONFIG.enemy.contactDamageCooldown}초
+          {enemy.id === "midboss" ? (
+            <>
+              등장: 5분 정각, 그 분의 엘리트 자리. 잡아도 판은 끝나지 않는다.
+              <br />
+              돌진 피해: {CONFIG.midBoss.dashDamage}. 접촉 피해: {CONFIG.midBoss.contactDamage}, {CONFIG.enemy.contactDamageCooldown}초마다.
+              <br />
+              1단 선딜 {CONFIG.midBoss.windup}초, 3단 선딜 {CONFIG.midBoss.enragedWindup}초, 후딜 {CONFIG.midBoss.recover}초.
+            </>
+          ) : (
+            <>
+              등장 시간: {Math.floor(enemy.unlockedTime / 60)}분 {enemy.unlockedTime % 60}초 이후
+              <br />
+              스폰 간격: {CONFIG.enemy.spawnInterval}초에서 시작. 처음 1분은 초당 ×{CONFIG.enemy.spawnDecayPerSecond}, 이후 분당 ×{CONFIG.enemy.spawnDecayPerMinute}
+              <br />
+              동시 최대 수: {CONFIG.enemy.maxCount}마리에서 시작, 분당 100%p씩 증가
+              <br />
+              접촉 피해 쿨다운: {CONFIG.enemy.contactDamageCooldown}초
+            </>
+          )}
         </p>
       </div>
     </div>

@@ -25,7 +25,9 @@ import {
 import {
   updateEnemies,
   checkContactDamage,
+  checkShotDamage,
   renderEnemies,
+  renderEnemyShots,
   renderEliteMarkers,
   cullDead,
   cullFarEnemies,
@@ -36,6 +38,7 @@ import {
   setEnemyConstraints,
   tickEliteLife,
 } from "@/game/entities/EnemyManager";
+import { consumeMidBossDamage, getMidBossSpawned } from "@/game/entities/MidBoss";
 import { WeaponManager, weaponFormName } from "@/game/systems/WeaponManager";
 import { pickUpgrades } from "@/game/systems/upgrades";
 import {
@@ -51,7 +54,7 @@ import {
 } from "@/game/entities/GemManager";
 import { computeModifiers, type GameModifiers } from "@/game/systems/traitHelper";
 import { resolveRunConstraints, type RunConstraints } from "@/game/data/constraints";
-import { playHurtSound, playLevelUpSound, playXpPickupSound, playGameOverSound, playEliteSound } from "@/game/core/audio";
+import { playHurtSound, playLevelUpSound, playXpPickupSound, playGameOverSound, playEliteSound, playMidBossSound } from "@/game/core/audio";
 import { CHARACTERS, type PassiveType } from "@/game/data/progression";
 import type { SaveData } from "@/game/core/storage";
 import {
@@ -344,7 +347,7 @@ export class GameEngine {
 
   private dropReward(e: EnemyState): void {
     if (e.gemDropped) return;
-    this.gems.push(e.isElite ? dropTreasure(e) : dropGem(e));
+    this.gems.push(e.isElite || e.enemyType === "midboss" ? dropTreasure(e) : dropGem(e));
     const special = rollSpecialDrop(e, this.elapsed);
     if (special) this.gems.push(special);
     e.gemDropped = true;
@@ -358,7 +361,7 @@ export class GameEngine {
     const cx = this.camera.x;
     const cy = this.camera.y;
     for (const e of this.enemies) {
-      if (!e.alive || e.dying || e.isElite) continue;
+      if (!e.alive || e.dying || e.isElite || e.enemyType === "midboss") continue;
       if (Math.abs(e.x - cx) > hw + e.radius) continue;
       if (Math.abs(e.y - cy) > hh + e.radius) continue;
       e.hp = 0;
@@ -415,25 +418,31 @@ export class GameEngine {
     this.camera.x = this.player.x;
     this.camera.y = this.player.y;
     const elitesBefore = getEliteSpawned();
+    const bossesBefore = getMidBossSpawned();
     updateEnemies(this.enemies, this.player, dt);
-    if (getEliteSpawned() > elitesBefore) playEliteSound();
+    const bossAdded = getMidBossSpawned() - bossesBefore;
+    if (getEliteSpawned() - elitesBefore > bossAdded) playEliteSound();
+    if (bossAdded > 0) playMidBossSound();
     if (tickEliteLife(this.enemies, dt)) {
       this.failedElite = true;
       this.player.alive = false;
     }
 
-    const contactDmg = checkContactDamage(this.enemies, this.player);
-    if (contactDmg > 0) {
+    const bossHit = consumeMidBossDamage();
+    const contactDmg = checkContactDamage(this.enemies, this.player) + bossHit.contact;
+    const shotDmg = checkShotDamage(this.player);
+    const incomingDmg = contactDmg + shotDmg + bossHit.dash;
+    if (incomingDmg > 0) {
       // Shield Forge + guardianWall: reduce incoming damage
       const guardianReduction = this.passive === "guardianWall" ? (this.breakthrough >= 3 ? 0.25 : 0.15) : 0;
-      const reducedDmg = contactDmg * (1 - accMods.damageReduction - guardianReduction);
+      const reducedDmg = incomingDmg * (1 - accMods.damageReduction - guardianReduction);
       playHurtSound();
       if (damagePlayer(this.player, reducedDmg)) noteDamageTaken(reducedDmg);
 
       // Thorn Armor + guardianWall: reflect damage to contacting enemies
       const guardianReflect = this.passive === "guardianWall" ? (this.breakthrough >= 3 ? 6 : 3) : 0;
       const reflectDmg = accMods.reflectDamage + guardianReflect;
-      if (reflectDmg > 0) {
+      if (contactDmg > 0 && reflectDmg > 0) {
         for (const e of this.enemies) {
           if (!e.alive || e.dying) continue;
           const dx = e.x - this.player.x;
@@ -617,6 +626,7 @@ export class GameEngine {
       })),
       rerolls: this.rerollsLeft,
       eliteSeconds: eliteSecondsLeft(this.enemies),
+      midBoss: getMidBossSpawned() > 0,
       failedElite: this.failedElite,
       damageTaken: report.taken,
       healing: report.healed,
@@ -669,6 +679,7 @@ export class GameEngine {
     if (!pixel && !tiled) renderDecor(ctx, camX, camY);
     renderGems(ctx, this.gems);
     renderEnemies(ctx, this.enemies);
+    renderEnemyShots(ctx);
     renderEffects(ctx);
     this.weaponMgr.render(ctx, this.player);
     renderEliteMarkers(ctx, this.enemies, this.camera.x, this.camera.y);

@@ -93,6 +93,37 @@ export function SettingsPanel() {
         </p>
       </div>
 
+      <div>
+        <div className="mb-1.5 text-sm font-semibold text-slate-200">브레스 방향</div>
+        <div className="grid grid-cols-2 gap-1.5 rounded-lg bg-slate-950/60 p-1">
+          <button
+            onClick={() => update({ breathMouseAim: false })}
+            className={`rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
+              settings.breathMouseAim
+                ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                : "bg-cyan-500 text-slate-900"
+            }`}
+          >
+            이동
+          </button>
+          <button
+            onClick={() => update({ breathMouseAim: true })}
+            className={`rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
+              settings.breathMouseAim
+                ? "bg-cyan-500 text-slate-900"
+                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+            }`}
+          >
+            마우스
+          </button>
+        </div>
+        <p className="mt-1 text-[11px] text-slate-500">
+          {settings.breathMouseAim
+            ? "브레스가 마우스 쪽을 향합니다. 쏘는 중에도 따라갑니다"
+            : "브레스가 이동 방향을 향합니다. 서 있으면 마지막 방향을 유지합니다"}
+        </p>
+      </div>
+
       <VolumeRow
         label="로비 음악"
         volume={settings.lobbyVolume}

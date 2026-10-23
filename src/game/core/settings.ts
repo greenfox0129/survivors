@@ -16,6 +16,8 @@ export interface GameSettings {
   /** Synthesized SFX 0..1. */
   sfxVolume: number;
   sfxMuted: boolean;
+  /** Breath follows the mouse instead of the movement direction. */
+  breathMouseAim: boolean;
 }
 
 const SETTINGS_KEY = "survivors_proto_settings";
@@ -28,6 +30,7 @@ const DEFAULTS: GameSettings = {
   ingameMuted: false,
   sfxVolume: 0.8,
   sfxMuted: false,
+  breathMouseAim: false,
 };
 
 interface StoredSettings extends Partial<GameSettings> {
@@ -60,6 +63,7 @@ function load(): GameSettings {
       ingameMuted: typeof parsed.ingameMuted === "boolean" ? parsed.ingameMuted : legacyMuted,
       sfxVolume: clampVolume(parsed.sfxVolume, legacyVolume),
       sfxMuted: typeof parsed.sfxMuted === "boolean" ? parsed.sfxMuted : legacyMuted,
+      breathMouseAim: parsed.breathMouseAim === true,
     };
   } catch {
     // localStorage unavailable (Node, private mode) — use defaults

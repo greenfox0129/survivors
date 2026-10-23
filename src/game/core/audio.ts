@@ -137,6 +137,12 @@ export function playEliteSound(): void {
   setTimeout(() => playTone(466, 622, 0.2, 0.07, "triangle"), 120);
 }
 
+/** Lower sting when the midboss enters. */
+export function playMidBossSound(): void {
+  playTone(196, 294, 0.16, 0.09, "sawtooth");
+  setTimeout(() => playTone(147, 220, 0.28, 0.08, "triangle"), 140);
+}
+
 export function playGameOverSound(): void {
   playTone(220, 90, 0.4, 0.07, "sawtooth");
 }

@@ -24,6 +24,8 @@ import type {
   WeaponMods,
   WeaponType,
 } from "@/game/core/types";
+import { getSettings } from "@/game/core/settings";
+import { pointerAim } from "@/game/core/pointer";
 import { updateBullet, renderBullets, cullBullets, resetBulletIds, bulletLevelEffect } from "@/game/weapons/BulletWeapon";
 import { updateMelee, renderMelee, createMeleeBlades, meleeLevelEffect } from "@/game/weapons/MeleeWeapon";
 import { updateBomb, renderBombs, cullBombs, resetBombIds, bombLevelEffect } from "@/game/weapons/BombWeapon";
@@ -151,13 +153,18 @@ const shuriken = defineWeapon<{ shurikens: ShurikenProjectile[] }>({
 });
 
 /** 야생의 발톱 — 진화하면 브레스(전방 화염 입자)로 상태가 교체된다 */
+function breathAim(moveAim: number): number {
+  if (!getSettings().breathMouseAim) return moveAim;
+  return pointerAim() ?? moveAim;
+}
+
 const claw = defineWeapon<{ claw: ClawState | null; breath: BreathState | null }>({
   renderOrder: 5,
   createState: (w) => ({ claw: createClawState(w), breath: null }),
   onLevelUp: (s, w) => ({ ...s, claw: createClawState(w) }),
   onEvolve: (_s, w) => ({ claw: null, breath: createBreathState(w) }),
   update: (s, a) => {
-    if (s.breath) updateBreath(s.breath, a.enemies, a.px, a.py, a.w, a.dt, a.onKill, a.mods, a.aim);
+    if (s.breath) updateBreath(s.breath, a.enemies, a.px, a.py, a.w, a.dt, a.onKill, a.mods, breathAim(a.aim));
     else if (s.claw) updateClaw(s.claw, a.enemies, a.px, a.py, a.w, a.dt, a.onKill, a.mods);
   },
   render: (ctx, s, p, w) => {

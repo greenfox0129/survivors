@@ -72,7 +72,7 @@
 | 캔버스 — 무기 | 회전검 `proj-blade` 칼날, 비도 `proj-dagger`(회귀 중에도 같은 비도), 폭발탄 `weapon-bomb`/운석 `weapon-bomb-evo`, 트랩 `weapon-trap`/토템 `weapon-trap-evo` |
 | 캔버스 — 이펙트 (Kenney, 저사양 끔) | 처치 `star`, 레벨업 `light_02`, 라이플 총구 `muzzle_02`, 폭발 `fire_01`, 잔불 `flame_01` |
 | 캔버스 — 월드 장식 (저사양 끔) | `decor-*` 10종(풀·돌·뼈·해골·버섯·비석·고목·거미줄·꽃·바위)을 280px 칸마다 해시로 배치, 배경보다 살짝 밝은 실루엣 (타일 월드 로딩 전에만) |
-| **캔버스 — 높음 품질 (픽셀 아트, `src/assets/pixel`)** | 월드 `tiles/floor·nature·detail` 청크 · 플레이어 `units/char-*` 4방향 걷기 · 적 `units/enemy-*` (+엘리트 금빛) · 그림자 `units/shadow` · 경험치 보석은 푸른 구체(뭉칠수록 진한 파랑) · 상자 `items/chest` · 라이플 `proj/energy-ball` · 비도 `proj/kunai` · 회전검 `items/sword`/`items/big-sword` · 폭발탄 `proj/canonball`/`proj/fireball` + `fx/circle-orange`·`fx/smoke`, 잔불 `fx/fire` · 트랩 `fx/circle-spark`(+`fx/thunder`) · 오오라 `fx/fire` 고리 · 발톱 `fx/claw` · 브레스 `fx/fire` 입자 · 처치 `fx/smoke`(+`fx/spark`) |
+| **캔버스 — 높음 품질 (픽셀 아트, `src/assets/pixel`)** | 월드 `tiles/floor·nature·detail` 청크 · 플레이어 `units/char-*` 4방향 걷기 · 적 `units/enemy-*` · 엘리트 `units/enemy-elite`(키클롭스) · 그림자 `units/shadow` · 경험치 보석은 푸른 구체(뭉칠수록 진한 파랑) · 상자 `items/chest` · 라이플 `proj/energy-ball` · 비도 `proj/kunai` · 회전검 `items/sword`/`items/big-sword` · 폭발탄 `proj/canonball`/`proj/fireball` + `fx/circle-orange`·`fx/smoke`, 잔불 `fx/fire` · 트랩 `fx/circle-spark`(+`fx/thunder`) · 오오라 `fx/fire` 고리 · 발톱 `fx/claw` · 브레스 `fx/fire` 입자 · 처치 `fx/smoke`(+`fx/spark`) |
 
 ## 6. 스크린샷
 

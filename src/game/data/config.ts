@@ -126,6 +126,20 @@ export const CONFIG = {
       shape: "hexagon" as const,
     },
     {
+      id: "eye",
+      name: "눈알",
+      color: "#facc15",
+      borderColor: "#854d0e",
+      radius: 13,
+      hp: 14,
+      speed: 48,
+      damage: 8,
+      spawnWeight: 4,
+      unlockedTime: 120,
+      shape: "circle" as const,
+      ranged: true,
+    },
+    {
       id: "wraith",
       name: "래쓰",
       color: "#f43f5e",
@@ -153,17 +167,55 @@ export const CONFIG = {
     },
   ] as const,
 
+  // Ranged types (enemyTypes[].ranged) hold this band and fire a straight shot.
+  // Elites keep the chase and never shoot.
+  ranged: {
+    range: 260,       // stop approaching inside this
+    backup: 150,      // step back when the player gets closer
+    cooldown: 1.8,    // seconds between shots
+    shotSpeed: 240,   // px/s, aimed at the player when fired
+    shotRadius: 5,
+    maxShots: 40,
+  },
+
   // ---- Elite enemies (spawn every 60s) ----
   elite: {
     spawnInterval: 60, // seconds between elite spawns
     killSeconds: 30, // game over if this elite is still alive
-    hp: 500,           // same for every elite, regardless of the borrowed type
+    hp: 500,           // same for every elite
     hpPerMinute: 2,    // spawn HP = hp × hpPerMinute ^ (elapsed minutes)
+    // Fixed body. Not copied from whichever regular type is spawning.
+    radius: 14,
+    speed: 50,
+    damage: 14,
     damageMult: 1.5,
     speedMult: 0.9,
     radiusMult: 1.8,
     color: "#fbbf24",
     borderColor: "#f59e0b",
+  },
+
+  // The 5:00 elite slot. Flat numbers: no per-minute HP or damage curve.
+  // Constraint multipliers still apply when the boss is created.
+  midBoss: {
+    spawnAt: 300,
+    hp: 8000,
+    radius: 36,
+    speed: 80,
+    approach: 200,
+    dashLength: 400,
+    dashTime: 0.1,
+    contactDamage: 50,
+    dashDamage: 50,
+    windup: 1,
+    enragedWindup: 0.6,
+    enrageAt: 0.5,
+    enragedDashes: 3,
+    recover: 0.8,
+    color: "#d4924a",
+    borderColor: "#7c3f12",
+    telegraph: "#ffedd5",
+    telegraphTrack: "#7c2d12",
   },
 
   // ---- Gems ----

@@ -41,6 +41,10 @@ export interface EnemyState extends Entity {
   baseSpeed: number;
   damage: number;
   contactTimer: number;
+  /** Seconds until the next ranged shot. Melee enemies leave this at 0. */
+  shotTimer: number;
+  /** Holds a band around the player and fires. Elites never do. */
+  ranged: boolean;
   enemyType: string;
   color: string;
   borderColor: string;
@@ -309,6 +313,8 @@ export interface GameStats {
   rerolls: number;
   /** Soonest elite kill timer, or null when no elite is alive. */
   eliteSeconds: number | null;
+  /** True once the 5:00 midboss has spawned this run. */
+  midBoss: boolean;
   /** The run ended because an elite outlasted its timer. */
   failedElite: boolean;
   /** Contact damage that landed, after shields. Invulnerable frames are not counted. */

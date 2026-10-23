@@ -142,6 +142,7 @@ export function stripFrameCount(name: string): number {
 /**
  * Draw frame `frame` (wraps around) of a horizontal strip centered on (x, y).
  * @param scale source px → world px @param angle rotation in radians
+ * @param flipX mirror across the vertical axis (boss charge facing)
  * @returns false while the image is loading
  */
 export function drawStrip(
@@ -152,6 +153,7 @@ export function drawStrip(
   y: number,
   scale: number,
   angle = 0,
+  flipX = false,
 ): boolean {
   const img = getPixelImage(name);
   if (!img) return false;
@@ -162,15 +164,12 @@ export function drawStrip(
   const w = fw * scale;
   const h = fh * scale;
   ctx.imageSmoothingEnabled = false;
-  if (angle === 0) {
-    ctx.drawImage(img, f * fw, 0, fw, fh, x - w / 2, y - h / 2, w, h);
-  } else {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(angle);
-    ctx.drawImage(img, f * fw, 0, fw, fh, -w / 2, -h / 2, w, h);
-    ctx.restore();
-  }
+  ctx.save();
+  ctx.translate(x, y);
+  if (flipX) ctx.scale(-1, 1);
+  if (angle !== 0) ctx.rotate(angle);
+  ctx.drawImage(img, f * fw, 0, fw, fh, -w / 2, -h / 2, w, h);
+  ctx.restore();
   ctx.imageSmoothingEnabled = true;
   return true;
 }

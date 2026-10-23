@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Pause, Play, Flag } from "lucide-react";
 import { GameEngine } from "@/game/core/GameEngine";
+import { setCanvasPointer } from "@/game/core/pointer";
 import { CONFIG } from "@/game/data/config";
 import type { GameStats, UpgradeOption, WeaponType } from "@/game/core/types";
 import { HUD } from "@/ui/components/HUD";
@@ -46,6 +47,7 @@ function initialStats(save: SaveData): GameStats {
     accessories: [],
     rerolls: 0,
     eliteSeconds: null,
+    midBoss: false,
     failedElite: false,
     damageTaken: 0,
     healing: 0,
@@ -184,14 +186,26 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
     const onVisibility = () => {
       if (document.hidden) onBlur();
     };
+    const onPointerMove = (e: PointerEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      setCanvasPointer(
+        ((e.clientX - rect.left) / rect.width) * CONFIG.canvasWidth,
+        ((e.clientY - rect.top) / rect.height) * CONFIG.canvasHeight,
+      );
+    };
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
     window.addEventListener("blur", onBlur);
+    window.addEventListener("pointermove", onPointerMove);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onBlur);
+      window.removeEventListener("pointermove", onPointerMove);
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [pauseGame, resumeGame]);

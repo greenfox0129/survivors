@@ -30,17 +30,28 @@ export function HUD({ stats }: HUDProps) {
   const hpPercent = stats.maxHp > 0 ? Math.max(0, Math.min(100, (stats.hp / stats.maxHp) * 100)) : 0;
   const emptyWeaponSlots = Math.max(0, CONFIG.maxWeapons - stats.weapons.length);
   const [eliteBanner, setEliteBanner] = useState(false);
+  const [bossBanner, setBossBanner] = useState(false);
   const prevElite = useRef<number | null>(stats.eliteSeconds);
+  const prevBoss = useRef(stats.midBoss);
   useEffect(() => {
     const prev = prevElite.current;
     prevElite.current = stats.eliteSeconds;
     if (prev == null && stats.eliteSeconds != null) setEliteBanner(true);
   }, [stats.eliteSeconds]);
   useEffect(() => {
+    if (!prevBoss.current && stats.midBoss) setBossBanner(true);
+    prevBoss.current = stats.midBoss;
+  }, [stats.midBoss]);
+  useEffect(() => {
     if (!eliteBanner) return;
     const id = window.setTimeout(() => setEliteBanner(false), 2200);
     return () => window.clearTimeout(id);
   }, [eliteBanner]);
+  useEffect(() => {
+    if (!bossBanner) return;
+    const id = window.setTimeout(() => setBossBanner(false), 2200);
+    return () => window.clearTimeout(id);
+  }, [bossBanner]);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10">
@@ -85,6 +96,12 @@ export function HUD({ stats }: HUDProps) {
         <div className="absolute left-1/2 top-16 flex -translate-x-1/2 items-center gap-2 rounded-lg border-2 border-amber-300 bg-slate-950/95 px-4 py-2">
           <GameIcon name={UI_ICONS.crown} size={22} className="text-amber-300" />
           <span className="text-lg font-bold tracking-wide text-amber-100">엘리트 출현</span>
+        </div>
+      )}
+
+      {bossBanner && (
+        <div className="absolute left-1/2 top-16 flex -translate-x-1/2 items-center gap-2 rounded-lg border-2 border-orange-300 bg-slate-950/95 px-4 py-2">
+          <span className="text-lg font-bold tracking-wide text-orange-100">중간보스 출현</span>
         </div>
       )}
 

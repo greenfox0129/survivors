@@ -51,12 +51,19 @@ const FILES = [
     ["skeleton", `${CH}/Skeleton/SeparateAnim/Walk.png`, `${CH}/Skeleton/Faceset.png`],
     ["ghost", `${MO}/Spirit/SpriteSheet.png`, `${MO}/Spirit/Faceset.png`],
     ["brute", `${MO}/Beast/Beast.png`, `${MO}/Beast/Faceset.png`],
+    ["eye", `${MO}/Eye/Eye.png`, `${MO}/Eye/Faceset.png`],
+    ["elite", `${MO}/Cyclope/SpriteSheet.png`, `${MO}/Cyclope/Faceset.png`],
     ["wraith", `${MO}/Flam/SpriteSheet.png`, `${MO}/Flam/Faceset.png`],
   ].flatMap(([id, sheet, face]) => [
     [`units/enemy-${id}.png`, sheet],
     [`faces/enemy-${id}.png`, face],
   ]),
   ["units/shadow.png", `${CH}/Shadow.png`],
+
+  // Midboss. Idle and charge are 60px horizontal strips, not 4×4 walk sheets.
+  ["faces/enemy-midboss.png", `${NA}/Actor/Boss/GiantRacoon/Faceset.png`],
+  ["boss/raccoon-idle.png", `${NA}/Actor/Boss/GiantRacoon/Idle.png`],
+  ["boss/raccoon-charge.png", `${NA}/Actor/Boss/GiantRacoon/charge.png`],
 
   // ---- World tiles (16px grid)
   ["tiles/floor.png", `${NA}/Backgrounds/Tilesets/TilesetFloor.png`],

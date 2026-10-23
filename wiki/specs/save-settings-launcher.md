@@ -30,7 +30,7 @@ interface SaveData {
 
 ## 설정 (localStorage `survivors_proto_settings`, `src/game/core/settings.ts`)
 
-`{ quality, lobbyVolume, lobbyMuted, ingameVolume, ingameMuted, sfxVolume, sfxMuted }` — 세이브와 분리된 기기별 설정. 음량은 0..1, 기본 80%. 일시정지 메뉴·로비 설정에서 변경. 예전 `{ volume, muted }` 는 읽을 때 세 칸으로 복사한다. 배경음 재생 크기는 슬라이더 값의 1/10이다.
+`{ quality, lobbyVolume, lobbyMuted, ingameVolume, ingameMuted, sfxVolume, sfxMuted, breathMouseAim }` — 세이브와 분리된 기기별 설정. 음량은 0..1, 기본 80%. `breathMouseAim` 기본값은 꺼짐(이동 방향). 일시정지 메뉴·로비 설정에서 변경. 예전 `{ volume, muted }` 는 읽을 때 세 칸으로 복사한다. 배경음 재생 크기는 슬라이더 값의 1/10이다.
 효과음이 음소거이거나 0이면 효과음 노드를 아예 만들지 않는다.
 
 ### 그래픽 품질
