@@ -2,7 +2,8 @@
 //  EnemyManager.ts — Spawning, tracking, collision, death
 // ============================================================
 
-import { CONFIG, eliteHp, enemyCap, enemyHpScale, regularSpawnInterval } from "@/game/data/config";
+import { CONFIG, eliteHp, enemyCap, enemyDamageScale, enemyHpScale, regularSpawnInterval } from "@/game/data/config";
+import { noteDamageDealt } from "@/game/core/runReport";
 import { playHitSound } from "@/game/core/audio";
 import type { EnemyState, PlayerState } from "@/game/core/types";
 import { isLowQuality } from "@/game/render/quality";
@@ -91,7 +92,7 @@ function createEliteEnemy(elapsedTime: number, px: number, py: number): EnemySta
     alive: true,
     speed: t.speed * ec.speedMult * enemyRun.speed,
     baseSpeed: t.speed * ec.speedMult * enemyRun.speed,
-    damage: t.damage * ec.damageMult * enemyRun.damage,
+    damage: t.damage * enemyDamageScale(elapsedTime) * ec.damageMult * enemyRun.damage,
     contactTimer: 0,
     enemyType: t.id,
     color: ec.color,
@@ -152,7 +153,7 @@ function createEnemy(elapsedTime: number, px: number, py: number): EnemyState {
     alive: true,
     speed: t.speed * variance * enemyRun.speed,
     baseSpeed: t.speed * variance * enemyRun.speed,
-    damage: t.damage * enemyRun.damage,
+    damage: t.damage * enemyDamageScale(elapsedTime) * enemyRun.damage,
     contactTimer: 0,
     enemyType: t.id,
     color: t.color,
@@ -276,6 +277,7 @@ export function damageEnemy(enemy: EnemyState, dmg: number, critChance: number =
     finalDmg = dmg * critMult;
   }
   playHitSound();
+  noteDamageDealt(finalDmg);
   enemy.hp -= finalDmg;
   if (enemy.hp <= 0) {
     enemy.alive = false;

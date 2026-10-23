@@ -14,6 +14,7 @@ import type {
   UpgradeOption,
   WeaponType,
 } from "@/game/core/types";
+import { noteDamageTaken, noteHealing, noteReflectDamage, resetRunReport, runReport } from "@/game/core/runReport";
 import {
   createPlayer,
   updatePlayer,
@@ -161,6 +162,7 @@ export class GameEngine {
     // Spawn clocks live on EnemyManager, not on this instance. Clear them or the
     // previous run's leftover shifts every elite off the minute marks.
     resetEnemyManager();
+    resetRunReport();
     setElapsedTime(0);
   }
 
@@ -307,6 +309,7 @@ export class GameEngine {
     this.elapsed = 0;
     setElapsedTime(0);
     this.kills = 0;
+    resetRunReport();
     this.score = 0;
     this.failedElite = false;
     this.paused = false;
@@ -324,13 +327,19 @@ export class GameEngine {
   }
 
   /** Drop the reward of a newly killed enemy exactly once (+ cosmetic kill pop). */
+  /** HP actually gained. A full bar or a dead player adds nothing. */
+  private restoreHp(amount: number): void {
+    if (amount <= 0 || !this.player.alive || this.player.hp >= this.player.maxHp) return;
+    const before = this.player.hp;
+    this.player.hp = Math.min(this.player.maxHp, this.player.hp + amount);
+    noteHealing(this.player.hp - before);
+  }
+
   /** A kill counts for score and, with the fang, gives a little HP back. */
   private noteKill(): void {
     this.kills++;
     if (!this.player.alive) return;
-    const heal = this.accessoryMgr.computeMods().killHeal;
-    if (heal <= 0 || this.player.hp >= this.player.maxHp) return;
-    this.player.hp = Math.min(this.player.maxHp, this.player.hp + heal);
+    this.restoreHp(this.accessoryMgr.computeMods().killHeal);
   }
 
   private dropReward(e: EnemyState): void {
@@ -419,7 +428,7 @@ export class GameEngine {
       const guardianReduction = this.passive === "guardianWall" ? (this.breakthrough >= 3 ? 0.25 : 0.15) : 0;
       const reducedDmg = contactDmg * (1 - accMods.damageReduction - guardianReduction);
       playHurtSound();
-      damagePlayer(this.player, reducedDmg);
+      if (damagePlayer(this.player, reducedDmg)) noteDamageTaken(reducedDmg);
 
       // Thorn Armor + guardianWall: reflect damage to contacting enemies
       const guardianReflect = this.passive === "guardianWall" ? (this.breakthrough >= 3 ? 6 : 3) : 0;
@@ -432,6 +441,7 @@ export class GameEngine {
           const collideR = e.radius + this.player.radius + 5;
           if (dx * dx + dy * dy < collideR * collideR) {
             e.hp -= reflectDmg;
+            noteReflectDamage(reflectDmg);
             if (e.hp <= 0 && !e.dying) {
               e.alive = false;
               this.noteKill();
@@ -443,9 +453,7 @@ export class GameEngine {
     }
 
     // Vital Ring: HP regen
-    if (accMods.regenPerSec > 0 && this.player.hp < this.player.maxHp) {
-      this.player.hp = Math.min(this.player.maxHp, this.player.hp + accMods.regenPerSec * dt);
-    }
+    if (accMods.regenPerSec > 0) this.restoreHp(accMods.regenPerSec * dt);
 
     // Weapons — onKill just counts kills; gem drops handled in single pass below
     this.weaponMgr.update(this.enemies, this.player, dt, () => {
@@ -463,7 +471,7 @@ export class GameEngine {
 
     const gemResult = updateGems(this.gems, this.player, dt);
     if (gemResult.heart) {
-      this.player.hp = this.player.maxHp;
+      this.restoreHp(this.player.maxHp - this.player.hp);
       playLevelUpSound();
     }
     if (gemResult.magnet) {
@@ -584,6 +592,7 @@ export class GameEngine {
 
   // ---- Stats ----
   private getStats(): GameStats {
+    const report = runReport();
     return {
       time: this.elapsed,
       kills: this.kills,
@@ -609,6 +618,10 @@ export class GameEngine {
       rerolls: this.rerollsLeft,
       eliteSeconds: eliteSecondsLeft(this.enemies),
       failedElite: this.failedElite,
+      damageTaken: report.taken,
+      healing: report.healed,
+      damageDealt: report.dealt,
+      reflectDamage: report.reflect,
     };
   }
 

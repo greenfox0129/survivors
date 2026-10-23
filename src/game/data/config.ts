@@ -53,6 +53,8 @@ export const CONFIG = {
     contactDamageCooldown: 0.5,
     // Regular spawn HP = base × hpPerMinute ^ (elapsed minutes). Elites use elite.hp instead.
     hpPerMinute: 1.5,
+    // Contact damage at spawn = base × damagePerMinute ^ (elapsed minutes). Elites too.
+    damagePerMinute: 1.2,
   },
 
   // ---- Enemy types ----
@@ -473,6 +475,11 @@ export function xpForLevel(level: number): number {
 /** HP multiplier for a regular enemy spawned at `elapsedSeconds`. 1 at 0:00, 1.5 at 1:00, 2.25 at 2:00. */
 export function enemyHpScale(elapsedSeconds: number, growthMult = 1): number {
   return Math.pow(CONFIG.enemy.hpPerMinute * growthMult, elapsedSeconds / 60);
+}
+
+/** Contact-damage multiplier for any enemy spawned at `elapsedSeconds`. 1 at 0:00, 1.2 at 1:00. */
+export function enemyDamageScale(elapsedSeconds: number): number {
+  return Math.pow(CONFIG.enemy.damagePerMinute, elapsedSeconds / 60);
 }
 
 /** Elite HP at spawn. 500 at 0:00, 1000 at 1:00, 2000 at 2:00. Does not use the type's HP. */

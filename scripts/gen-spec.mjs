@@ -241,6 +241,7 @@ try {
         ["엘리트 체력", `${el.hp} × ${el.hpPerMinute}^(경과 분). 종류와 무관. 0분 ${el.hp}, 1분 ${el.hp * el.hpPerMinute}, 2분 ${el.hp * el.hpPerMinute ** 2}`],
         ["엘리트 배율", `피해 ×${el.damageMult} · 속도 ×${el.speedMult} · 크기 ×${el.radiusMult}`],
         ["생성 시 체력", `일반 적: 기본 HP × ${e.hpPerMinute}^(경과 분). 이미 나온 적은 변하지 않음`],
+        ["생성 시 공격력", `기본 접촉 피해 × ${e.damagePerMinute}^(경과 분). 엘리트는 여기에 ×${el.damageMult}. 이미 나온 적은 변하지 않음`],
         ["엘리트 보상", "보물 상자 → 획득 시 즉시 레벨업 선택지"],
       ],
     ),

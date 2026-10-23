@@ -100,14 +100,16 @@ export function gainXp(player: PlayerState, amount: number): number {
   return levels;
 }
 
-export function damagePlayer(player: PlayerState, dmg: number): void {
-  if (player.invulnTimer > 0 || !player.alive) return;
+/** True when the hit landed. Invulnerable frames and a dead player take nothing. */
+export function damagePlayer(player: PlayerState, dmg: number): boolean {
+  if (player.invulnTimer > 0 || !player.alive || dmg <= 0) return false;
   player.hp -= dmg;
   player.invulnTimer = CONFIG.player.invulnTime;
   if (player.hp <= 0) {
     player.hp = 0;
     player.alive = false;
   }
+  return true;
 }
 
 /** Dark ink on bright circles, light ink on dark ones (e.g. Linya's near-black color). */

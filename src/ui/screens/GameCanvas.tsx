@@ -47,7 +47,15 @@ function initialStats(save: SaveData): GameStats {
     rerolls: 0,
     eliteSeconds: null,
     failedElite: false,
+    damageTaken: 0,
+    healing: 0,
+    damageDealt: {},
+    reflectDamage: 0,
   };
+}
+
+function formatAmount(n: number): string {
+  return Math.round(n).toLocaleString("ko-KR");
 }
 
 /** 캔버스 비율(4:3)을 유지하면서 가로·세로 모두 화면 안에 들어오는 폭 (하단 안내줄 여백 96px) */
@@ -222,6 +230,11 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
     engineRef.current?.giveUp();
   }, []);
 
+  const damageRows = [...stats.weapons]
+    .map((w) => ({ ...w, dealt: stats.damageDealt[w.type] ?? 0 }))
+    .sort((a, b) => b.dealt - a.dealt);
+  const damageTop = Math.max(1, ...damageRows.map((w) => w.dealt), stats.reflectDamage);
+
   const starsGained = newAchievements.reduce((sum, a) => sum + a.reward, 0);
 
   return (
@@ -252,7 +265,7 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
         {/* Pause menu */}
         {phase === "paused" && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 backdrop-blur-sm px-6">
-            <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900/90 p-6">
+            <div className="max-h-full w-full max-w-sm overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900/90 p-6">
               <h2 className="mb-1 text-center text-2xl font-bold tracking-wide text-slate-100">일시정지</h2>
               <p className="mb-5 text-center text-xs text-slate-500">ESC / P 로 계속하기</p>
               <SettingsPanel />
@@ -276,13 +289,14 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
 
         {/* Game over screen */}
         {phase === "gameover" && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm px-6">
+          <div className="absolute inset-0 z-20 overflow-y-auto bg-black/80 backdrop-blur-sm">
+            <div className="flex min-h-full flex-col items-center justify-center px-6 py-6">
             <h2 className={`text-3xl font-bold text-red-500 tracking-wide ${stats.failedElite ? "mb-2" : "mb-4"}`}>GAME OVER</h2>
             {stats.failedElite && (
               <p className="mb-4 text-sm font-semibold text-amber-200">엘리트를 30초 안에 처치하지 못했다</p>
             )}
 
-            <div className="rounded-xl border border-slate-700 bg-slate-900/70 px-7 py-5 mb-4 flex flex-col gap-2 min-w-[260px]">
+            <div className="mb-4 flex w-full max-w-sm flex-col gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-7 py-5">
               {[
                 { icon: UI_ICONS.time, label: "생존 시간", value: formatTime(stats.time), color: "text-cyan-300" },
                 { icon: UI_ICONS.kills, label: "처치 수", value: stats.kills, color: "text-red-400" },
@@ -332,6 +346,40 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
                   <span className="text-cyan-300 font-mono font-bold text-base">+{starsGained} 별</span>
                 </div>
               )}
+              <div className="h-px bg-slate-700 my-1" />
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-400">받은 피해</span>
+                <span className="font-mono font-bold text-rose-300">{formatAmount(stats.damageTaken)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-400">회복</span>
+                <span className="font-mono font-bold text-emerald-300">{formatAmount(stats.healing)}</span>
+              </div>
+              <p className="mt-1 text-xs font-semibold text-slate-500">준 피해</p>
+              {damageRows.map((w) => (
+                <div key={w.type} className="flex flex-col gap-0.5">
+                  <div className="flex items-center justify-between gap-3 text-xs">
+                    <span className="flex min-w-0 items-center gap-1.5 text-slate-300">
+                      <GameIcon name={weaponIcon(w.type, w.evolved, w.super)} size={14} color={weaponColor(w.type)} />
+                      <span className="truncate">{w.name}</span>
+                      <span className="shrink-0 text-slate-500">{w.evolved ? "MAX" : `Lv${w.level}`}</span>
+                    </span>
+                    <span className="shrink-0 font-mono font-bold text-orange-200">{formatAmount(w.dealt)}</span>
+                  </div>
+                  <div className="h-1 overflow-hidden rounded-full bg-slate-800">
+                    <div
+                      className="h-1 rounded-full"
+                      style={{ width: `${(w.dealt / damageTop) * 100}%`, background: weaponColor(w.type) }}
+                    />
+                  </div>
+                </div>
+              ))}
+              {stats.reflectDamage > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">반사</span>
+                  <span className="font-mono font-bold text-slate-200">{formatAmount(stats.reflectDamage)}</span>
+                </div>
+              )}
             </div>
 
             {newAchievements.length > 0 && (
@@ -351,22 +399,6 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
               </div>
             )}
 
-            {/* Weapons used this run */}
-            <div className="mb-5 flex flex-wrap justify-center gap-1.5">
-              {stats.weapons.map((w) => (
-                <span
-                  key={w.type}
-                  title={w.name}
-                  className={`flex items-center gap-1 rounded-md border px-1.5 py-1 text-[11px] ${
-                    w.evolved ? "border-amber-500/60 text-amber-300" : "border-slate-700 text-slate-400"
-                  }`}
-                >
-                  <GameIcon name={weaponIcon(w.type, w.evolved, w.super)} size={14} color={weaponColor(w.type)} />
-                  {w.evolved ? "MAX" : `Lv${w.level}`}
-                </span>
-              ))}
-            </div>
-
             <button
               onClick={handleRestart}
               className="rounded-lg bg-cyan-500 px-8 py-3 font-bold text-slate-900 transition-all hover:bg-cyan-400 active:scale-95"
@@ -379,6 +411,7 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
             >
               로비로 돌아가기
             </button>
+            </div>
           </div>
         )}
       </div>

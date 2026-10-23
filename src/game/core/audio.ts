@@ -1,6 +1,6 @@
 // ============================================================
 //  audio.ts — Synthesized SFX (WebAudio, no audio files).
-//  All sounds go through one master gain driven by settings (volume / mute).
+//  All sounds go through one master gain driven by the SFX volume and mute.
 // ============================================================
 
 import { getSettings, subscribeSettings, type GameSettings } from "@/game/core/settings";
@@ -9,7 +9,7 @@ let audioContext: AudioContext | null = null;
 let master: GainNode | null = null;
 
 function masterLevel(s: GameSettings): number {
-  return s.muted ? 0 : s.volume;
+  return s.sfxMuted ? 0 : s.sfxVolume;
 }
 
 /** Skip creating audio nodes entirely when muted (saves CPU on low-end machines). */

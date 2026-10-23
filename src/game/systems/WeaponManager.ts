@@ -15,6 +15,7 @@ import type {
 } from "@/game/core/types";
 import { EVOLUTIONS, SUPER_EVOLUTIONS, superEvolutionFor } from "@/game/data/evolutions";
 import { ALL_WEAPON_TYPES, WEAPON_MODULES } from "@/game/weapons/registry";
+import { setDamageSource } from "@/game/core/runReport";
 
 export type { WeaponMods } from "@/game/core/types";
 
@@ -159,16 +160,21 @@ export class WeaponManager {
     onKill: () => void
   ): void {
     for (const w of this.weapons) {
-      WEAPON_MODULES[w.type].update(this.states.get(w.type), {
-        enemies,
-        px: player.x,
-        py: player.y,
-        w,
-        dt,
-        onKill,
-        mods: this.mods,
-        aim: player.aim,
-      });
+      setDamageSource(w.type);
+      try {
+        WEAPON_MODULES[w.type].update(this.states.get(w.type), {
+          enemies,
+          px: player.x,
+          py: player.y,
+          w,
+          dt,
+          onKill,
+          mods: this.mods,
+          aim: player.aim,
+        });
+      } finally {
+        setDamageSource(null);
+      }
     }
   }
 

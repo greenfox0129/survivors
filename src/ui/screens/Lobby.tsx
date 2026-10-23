@@ -101,7 +101,7 @@ const MENU_ITEMS: MenuCard[] = [
   },
   {
     title: "설정",
-    desc: "그래픽과 효과음을 조절하세요",
+    desc: "그래픽과 소리를 조절하세요",
     lucide: "settings",
     iconColor: "#cbd5e1",
     color: "border-slate-500/40 bg-slate-900/40",

@@ -1,5 +1,5 @@
 // ============================================================
-//  SettingsPanel — graphics quality + SFX volume (pause menu and the settings screen).
+//  SettingsPanel — graphics quality + sound volume (pause menu and the settings screen).
 // ============================================================
 
 import { Volume2, VolumeX } from "lucide-react";
@@ -14,9 +14,55 @@ const QUALITY_OPTIONS: { value: QualitySetting; label: string; hint: string }[] 
   { value: "low", label: "저사양", hint: "장식 효과 생략 (게임 정보는 그대로)" },
 ];
 
+function VolumeRow({
+  label,
+  volume,
+  muted,
+  onVolume,
+  onToggleMute,
+  onPreview,
+}: {
+  label: string;
+  volume: number;
+  muted: boolean;
+  onVolume: (volume: number) => void;
+  onToggleMute: () => void;
+  onPreview?: () => void;
+}) {
+  const pct = Math.round(volume * 100);
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between">
+        <span className="text-sm font-semibold text-slate-200">{label}</span>
+        <span className="font-mono text-xs text-slate-400">{muted ? "음소거" : `${pct}%`}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onToggleMute}
+          className="rounded-md border border-slate-700 bg-slate-900/60 p-1.5 text-slate-300 hover:border-slate-500 hover:text-slate-100"
+          aria-label={muted ? `${label} 음소거 해제` : `${label} 음소거`}
+        >
+          {muted || volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+        </button>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={1}
+          value={pct}
+          onChange={(e) => onVolume(Number(e.target.value) / 100)}
+          onPointerUp={onPreview}
+          onKeyUp={onPreview}
+          className="h-1.5 flex-1 cursor-pointer accent-cyan-400"
+          aria-label={`${label} 볼륨`}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function SettingsPanel() {
   const [settings, update] = useSettings();
-  const volumePct = Math.round(settings.volume * 100);
   const downgraded = settings.quality === "auto" && isAutoDowngraded();
 
   return (
@@ -47,33 +93,28 @@ export function SettingsPanel() {
         </p>
       </div>
 
-      <div>
-        <div className="mb-1.5 flex items-center justify-between">
-          <span className="text-sm font-semibold text-slate-200">효과음</span>
-          <span className="font-mono text-xs text-slate-400">{settings.muted ? "음소거" : `${volumePct}%`}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => update({ muted: !settings.muted })}
-            className="rounded-md border border-slate-700 bg-slate-900/60 p-1.5 text-slate-300 hover:border-slate-500 hover:text-slate-100"
-            aria-label={settings.muted ? "음소거 해제" : "음소거"}
-          >
-            {settings.muted || settings.volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-          </button>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            step={5}
-            value={volumePct}
-            onChange={(e) => update({ volume: Number(e.target.value) / 100, muted: false })}
-            onPointerUp={() => playUiSound()}
-            onKeyUp={() => playUiSound()}
-            className="h-1.5 flex-1 cursor-pointer accent-cyan-400"
-            aria-label="효과음 볼륨"
-          />
-        </div>
-      </div>
+      <VolumeRow
+        label="로비 음악"
+        volume={settings.lobbyVolume}
+        muted={settings.lobbyMuted}
+        onVolume={(lobbyVolume) => update({ lobbyVolume, lobbyMuted: false })}
+        onToggleMute={() => update({ lobbyMuted: !settings.lobbyMuted })}
+      />
+      <VolumeRow
+        label="인게임 음악"
+        volume={settings.ingameVolume}
+        muted={settings.ingameMuted}
+        onVolume={(ingameVolume) => update({ ingameVolume, ingameMuted: false })}
+        onToggleMute={() => update({ ingameMuted: !settings.ingameMuted })}
+      />
+      <VolumeRow
+        label="효과음"
+        volume={settings.sfxVolume}
+        muted={settings.sfxMuted}
+        onVolume={(sfxVolume) => update({ sfxVolume, sfxMuted: false })}
+        onToggleMute={() => update({ sfxMuted: !settings.sfxMuted })}
+        onPreview={playUiSound}
+      />
     </div>
   );
 }

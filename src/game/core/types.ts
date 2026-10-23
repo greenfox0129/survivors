@@ -311,6 +311,14 @@ export interface GameStats {
   eliteSeconds: number | null;
   /** The run ended because an elite outlasted its timer. */
   failedElite: boolean;
+  /** Contact damage that landed, after shields. Invulnerable frames are not counted. */
+  damageTaken: number;
+  /** HP actually restored (fang, regen, heart). Raising max HP is not healing. */
+  healing: number;
+  /** Damage dealt by each held weapon, including crits, burns, and overkill. */
+  damageDealt: Partial<Record<WeaponType, number>>;
+  /** Thorn armor and guardian reflection. */
+  reflectDamage: number;
 }
 
 export interface Camera {

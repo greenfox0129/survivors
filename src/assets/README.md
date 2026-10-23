@@ -7,6 +7,7 @@
 | `icons/map.ts` | Semantic mapping: `weaponIcon`, `accessoryIconName`, `enemyIcon`, `characterIcon`, `traitIcon`, `UI_ICONS` | — |
 | `pixel/` | Pixel-art sprites used on **high** quality: `units/` (4×4 walk sheets: characters + enemies), `faces/` (38×38 portraits for the UI), `tiles/` (ground/nature tilesets for the world), `proj/` `fx/` `items/` (horizontal frame strips). `index.ts` = name → URL, `catalog.ts` = slicing + id → sheet mapping. **Generated** by `npm run assets:pixel` from `art/` — edit the list in `scripts/sync-pixel-assets.mjs`, not the files | Ninja Adventure (Pixel-boy & AAA), CC0 |
 | `fx/*.png` | FX textures (white alpha, tinted at runtime): star (kill), light_02 (level-up), muzzle_02 (rifle), fire_01 (explosion), flame_01 (burn field), scorch_02/spark_04 (spare) | Kenney Particle Pack, CC0 |
+| `audio/` | `lobby-bgm.mp3` loops outside a run. `ingame-bgm.mp3` loops during a run | user supplied |
 
 Usage
 - UI: `<GameIcon name={weaponIcon("claw", true)} color="#84cc16" size={24} />`, portraits `<PixelFace kind="char" id="mage" size={48} />`

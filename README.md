@@ -19,7 +19,7 @@ WASD로 움직이기만 하면 무기가 자동으로 공격하고, 경험치를
 | **원클릭 exe (Windows)** | `npm run build:exe` → `release/SurvivorsProto.exe` 더블클릭 | 설치 불필요, Edge 앱 창, 세이브는 `%LOCALAPPDATA%\SurvivorsProto\save.json` 에도 백업 |
 | 개발 서버 | `npm install` → `npm run dev` → http://localhost:5173 | 코드 수정 시 즉시 반영 |
 
-조작: **WASD / 방향키** 이동 · 공격 자동 · 레벨업 **1/2/3** 선택, **R** 리롤 · **ESC/P** 일시정지(그래픽·효과음 설정)
+조작: **WASD / 방향키** 이동 · 공격 자동 · 레벨업 **1/2/3** 선택, **R** 리롤 · **ESC/P** 일시정지(그래픽·배경음·효과음 설정)
 
 ## 게임 구성
 
