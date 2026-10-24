@@ -10,8 +10,7 @@ import { weaponLevelEffectAt } from "@/game/weapons/registry";
 import { accessoryColor, weaponColor } from "@/ui/theme";
 import { GameIcon } from "@/ui/components/GameIcon";
 import { EnemyShape } from "@/ui/components/EnemyShape";
-import { PixelFace, PixelWalker } from "@/ui/components/PixelSprite";
-import { pixelUrl } from "@/assets/pixel";
+import { PixelFace, PixelStrip, PixelWalker } from "@/ui/components/PixelSprite";
 import { accessoryIconName, weaponIcon } from "@/ui/icons";
 import type { WeaponType, WeaponInstance, AccessoryType } from "@/game/core/types";
 
@@ -32,15 +31,21 @@ interface EnemyInfo {
 }
 
 const ENEMY_DESCS: Record<string, string> = {
-  slime: "가장 기본적인 적. 느리지만 꾸준히 몰려옵니다. 게임 시작부터 등장합니다.",
-  bat: "빠른 속도로 돌진하는 작은 박쥐. 체력은 낮지만 피하기 어렵습니다. 30초 후부터 등장합니다.",
-  skeleton: "단단한 뼈로 이루어져 체력이 높습니다. 느리지만 한 방이 아프습니다. 60초 후부터 등장합니다.",
-  ghost: "푸른 빛을 띤 유령. 균형 잡힌 스탯으로 까다롭습니다. 90초 후부터 등장합니다.",
-  brute: "거대한 체구와 막강한 체력을 가진 브루트. 느리지만 절대 얕보지 마세요. 120초 후부터 등장합니다.",
-  eye: "거리를 두고 직선 탄을 쏘는 눈알. 2분 후부터 등장합니다.",
-  wraith: "매우 빠르고 강한 래쓰. 180초 후부터 등장하는 최위험 적입니다.",
-  wolf: "스프라이트로 표현된 날렵한 늑대. 빠르고 강력한 근접 공격으로 위협합니다. 150초 후부터 등장합니다.",
+  slime: "느리지만 꾸준히 몰려오는 슬라임. 게임 시작부터 3분간 등장합니다.",
+  bat: "빠른 속도로 돌진하는 작은 박쥐. 체력은 낮지만 피하기 어렵습니다. 30초 후부터 3분간 등장합니다.",
+  ghost: "푸른 빛을 띤 유령. 균형 잡힌 스탯으로 까다롭습니다. 1분 후부터 3분간 등장합니다.",
+  skeleton: "단단한 뼈로 이루어져 체력이 높습니다. 느리지만 한 방이 아프습니다. 1분 30초 후부터 3분간 등장합니다.",
+  eye: "거리를 두고 직선 탄을 쏘는 눈알. 2분 후부터 3분간 등장합니다.",
+  skull: "거리를 두고 직선 탄을 쏘는 해골. 7분 후부터 3분간 등장합니다.",
+  spider: "빠르게 달라붙는 거미. 2분 30초 후부터 3분간 등장합니다.",
+  snake: "풀숲을 기어오는 뱀. 3분 30초 후부터 3분간 등장합니다.",
+  wraith: "매우 빠른 래쓰. 4분 30초 후부터 3분간 등장합니다.",
+  lizard: "빠르고 질긴 도마뱀. 5분 30초 후부터 3분간 등장합니다.",
+  wolf: "날렵하고 강한 늑대. 6분 30초 후부터 3분간 등장합니다.",
+  brute: "거대한 체구와 막강한 체력을 가진 브루트. 느리지만 절대 얕보지 마세요. 7분 30초 후부터 3분간 등장합니다.",
+  mushroom: "느리지만 가장 단단한 버섯. 8분 30초 후부터 3분간 등장합니다.",
   midboss: "5분 정각에 엘리트 대신 한 번 나온다. 가까이 걸어온 뒤 몸을 통과하는 돌진을 한다. 체력이 절반 이하면 세 번 연속이다.",
+  finalboss: "10분 정각에 나온다. 맵의 몹이 사라지고, 쓰러뜨리면 그 판이 끝난다.",
 };
 
 const ENEMY_INFOS: EnemyInfo[] = [
@@ -69,6 +74,19 @@ const ENEMY_INFOS: EnemyInfo[] = [
     radius: CONFIG.midBoss.radius,
     shape: "circle" as const,
     unlockedTime: CONFIG.midBoss.spawnAt,
+  },
+  {
+    id: "finalboss",
+    name: "거대 영혼",
+    color: CONFIG.finalBoss.color,
+    borderColor: CONFIG.finalBoss.borderColor,
+    desc: ENEMY_DESCS.finalboss,
+    hp: CONFIG.finalBoss.hp,
+    speed: 0,
+    damage: CONFIG.finalBoss.damage,
+    radius: CONFIG.finalBoss.radius,
+    shape: "circle" as const,
+    unlockedTime: CONFIG.finalBoss.spawnAt,
   },
 ];
 
@@ -314,13 +332,9 @@ function EnemyDetail({ enemy, onBack }: { enemy: EnemyInfo; onBack: () => void }
           <div className="flex gap-2">
             <div className="flex flex-col items-center gap-1 rounded-xl border border-slate-700/60 bg-[#2f4a1f] px-3 py-2">
               {enemy.id === "midboss" ? (
-                <div className="h-11 w-11 overflow-hidden">
-                  <img
-                    src={pixelUrl("boss/raccoon-idle")}
-                    alt=""
-                    style={{ width: 44 * 6, height: 44, imageRendering: "pixelated" }}
-                  />
-                </div>
+                <PixelStrip name="boss/raccoon-idle" frames={6} size={44} />
+              ) : enemy.id === "finalboss" ? (
+                <PixelStrip name="boss/spirit-idle" frames={5} size={44} />
               ) : (
                 <PixelWalker kind="enemy" id={enemy.id} size={44} />
               )}
@@ -345,15 +359,23 @@ function EnemyDetail({ enemy, onBack }: { enemy: EnemyInfo; onBack: () => void }
         <p className="text-slate-400 text-xs leading-relaxed">
           {enemy.id === "midboss" ? (
             <>
-              등장: 5분 정각, 그 분의 엘리트 자리. 체력은 기본 {CONFIG.midBoss.hp} × {CONFIG.elite.hpPerMinute}^(경과 분). 잡아도 판은 끝나지 않는다.
+              등장: 5분 정각, 그 분의 엘리트 자리. 체력은 기본 {CONFIG.midBoss.hp} × {CONFIG.elite.hpPerMinute}^({CONFIG.elite.hpLateFrom / 60}분까지) × {CONFIG.elite.hpPerMinuteLate}^(그 뒤). 잡아도 판은 끝나지 않는다.
               <br />
               돌진 피해: {CONFIG.midBoss.dashDamage}. 접촉 피해: {CONFIG.midBoss.contactDamage}, {CONFIG.enemy.contactDamageCooldown}초마다.
               <br />
               1단 선딜 {CONFIG.midBoss.windup}초, 3단 선딜 {CONFIG.midBoss.enragedWindup}초, 후딜 {CONFIG.midBoss.recover}초.
             </>
+          ) : enemy.id === "finalboss" ? (
+            <>
+              등장: 10분 정각, 그 분의 엘리트 자리. 나오는 순간 다른 몹은 사라지고 더 나오지 않는다. 쓰러뜨리면 판이 끝난다.
+              <br />
+              체력은 기본 {CONFIG.finalBoss.hp} × {CONFIG.elite.hpPerMinute}^({CONFIG.elite.hpLateFrom / 60}분까지) × {CONFIG.elite.hpPerMinuteLate}^(그 뒤). 피해는 기본 {CONFIG.finalBoss.damage} × {CONFIG.enemy.damagePerMinute}^(경과 분) × {CONFIG.elite.damageMult}.
+              <br />
+              예고가 채워진 범위만 맞는다. 패턴 사이는 체력 60% 초과 {CONFIG.finalBoss.recover}초, 60% 이하 {CONFIG.finalBoss.recoverLow}초, 30% 이하는 없다.
+            </>
           ) : (
             <>
-              등장 시간: {Math.floor(enemy.unlockedTime / 60)}분 {enemy.unlockedTime % 60}초 이후
+              {`등장 시간: ${Math.floor(enemy.unlockedTime / 60)}분 ${enemy.unlockedTime % 60}초 이후, ${CONFIG.enemy.activeSeconds / 60}분 동안`}
               <br />
               스폰 간격: {CONFIG.enemy.spawnInterval}초에서 시작. 처음 1분은 초당 ×{CONFIG.enemy.spawnDecayPerSecond}, 이후 분당 ×{CONFIG.enemy.spawnDecayPerMinute}
               <br />

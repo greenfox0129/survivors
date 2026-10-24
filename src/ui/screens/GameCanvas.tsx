@@ -50,6 +50,8 @@ function initialStats(save: SaveData): GameStats {
     eliteSeconds: null,
     midBoss: false,
     midBossKilled: false,
+    finalBoss: false,
+    victory: false,
     failedElite: false,
     damageTaken: 0,
     healing: 0,
@@ -305,7 +307,9 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
         {phase === "gameover" && (
           <div className="absolute inset-0 z-20 overflow-y-auto bg-black/80 backdrop-blur-sm">
             <div className="flex min-h-full flex-col items-center justify-center px-6 py-6">
-            <h2 className={`text-3xl font-bold text-red-500 tracking-wide ${stats.failedElite ? "mb-2" : "mb-4"}`}>GAME OVER</h2>
+            <h2 className={`text-3xl font-bold tracking-wide ${stats.victory ? "mb-4 text-amber-300" : stats.failedElite ? "mb-2 text-red-500" : "mb-4 text-red-500"}`}>
+              {stats.victory ? "승리" : "GAME OVER"}
+            </h2>
             {stats.failedElite && (
               <p className="mb-4 text-sm font-semibold text-amber-200">엘리트를 30초 안에 처치하지 못했다</p>
             )}

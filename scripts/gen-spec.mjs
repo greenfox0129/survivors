@@ -26,7 +26,7 @@ const server = await createServer({
 const load = (p) => server.ssrLoadModule(p);
 
 try {
-  const { CONFIG, xpForLevel } = await load("/src/game/data/config.ts");
+  const { CONFIG, xpForLevel, eliteHp, enemyHpScale, midBossHp, finalBossHp } = await load("/src/game/data/config.ts");
   const { EVOLUTIONS, SUPER_EVOLUTIONS } = await load("/src/game/data/evolutions.ts");
   const P = await load("/src/game/data/progression.ts");
   const { AccessoryManager, allAccessoryTypes, accessoryName } = await load("/src/game/systems/AccessoryManager.ts");
@@ -215,6 +215,7 @@ try {
   const e = CONFIG.enemy;
   const el = CONFIG.elite;
   const mb = CONFIG.midBoss;
+  const fb = CONFIG.finalBoss;
   const enemyDoc = [
     header("적·스폰 수치표 (Enemies & Spawning)"),
     "## 적 종류",
@@ -224,7 +225,7 @@ try {
       CONFIG.enemyTypes.map((t) => [t.name, `\`${t.id}\``, t.unlockedTime, t.hp, t.speed, t.damage, t.radius, t.spawnWeight, t.shape, t.ranged ? "원거리" : "접촉"]),
     ),
     "",
-    `- 원거리(눈알): ${CONFIG.ranged.range}px 안에 멈추고, ${CONFIG.ranged.backup}px보다 가까우면 물러난다. ${CONFIG.ranged.cooldown}초마다 직선 탄(속도 ${CONFIG.ranged.shotSpeed}, 반경 ${CONFIG.ranged.shotRadius}). 탄 피해는 기본 ${CONFIG.ranged.shotDamage}. 접촉과 같은 분당 배율을 받는다. 동시에 ${CONFIG.ranged.maxShots}발. 엘리트는 쏘지 않는다.`,
+    `- 원거리(눈알·해골): ${CONFIG.ranged.range}px 안에 멈추고, ${CONFIG.ranged.backup}px보다 가까우면 물러난다. ${CONFIG.ranged.cooldown}초마다 직선 탄(속도 ${CONFIG.ranged.shotSpeed}, 반경 ${CONFIG.ranged.shotRadius}). 탄 피해는 기본 ${CONFIG.ranged.shotDamage}. 접촉과 같은 분당 배율을 받는다. 동시에 ${CONFIG.ranged.maxShots}발. 엘리트는 쏘지 않는다.`,
     "",
     "- 일반 적 속도는 생성 시 ×0.8~1.2 무작위.",
     "- 플레이어와 150px 이상 떨어지면 거리 비례 가속 (500px에서 최대 ×2.6) — 화면 밖 적이 따라잡도록.",
@@ -239,17 +240,22 @@ try {
         ["처음 1분", `초당 ×${e.spawnDecayPerSecond}`],
         ["1분 이후", `분당 ×${e.spawnDecayPerMinute}. 최소 간격 없음`],
         ["최대 동시 적 수", `${e.maxCount} × (1 + ${e.maxCountGrowthPerMinute} × 경과 분). 0분 ${e.maxCount}, 1분 ${e.maxCount * 2}, 2분 ${e.maxCount * 3}`],
+        ["잡몹 출현 기간", `합류 후 ${e.activeSeconds}초. 이미 나온 적은 유지. 엘리트·중간보스는 제외`],
         ["접촉 피해 쿨다운(적별)", `${e.contactDamageCooldown}s`],
         ["엘리트 주기", `${el.spawnInterval}s마다 1마리 (상한과 무관). ${el.killSeconds}초 안에 처치하지 못하면 게임오버`],
-        ["엘리트 체력", `${el.hp} × ${el.hpPerMinute}^(경과 분). 0분 ${el.hp}, 1분 ${el.hp * el.hpPerMinute}, 2분 ${el.hp * el.hpPerMinute ** 2}`],
+        ["엘리트 체력", `${el.hp} × ${el.hpPerMinute}^(${el.hpLateFrom / 60}분까지) × ${el.hpPerMinuteLate}^(그 뒤). 1분 ${n(eliteHp(60), 0)}, 5분 ${n(eliteHp(300), 0)}, 6분 ${n(eliteHp(360), 0)}`],
         ["엘리트 몸", `키클롭스 고정. 반경 ${el.radius}×${el.radiusMult}, 속도 ${el.speed}×${el.speedMult}, 접촉 ${el.damage}×${el.damageMult}`],
-        ["생성 시 체력", `일반 적: 기본 HP × ${e.hpPerMinute}^(경과 분). 이미 나온 적은 변하지 않음`],
+        ["생성 시 체력", `일반 적: 기본 HP × ${e.hpPerMinute}^(${e.hpLateFrom / 60}분까지) × ${e.hpPerMinuteLate}^(그 뒤). 5분 ×${n(enemyHpScale(300), 2)}, 6분 ×${n(enemyHpScale(360), 2)}. 이미 나온 적은 변하지 않음`],
         ["생성 시 공격력", `일반 적: 기본 접촉 피해 × ${e.damagePerMinute}^(경과 분). 엘리트: ${el.damage} × 같은 배율 × ${el.damageMult}. 이미 나온 적은 변하지 않음`],
         ["엘리트 보상", "보물 상자 → 획득 시 즉시 레벨업 선택지"],
         ["중간보스", `${mb.spawnAt / 60}분 정각, 그 분의 엘리트 대신 1마리. 처치해도 판은 계속. 제한 시간 없음`],
-        ["중간보스 몸", `거대 너구리. 체력 ${mb.hp} × ${el.hpPerMinute}^(경과 분). 5분 ${mb.hp * el.hpPerMinute ** (mb.spawnAt / 60)}. 반경 ${mb.radius}. 접근 속도 ${mb.speed}, ${mb.approach}px에서 멈춤`],
+        ["중간보스 몸", `거대 너구리. 체력 ${mb.hp} × ${el.hpPerMinute}^(${el.hpLateFrom / 60}분까지) × ${el.hpPerMinuteLate}^(그 뒤). 5분 ${n(midBossHp(mb.spawnAt), 0)}. 반경 ${mb.radius}. 접근 속도 ${mb.speed}, ${mb.approach}px에서 멈춤`],
         ["중간보스 돌진", `길이 ${mb.dashLength}px, ${mb.dashTime}초. 피해 ${mb.dashDamage}. 선딜 ${mb.windup}초(절반 이하는 ${mb.enragedDashes}단, 각 ${mb.enragedWindup}초). 후딜 ${mb.recover}초`],
         ["중간보스 접촉", `${mb.contactDamage}, ${e.contactDamageCooldown}초마다. 돌진 피해와 따로. 보상은 보물 상자`],
+        ["보스", `${fb.spawnAt / 60}분 정각, 그 분의 엘리트 대신 1마리. 다른 몹은 사라지고 더 나오지 않음. 처치하면 판이 끝남`],
+        ["보스 몸", `거대 영혼. 체력 ${fb.hp} × ${el.hpPerMinute}^(${el.hpLateFrom / 60}분까지) × ${el.hpPerMinuteLate}^(그 뒤). 10분 ${n(finalBossHp(fb.spawnAt), 0)}. 반경 ${fb.radius}`],
+        ["보스 피해", `기본 ${fb.damage} × ${e.damagePerMinute}^(경과 분) × ${el.damageMult}. 패턴과 접촉이 같은 값`],
+        ["보스 후딜", `체력 60% 초과 ${fb.recover}초, 60% 이하 ${fb.recoverLow}초, 30% 이하 없음`],
       ],
     ),
     "",

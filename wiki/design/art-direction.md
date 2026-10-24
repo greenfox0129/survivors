@@ -21,7 +21,7 @@
 | 천 | `art/cheon` — Universal LPC로 합성한 검은 머리 남성 (32px 프레임, CC BY-SA 3.0). 검은 민소매, 어두운 바지 |
 | 칼리 | `art/kali` — Universal LPC로 합성한 작은 여우 수인 (32px 프레임, CC BY-SA 3.0). 머리 중앙에 모은 쫑긋한 긴 베이지 여우 귀, 베이지 꼬리, 밝은 베이지 긴 머리 |
 | 리냐 | `art/linya` — Universal LPC로 합성한 고양이 수인 (32px 프레임, CC BY-SA 3.0). 귀·꼬리·검은 단발 |
-| 슬라임 / 박쥐 / 스켈레톤 / 고스트 / 브루트 / 눈알 / 래쓰 | Slime / Butterfly / Skeleton / Spirit / Beast / Eye / Flam |
+| 슬라임 / 박쥐 / 스켈레톤 / 고스트 / 브루트 / 눈알 / 해골 / 래쓰 / 거미 / 뱀 / 버섯 / 도마뱀 / 중간보스 / 보스 | Slime / Butterfly / Skeleton / Spirit / Beast / Eye / Skull / Flam / SpiderRed / Snake / Mushroom / Lizard / GiantRacoon / GiantSpirit |
 | 엘리트 | Cyclope. 일반 몹 모습을 빌리지 않는다. 금색 고리와 왕관은 그대로 |
 | 중간보스 | GiantRacoon. 걷기·후딜 `Idle.png`. 선딜과 돌진은 `charge.png`. 저사양은 큰 갈색 원. 왕관 없음 |
 | 늑대 | 원본 `Wolf.png` 유지 (높음 품질에선 스무딩 없이) |

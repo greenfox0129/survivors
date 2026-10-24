@@ -16,7 +16,7 @@
 | `components/SettingsPanel.tsx` | 그래픽 품질·배경음·효과음 (일시정지 메뉴·설정 화면 공용) |
 | `components/GameIcon.tsx` | SVG 아이콘을 CSS mask 로 틴트 |
 | `components/EnemyShape.tsx` | 게임 속 적 도형 SVG (저사양 모드의 모습) |
-| `components/PixelSprite.tsx` | `PixelFace`(38×38 초상) · `PixelWalker`(4프레임 걷기, CSS steps) — `src/assets/pixel`, 없으면 SVG 엠블럼 폴백 |
+| `components/PixelSprite.tsx` | `PixelFace`(38×38 초상) · `PixelWalker`(4프레임 걷기) · `PixelStrip`(보스 가로 스트립 한 칸) — `src/assets/pixel`, 초상·걷기는 없으면 SVG 엠블럼 폴백 |
 | `hooks/useSettings.ts` | `core/settings.ts` React 바인딩 |
 | `icons.ts` | `assets/icons/map.ts` 재노출 |
 | `theme.ts` | 장신구 색, 무기 색, `readableAccent()` |

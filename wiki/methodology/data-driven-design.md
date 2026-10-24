@@ -11,7 +11,7 @@ Nystrom 의 *Type Object*: "종류마다 클래스를 만들지 말고, 종류�
 
 | 층 | 무엇 | 파일 |
 |---|---|---|
-| **데이터** (Type Object) | 적 8종, 무기 스탯, 장신구, 캐릭터, 특성, 업적, 진화 | `src/game/data/*.ts` |
+| **데이터** (Type Object) | 적 13종, 무기 스탯, 장신구, 캐릭터, 특성, 업적, 진화 | `src/game/data/*.ts` |
 | **행동** (미리 정의된 묶음) | 무기 7종의 update/render | `src/game/weapons/*Weapon.ts` |
 | **등록** | 행동 ↔ 종류 연결 | `src/game/weapons/registry.ts` (`WEAPON_MODULES`) |
 | **표현** | 색·아이콘 | `src/ui/theme.ts`, `src/assets/icons/map.ts` |

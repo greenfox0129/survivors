@@ -39,6 +39,7 @@ import {
   tickEliteLife,
 } from "@/game/entities/EnemyManager";
 import { consumeMidBossDamage, getMidBossSpawned } from "@/game/entities/MidBoss";
+import { consumeFinalBossDamage, getFinalBossSpawned } from "@/game/entities/FinalBoss";
 import { WeaponManager, weaponFormName } from "@/game/systems/WeaponManager";
 import { pickUpgrades } from "@/game/systems/upgrades";
 import {
@@ -54,7 +55,7 @@ import {
 } from "@/game/entities/GemManager";
 import { computeModifiers, type GameModifiers } from "@/game/systems/traitHelper";
 import { resolveRunConstraints, type RunConstraints } from "@/game/data/constraints";
-import { playHurtSound, playLevelUpSound, playXpPickupSound, playGameOverSound, playEliteSound, playMidBossSound } from "@/game/core/audio";
+import { playHurtSound, playLevelUpSound, playXpPickupSound, playGameOverSound, playEliteSound, playMidBossSound, playFinalBossSound, playVictorySound } from "@/game/core/audio";
 import { CHARACTERS, type PassiveType } from "@/game/data/progression";
 import type { SaveData } from "@/game/core/storage";
 import {
@@ -105,6 +106,7 @@ export class GameEngine {
   private constraints: RunConstraints = resolveRunConstraints(undefined);
   private failedElite = false;
   private midBossKilled = false;
+  private victory = false;
   private save: SaveData | null;
   private rerollsLeft: number = 0;
   private breakthrough: number = 0;
@@ -317,6 +319,7 @@ export class GameEngine {
     this.score = 0;
     this.failedElite = false;
     this.midBossKilled = false;
+    this.victory = false;
     this.paused = false;
     this.userPaused = false;
     this.pendingLevelUps = 0;
@@ -350,6 +353,7 @@ export class GameEngine {
   private dropReward(e: EnemyState): void {
     if (e.gemDropped) return;
     if (e.enemyType === "midboss") this.midBossKilled = true;
+    if (e.enemyType === "finalboss") this.victory = true;
     this.gems.push(e.isElite || e.enemyType === "midboss" ? dropTreasure(e) : dropGem(e));
     const special = rollSpecialDrop(e, this.elapsed);
     if (special) this.gems.push(special);
@@ -364,7 +368,7 @@ export class GameEngine {
     const cx = this.camera.x;
     const cy = this.camera.y;
     for (const e of this.enemies) {
-      if (!e.alive || e.dying || e.isElite || e.enemyType === "midboss") continue;
+      if (!e.alive || e.dying || e.isElite || e.enemyType === "midboss" || e.enemyType === "finalboss") continue;
       if (Math.abs(e.x - cx) > hw + e.radius) continue;
       if (Math.abs(e.y - cy) > hh + e.radius) continue;
       e.hp = 0;
@@ -422,19 +426,22 @@ export class GameEngine {
     this.camera.y = this.player.y;
     const elitesBefore = getEliteSpawned();
     const bossesBefore = getMidBossSpawned();
+    const finalsBefore = getFinalBossSpawned();
     updateEnemies(this.enemies, this.player, dt);
     const bossAdded = getMidBossSpawned() - bossesBefore;
-    if (getEliteSpawned() - elitesBefore > bossAdded) playEliteSound();
+    if (getEliteSpawned() - elitesBefore > bossAdded + (getFinalBossSpawned() - finalsBefore)) playEliteSound();
     if (bossAdded > 0) playMidBossSound();
+    if (getFinalBossSpawned() > finalsBefore) playFinalBossSound();
     if (tickEliteLife(this.enemies, dt)) {
       this.failedElite = true;
       this.player.alive = false;
     }
 
     const bossHit = consumeMidBossDamage();
+    const finalHit = consumeFinalBossDamage();
     const contactDmg = checkContactDamage(this.enemies, this.player) + bossHit.contact;
     const shotDmg = checkShotDamage(this.player);
-    const incomingDmg = contactDmg + shotDmg + bossHit.dash;
+    const incomingDmg = contactDmg + shotDmg + bossHit.dash + finalHit;
     if (incomingDmg > 0) {
       // Shield Forge + guardianWall: reduce incoming damage
       const guardianReduction = this.passive === "guardianWall" ? (this.breakthrough >= 3 ? 0.25 : 0.15) : 0;
@@ -521,7 +528,11 @@ export class GameEngine {
       this.emitStats();
     }
 
-    if (!this.player.alive) {
+    if (this.victory) {
+      playVictorySound();
+      this.callbacks.onGameOver(this.getStats());
+      this.player.alive = false;
+    } else if (!this.player.alive) {
       playGameOverSound(); // same sound as giving up (was missing on a real death)
       this.callbacks.onGameOver(this.getStats());
     }
@@ -631,6 +642,8 @@ export class GameEngine {
       eliteSeconds: eliteSecondsLeft(this.enemies),
       midBoss: getMidBossSpawned() > 0,
       midBossKilled: this.midBossKilled,
+      finalBoss: getFinalBossSpawned() > 0,
+      victory: this.victory,
       failedElite: this.failedElite,
       damageTaken: report.taken,
       healing: report.healed,

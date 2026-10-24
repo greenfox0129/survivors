@@ -317,6 +317,10 @@ export interface GameStats {
   midBoss: boolean;
   /** True once that midboss has been killed this run. */
   midBossKilled: boolean;
+  /** True once the 10:00 boss has spawned this run. */
+  finalBoss: boolean;
+  /** The run ended because that boss died. */
+  victory: boolean;
   /** The run ended because an elite outlasted its timer. */
   failedElite: boolean;
   /** Contact damage that landed, after shields. Invulnerable frames are not counted. */

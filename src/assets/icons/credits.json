@@ -135,6 +135,26 @@
     "author": "Lorc",
     "source": "https://game-icons.net/1x1/lorc/eyeball.html"
   },
+  "enemy-lizard": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/gecko.html"
+  },
+  "enemy-mushroom": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/mushroom.html"
+  },
+  "enemy-skull": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/skull-crack.html"
+  },
+  "enemy-snake": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/snake.html"
+  },
+  "enemy-spider": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/hanging-spider.html"
+  },
   "enemy-elite": {
     "author": "Lorc",
     "source": "https://game-icons.net/1x1/lorc/crowned-skull.html"

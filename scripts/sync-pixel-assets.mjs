@@ -52,6 +52,11 @@ const FILES = [
     ["ghost", `${MO}/Spirit/SpriteSheet.png`, `${MO}/Spirit/Faceset.png`],
     ["brute", `${MO}/Beast/Beast.png`, `${MO}/Beast/Faceset.png`],
     ["eye", `${MO}/Eye/Eye.png`, `${MO}/Eye/Faceset.png`],
+    ["skull", `${MO}/Skull/SpriteSheet.png`, `${MO}/Skull/Faceset.png`],
+    ["spider", `${MO}/SpiderRed/SpriteSheet.png`, `${MO}/SpiderRed/Faceset.png`],
+    ["snake", `${MO}/Snake/Snake.png`, `${MO}/Snake/Faceset.png`],
+    ["mushroom", `${MO}/Mushroom/mushroom.png`, `${MO}/Mushroom/Faceset.png`],
+    ["lizard", `${MO}/Lizard/Lizard.png`, `${MO}/Lizard/Faceset.png`],
     ["elite", `${MO}/Cyclope/SpriteSheet.png`, `${MO}/Cyclope/Faceset.png`],
     ["wraith", `${MO}/Flam/SpriteSheet.png`, `${MO}/Flam/Faceset.png`],
   ].flatMap(([id, sheet, face]) => [
@@ -64,6 +69,8 @@ const FILES = [
   ["faces/enemy-midboss.png", `${NA}/Actor/Boss/GiantRacoon/Faceset.png`],
   ["boss/raccoon-idle.png", `${NA}/Actor/Boss/GiantRacoon/Idle.png`],
   ["boss/raccoon-charge.png", `${NA}/Actor/Boss/GiantRacoon/charge.png`],
+  ["boss/spirit-idle.png", `${NA}/Actor/Boss/GiantSpirit/Idle.png`],
+  ["faces/enemy-finalboss.png", `${NA}/Actor/Boss/GiantSpirit/Faceset.png`],
 
   // ---- World tiles (16px grid)
   ["tiles/floor.png", `${NA}/Backgrounds/Tilesets/TilesetFloor.png`],

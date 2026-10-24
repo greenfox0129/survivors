@@ -8,7 +8,7 @@
 |---|---|
 | [core-loop.md](core-loop.md) | 한 판의 흐름, 이동·카메라, 시간·스코어·골드, 레벨업·리롤·보물 상자, 경험치 보석 |
 | [combat.md](combat.md) | 무기 7종 동작, 진화 규칙, 장신구, 피해 계산식, 패시브 |
-| [enemies-spawning.md](enemies-spawning.md) | 적 8종, 스폰 곡선, 엘리트, 추적·가속, 접촉·원거리 피해, 컬링 |
+| [enemies-spawning.md](enemies-spawning.md) | 적 13종, 스폰 곡선, 엘리트, 추적·가속, 접촉·원거리 피해, 컬링 |
 | [meta-progression.md](meta-progression.md) | 골드, 뽑기, 캐릭터 레벨·각성·돌파, 특성, 업적·해금 |
 | [ui-flow.md](ui-flow.md) | 화면 흐름, HUD, 레벨업 모달, 게임오버, 도감 |
 | [save-settings-launcher.md](save-settings-launcher.md) | 세이브 스키마·마이그레이션, 그래픽 설정, 원클릭 실행기 |
@@ -32,7 +32,7 @@
 | F-03 | 무기 진화 (Lv8 + 짝 장신구, 최종형) | ✅ (v0.1.0 수치·설명 불일치 수정) | combat, [known-issues](../direction/known-issues.md) |
 | F-04 | 장신구 9종 (Lv1–5) | ✅ | combat |
 | F-05 | 레벨업 3지선다 + 리롤 | ✅ | core-loop |
-| F-06 | 적 8종 시간차 등장 + 엘리트 | ✅ | enemies-spawning |
+| F-06 | 적 13종 시간차 등장 + 엘리트 | ✅ | enemies-spawning |
 | F-07 | 경험치 보석 흡수·병합 | ✅ | core-loop |
 | F-08 | 보물 상자 → 추가 레벨업 | ✅ | core-loop |
 | F-09 | 골드·캐릭터 뽑기·강화·돌파 | ✅ | meta-progression |

@@ -41,7 +41,7 @@ export const CONFIG = {
   enemy: {
     radius: 12,
     color: "#ef4444",
-    hp: 10,
+    hp: 5,
     speed: 55,
     damage: 8,
     spawnInterval: 0.8, // seconds at 0:00
@@ -51,14 +51,19 @@ export const CONFIG = {
     maxCount: 120, // at 0:00. Grows by maxCountGrowthPerMinute (100%p) each minute.
     maxCountGrowthPerMinute: 1,
     contactDamageCooldown: 0.5,
-    // Regular spawn HP = base × hpPerMinute ^ (elapsed minutes). Elites use elite.hp instead.
-    hpPerMinute: 1.5,
+    // A trash type stops joining this many seconds after unlockedTime.
+    activeSeconds: 180,
+    // Regular spawn HP = base × hpPerMinute ^ (minutes through hpLateFrom)
+    // × hpPerMinuteLate ^ (minutes after that). Elites use elite.hp instead.
+    hpPerMinute: 1.8,
+    hpPerMinuteLate: 1.3,
+    hpLateFrom: 300,
     // Contact damage at spawn = base × damagePerMinute ^ (elapsed minutes). Elites too.
     damagePerMinute: 1.2,
   },
 
   // ---- Enemy types ----
-  // unlockedTime: enemies of this type start spawning after this many seconds
+  // First five are a fixed order. A new type every 30s through 2:30, then every 60s.
   enemyTypes: [
     {
       id: "slime",
@@ -66,7 +71,7 @@ export const CONFIG = {
       color: "#ef4444",
       borderColor: "#7f1d1d",
       radius: 12,
-      hp: 10,
+      hp: 5,
       speed: 55,
       damage: 8,
       spawnWeight: 10,
@@ -79,7 +84,7 @@ export const CONFIG = {
       color: "#a78bfa",
       borderColor: "#6d28d9",
       radius: 9,
-      hp: 6,
+      hp: 3,
       speed: 95,
       damage: 6,
       spawnWeight: 7,
@@ -87,43 +92,30 @@ export const CONFIG = {
       shape: "triangle" as const,
     },
     {
-      id: "skeleton",
-      name: "스켈레톤",
-      color: "#e2e8f0",
-      borderColor: "#64748b",
-      radius: 13,
-      hp: 25,
-      speed: 45,
-      damage: 12,
-      spawnWeight: 6,
-      unlockedTime: 60,
-      shape: "square" as const,
-    },
-    {
       id: "ghost",
       name: "고스트",
       color: "#67e8f9",
       borderColor: "#0e7490",
       radius: 14,
-      hp: 15,
+      hp: 7.5,
       speed: 65,
       damage: 10,
       spawnWeight: 5,
-      unlockedTime: 90,
+      unlockedTime: 60,
       shape: "diamond" as const,
     },
     {
-      id: "brute",
-      name: "브루트",
-      color: "#f97316",
-      borderColor: "#9a3412",
-      radius: 20,
-      hp: 80,
-      speed: 35,
-      damage: 20,
-      spawnWeight: 2,
-      unlockedTime: 120,
-      shape: "hexagon" as const,
+      id: "skeleton",
+      name: "스켈레톤",
+      color: "#e2e8f0",
+      borderColor: "#64748b",
+      radius: 13,
+      hp: 12.5,
+      speed: 45,
+      damage: 12,
+      spawnWeight: 6,
+      unlockedTime: 90,
+      shape: "square" as const,
     },
     {
       id: "eye",
@@ -131,7 +123,7 @@ export const CONFIG = {
       color: "#facc15",
       borderColor: "#854d0e",
       radius: 13,
-      hp: 14,
+      hp: 7,
       speed: 48,
       damage: 8,
       spawnWeight: 4,
@@ -140,17 +132,56 @@ export const CONFIG = {
       ranged: true,
     },
     {
+      id: "spider",
+      name: "거미",
+      color: "#4ade80",
+      borderColor: "#166534",
+      radius: 10,
+      hp: 15,
+      speed: 100,
+      damage: 14,
+      spawnWeight: 4,
+      unlockedTime: 150,
+      shape: "triangle" as const,
+    },
+    {
+      id: "snake",
+      name: "뱀",
+      color: "#a3e635",
+      borderColor: "#3f6212",
+      radius: 12,
+      hp: 18,
+      speed: 72,
+      damage: 16,
+      spawnWeight: 3,
+      unlockedTime: 210,
+      shape: "square" as const,
+    },
+    {
       id: "wraith",
       name: "래쓰",
       color: "#f43f5e",
       borderColor: "#881337",
       radius: 11,
-      hp: 40,
+      hp: 20,
       speed: 110,
       damage: 15,
       spawnWeight: 3,
-      unlockedTime: 180,
+      unlockedTime: 270,
       shape: "star" as const,
+    },
+    {
+      id: "lizard",
+      name: "도마뱀",
+      color: "#2dd4bf",
+      borderColor: "#115e59",
+      radius: 14,
+      hp: 24,
+      speed: 90,
+      damage: 18,
+      spawnWeight: 3,
+      unlockedTime: 330,
+      shape: "diamond" as const,
     },
     {
       id: "wolf",
@@ -158,12 +189,52 @@ export const CONFIG = {
       color: "#94a3b8",
       borderColor: "#475569",
       radius: 16,
-      hp: 60,
+      hp: 30,
       speed: 85,
       damage: 18,
       spawnWeight: 4,
-      unlockedTime: 150,
+      unlockedTime: 390,
       shape: "sprite" as const,
+    },
+    {
+      id: "skull",
+      name: "해골",
+      color: "#fda4af",
+      borderColor: "#9f1239",
+      radius: 14,
+      hp: 35,
+      speed: 40,
+      damage: 14,
+      spawnWeight: 3,
+      unlockedTime: 420,
+      shape: "circle" as const,
+      ranged: true,
+    },
+    {
+      id: "brute",
+      name: "브루트",
+      color: "#f97316",
+      borderColor: "#9a3412",
+      radius: 20,
+      hp: 40,
+      speed: 35,
+      damage: 20,
+      spawnWeight: 2,
+      unlockedTime: 450,
+      shape: "hexagon" as const,
+    },
+    {
+      id: "mushroom",
+      name: "버섯",
+      color: "#e879f9",
+      borderColor: "#86198f",
+      radius: 18,
+      hp: 45,
+      speed: 30,
+      damage: 22,
+      spawnWeight: 2,
+      unlockedTime: 510,
+      shape: "hexagon" as const,
     },
   ] as const,
 
@@ -183,8 +254,11 @@ export const CONFIG = {
   elite: {
     spawnInterval: 60, // seconds between elite spawns
     killSeconds: 30, // game over if this elite is still alive
-    hp: 500,           // same for every elite
-    hpPerMinute: 2,    // spawn HP = hp × hpPerMinute ^ (elapsed minutes)
+    hp: 250,           // same for every elite
+    // Through hpLateFrom, then the late rate compounds on top. Bosses share this curve.
+    hpPerMinute: 2.1,
+    hpPerMinuteLate: 1.7,
+    hpLateFrom: 300,
     // Fixed body. Not copied from whichever regular type is spawning.
     radius: 14,
     speed: 50,
@@ -200,7 +274,7 @@ export const CONFIG = {
   // 적의 체력, 공격력, and 속도 still apply when the boss is created.
   midBoss: {
     spawnAt: 300,
-    hp: 400, // × elite hpPerMinute^(minutes), then × 체력 배율 inside the exponent
+    hp: 200, // × the elite HP curve, with 체력 배율 inside each minute's rate
     radius: 36,
     speed: 80,
     approach: 200,
@@ -217,6 +291,47 @@ export const CONFIG = {
     borderColor: "#7c3f12",
     telegraph: "#ffedd5",
     telegraphTrack: "#7c2d12",
+  },
+
+  // The 10:00 win boss. Replaces that minute's elite and ends the run on death.
+  // HP and damage use the elite multipliers. Pattern gaps shrink with HP.
+  finalBoss: {
+    spawnAt: 600,
+    hp: 500,
+    damage: 6,
+    radius: 48,
+    dashPast: 100,
+    dashSpeed: 2000,
+    dashWindup: 2,
+    dashChase: 800,
+    slamRadius: 500,
+    slamWindup: 2,
+    slamWithin: 300,
+    shockRadius: 800,
+    shockAngle: Math.PI / 2,
+    shockWindup: 1.2,
+    shockBeyond: 200,
+    bombRadius: 120,
+    bombCount: 28,
+    // Centers may sit this far outside the screen, so blasts reach past the edge.
+    bombMargin: 160,
+    bombWindup: 1.5,
+    // How long the hit shape stays solid after slam, shock, and bombs go off.
+    impactTime: 0.22,
+    waveRadius: 48,
+    waveSpeed: 1500,
+    waveRange: 900,
+    waveCount: 3,
+    waveWindupFirst: 1,
+    waveWindupNext: 0.6,
+    recover: 1,
+    recoverLow: 0.5,
+    recoverLowAt: 0.6,
+    recoverNoneAt: 0.3,
+    color: "#a78bfa",
+    borderColor: "#4c1d95",
+    telegraph: "#ddd6fe",
+    telegraphTrack: "#4c1d95",
   },
 
   // ---- Gems ----
@@ -525,9 +640,23 @@ export function xpForLevel(level: number): number {
   );
 }
 
-/** HP multiplier for a regular enemy spawned at `elapsedSeconds`. 1 at 0:00, 1.5 at 1:00, 2.25 at 2:00. */
+/**
+ * Per-minute HP scale with a breakpoint. The first `lateFrom` seconds use `early`,
+ * and time after that uses `late` on top. `growthMult` (제약 체력 배율) multiplies
+ * both rates before the exponent. Already-spawned enemies do not call this again.
+ */
+function steppedHpScale(elapsedSeconds: number, early: number, late: number, lateFrom: number, growthMult: number): number {
+  const minutes = elapsedSeconds / 60;
+  const split = lateFrom / 60;
+  const earlyMinutes = Math.min(minutes, split);
+  const lateMinutes = Math.max(0, minutes - split);
+  return Math.pow(early * growthMult, earlyMinutes) * Math.pow(late * growthMult, lateMinutes);
+}
+
+/** HP multiplier for a regular enemy spawned at `elapsedSeconds`. 1 at 0:00. */
 export function enemyHpScale(elapsedSeconds: number, growthMult = 1): number {
-  return Math.pow(CONFIG.enemy.hpPerMinute * growthMult, elapsedSeconds / 60);
+  const e = CONFIG.enemy;
+  return steppedHpScale(elapsedSeconds, e.hpPerMinute, e.hpPerMinuteLate, e.hpLateFrom, growthMult);
 }
 
 /** Contact-damage multiplier for any enemy spawned at `elapsedSeconds`. 1 at 0:00, 1.2 at 1:00. */
@@ -535,14 +664,25 @@ export function enemyDamageScale(elapsedSeconds: number): number {
   return Math.pow(CONFIG.enemy.damagePerMinute, elapsedSeconds / 60);
 }
 
-/** Elite HP at spawn. 500 at 0:00, 1000 at 1:00, 2000 at 2:00. Does not use the type's HP. */
-export function eliteHp(elapsedSeconds: number, growthMult = 1): number {
-  return CONFIG.elite.hp * Math.pow(CONFIG.elite.hpPerMinute * growthMult, elapsedSeconds / 60);
+/** Elite curve shared by elites, the midboss, and the final boss. */
+function eliteHpScale(elapsedSeconds: number, growthMult: number): number {
+  const e = CONFIG.elite;
+  return steppedHpScale(elapsedSeconds, e.hpPerMinute, e.hpPerMinuteLate, e.hpLateFrom, growthMult);
 }
 
-/** Midboss HP at spawn. Same per-minute curve as an elite, with its own base. 12800 at 5:00. */
+/** Elite HP at spawn. Does not use the regular type's HP. */
+export function eliteHp(elapsedSeconds: number, growthMult = 1): number {
+  return CONFIG.elite.hp * eliteHpScale(elapsedSeconds, growthMult);
+}
+
+/** Midboss HP at spawn. Same curve as an elite, with its own base. */
 export function midBossHp(elapsedSeconds: number, growthMult = 1): number {
-  return CONFIG.midBoss.hp * Math.pow(CONFIG.elite.hpPerMinute * growthMult, elapsedSeconds / 60);
+  return CONFIG.midBoss.hp * eliteHpScale(elapsedSeconds, growthMult);
+}
+
+/** Final boss HP at spawn. Same curve as an elite. */
+export function finalBossHp(elapsedSeconds: number, growthMult = 1): number {
+  return CONFIG.finalBoss.hp * eliteHpScale(elapsedSeconds, growthMult);
 }
 
 /** Special-item chance per kill. Flat until 5:00, then ×0.8 each minute. */

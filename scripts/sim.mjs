@@ -36,7 +36,7 @@ const fail = (msg) => failures.push(msg);
 try {
   const { GameEngine } = await server.ssrLoadModule("/src/game/core/GameEngine.ts");
   const { CHARACTERS } = await server.ssrLoadModule("/src/game/data/progression.ts");
-  const { CONFIG, enemyCap, eliteHp, regularSpawnInterval, specialDropChance } = await server.ssrLoadModule("/src/game/data/config.ts");
+  const { CONFIG, enemyCap, eliteHp, enemyHpScale, midBossHp, finalBossHp, regularSpawnInterval, specialDropChance } = await server.ssrLoadModule("/src/game/data/config.ts");
   const atOneMinute = 0.8 * 0.98 ** 60;
   if (
     Math.abs(regularSpawnInterval(0) - 0.8) > 1e-9 ||
@@ -49,8 +49,26 @@ try {
     fail(`enemy cap curve ${enemyCap(0)}/${enemyCap(30)}/${enemyCap(60)}/${enemyCap(120)}`);
   }
   if (enemyCap(0, 2) !== 240) fail(`enemy cap x2 ${enemyCap(0, 2)}`);
-  if (eliteHp(0) !== 500 || eliteHp(60) !== 1000 || eliteHp(120) !== 2000) {
-    fail(`elite hp ${eliteHp(0)}/${eliteHp(60)}/${eliteHp(120)}`);
+  const close = (a, b) => Math.abs(a - b) < 1e-6 * Math.max(1, Math.abs(b));
+  if (
+    !close(eliteHp(0), 250) ||
+    !close(eliteHp(60), 250 * 2.1) ||
+    !close(eliteHp(120), 250 * 2.1 ** 2) ||
+    !close(eliteHp(300), 250 * 2.1 ** 5) ||
+    !close(eliteHp(360), 250 * 2.1 ** 5 * 1.7) ||
+    !close(eliteHp(360, 2), 250 * (2.1 * 2) ** 5 * (1.7 * 2))
+  ) {
+    fail(`elite hp ${eliteHp(0)}/${eliteHp(60)}/${eliteHp(300)}/${eliteHp(360)}/${eliteHp(360, 2)}`);
+  }
+  if (
+    !close(enemyHpScale(0), 1) ||
+    !close(enemyHpScale(300), 1.8 ** 5) ||
+    !close(enemyHpScale(360), 1.8 ** 5 * 1.3) ||
+    !close(enemyHpScale(360, 2), (1.8 * 2) ** 5 * (1.3 * 2)) ||
+    !close(midBossHp(300), 200 * 2.1 ** 5) ||
+    !close(finalBossHp(600), 500 * 2.1 ** 5 * 1.7 ** 5)
+  ) {
+    fail(`hp curve trash ${enemyHpScale(360)} mid ${midBossHp(300)} boss ${finalBossHp(600)}`);
   }
   const baseDrop = 1 / 300;
   if (

@@ -143,6 +143,18 @@ export function playMidBossSound(): void {
   setTimeout(() => playTone(147, 220, 0.28, 0.08, "triangle"), 140);
 }
 
+/** Lower, longer sting when the final boss enters. */
+export function playFinalBossSound(): void {
+  playTone(146, 220, 0.18, 0.09, "sawtooth");
+  setTimeout(() => playTone(110, 174, 0.32, 0.08, "triangle"), 160);
+}
+
+/** Short rise when the final boss dies and the run is won. */
+export function playVictorySound(): void {
+  playTone(392, 523, 0.12, 0.07, "triangle");
+  setTimeout(() => playTone(523, 784, 0.22, 0.07, "triangle"), 110);
+}
+
 export function playGameOverSound(): void {
   playTone(220, 90, 0.4, 0.07, "sawtooth");
 }

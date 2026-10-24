@@ -2,14 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-/* PixelWalker (ui/components/PixelSprite.tsx): step through the 4 walk rows of a unit sheet */
+/* PixelWalker: step through the 4 walk rows of a unit sheet.
+   PixelStrip: step through one horizontal idle strip (bosses). */
 @keyframes pixel-walk {
   from { background-position-y: 0; }
   to { background-position-y: calc(-1 * var(--walk-h)); }
 }
+@keyframes pixel-strip {
+  from { background-position-x: 0; }
+  to { background-position-x: calc(-1 * var(--strip-w)); }
+}
 .pixel-walker {
   animation: pixel-walk 0.6s steps(4) infinite;
 }
+.pixel-strip {
+  animation: pixel-strip 0.8s steps(var(--strip-frames)) infinite;
+}
 @media (prefers-reduced-motion: reduce) {
-  .pixel-walker { animation: none; }
+  .pixel-walker, .pixel-strip { animation: none; }
 }

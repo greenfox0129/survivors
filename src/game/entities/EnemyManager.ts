@@ -2,7 +2,7 @@
 //  EnemyManager.ts — Spawning, tracking, collision, death
 // ============================================================
 
-import { CONFIG, eliteHp, enemyCap, enemyDamageScale, enemyHpScale, midBossHp, regularSpawnInterval } from "@/game/data/config";
+import { CONFIG, eliteHp, enemyCap, enemyDamageScale, enemyHpScale, finalBossHp, midBossHp, regularSpawnInterval } from "@/game/data/config";
 import { noteDamageDealt } from "@/game/core/runReport";
 import { playHitSound } from "@/game/core/audio";
 import type { EnemyState, PlayerState } from "@/game/core/types";
@@ -18,6 +18,14 @@ import {
   resetMidBoss,
   updateMidBoss,
 } from "@/game/entities/MidBoss";
+import {
+  createFinalBossState,
+  getFinalBossSpawned,
+  isFinalBoss,
+  renderFinalBoss,
+  resetFinalBoss,
+  updateFinalBoss,
+} from "@/game/entities/FinalBoss";
 
 /** Walk frames per second for pixel-sprite enemies. */
 const ENEMY_WALK_FPS = 6;
@@ -93,6 +101,7 @@ export function resetEnemyManager(): void {
   eliteSpawned = 0;
   shots.length = 0;
   resetMidBoss();
+  resetFinalBoss();
 }
 
 export function getEliteSpawned(): number {
@@ -150,6 +159,13 @@ function createMidBoss(elapsedTime: number, px: number, py: number): EnemyState 
   );
 }
 
+function createFinalBoss(elapsedTime: number, px: number, py: number): EnemyState {
+  const pos = spawnEdgePosition(px, py);
+  const hp = finalBossHp(elapsedTime, enemyRun.hpGrowth) * enemyRun.hp;
+  const damage = CONFIG.finalBoss.damage * enemyDamageScale(elapsedTime) * CONFIG.elite.damageMult * enemyRun.damage;
+  return createFinalBossState(++idCounter, pos.x, pos.y, hp, damage, px, py);
+}
+
 function spawnEdgePosition(px: number, py: number): { x: number; y: number } {
   const w = CONFIG.canvasWidth;
   const h = CONFIG.canvasHeight;
@@ -164,11 +180,16 @@ function spawnEdgePosition(px: number, py: number): { x: number; y: number } {
 }
 
 function getAvailableTypes(elapsedTime: number): readonly EnemyTypeConfig[] {
-  return CONFIG.enemyTypes.filter((t) => elapsedTime >= t.unlockedTime);
+  const window = CONFIG.enemy.activeSeconds;
+  return CONFIG.enemyTypes.filter((t) => {
+    if (elapsedTime < t.unlockedTime) return false;
+    return elapsedTime < t.unlockedTime + window;
+  });
 }
 
-function pickType(elapsedTime: number): EnemyTypeConfig {
+function pickType(elapsedTime: number): EnemyTypeConfig | null {
   const available = getAvailableTypes(elapsedTime);
+  if (available.length === 0) return null;
   const totalWeight = available.reduce((sum, t) => sum + t.spawnWeight, 0);
   let roll = Math.random() * totalWeight;
   for (const t of available) {
@@ -178,9 +199,10 @@ function pickType(elapsedTime: number): EnemyTypeConfig {
   return available[0];
 }
 
-function createEnemy(elapsedTime: number, px: number, py: number): EnemyState {
-  const pos = spawnEdgePosition(px, py);
+function createEnemy(elapsedTime: number, px: number, py: number): EnemyState | null {
   const t = pickType(elapsedTime);
+  if (!t) return null;
+  const pos = spawnEdgePosition(px, py);
   const variance = 0.8 + Math.random() * 0.4;
   const hp = t.hp * enemyHpScale(elapsedTime, enemyRun.hpGrowth) * enemyRun.hp;
   return {
@@ -217,13 +239,14 @@ export function updateEnemies(
   player: PlayerState,
   dt: number
 ): void {
-  if (enemies.length < enemyCap(_elapsedTime)) {
+  if (getFinalBossSpawned() === 0 && enemies.length < enemyCap(_elapsedTime)) {
     spawnTimer += dt;
     const interval = regularSpawnInterval(_elapsedTime) * enemyRun.spawn;
     // Catch up when the interval is shorter than a frame. Stop if it is not a positive number.
     while (interval > 0 && spawnTimer >= interval && enemies.length < enemyCap(_elapsedTime)) {
       spawnTimer -= interval;
-      enemies.push(createEnemy(_elapsedTime, player.x, player.y));
+      const spawned = createEnemy(_elapsedTime, player.x, player.y);
+      if (spawned) enemies.push(spawned);
     }
   }
 
@@ -236,7 +259,12 @@ export function updateEnemies(
     while (eliteSpawned < due) {
       eliteSpawned++;
       const at = eliteSpawned * eliteInterval;
-      if (at === CONFIG.midBoss.spawnAt) enemies.push(createMidBoss(_elapsedTime, player.x, player.y));
+      if (getFinalBossSpawned() > 0) continue;
+      if (at === CONFIG.finalBoss.spawnAt) {
+        shots.length = 0;
+        enemies.length = 0;
+        enemies.push(createFinalBoss(_elapsedTime, player.x, player.y));
+      } else if (at === CONFIG.midBoss.spawnAt) enemies.push(createMidBoss(_elapsedTime, player.x, player.y));
       else enemies.push(createEliteEnemy(_elapsedTime, player.x, player.y));
     }
   }
@@ -248,6 +276,10 @@ export function updateEnemies(
     e.speed = e.baseSpeed;
     if (isMidBoss(e)) {
       updateMidBoss(e, player, dt);
+      continue;
+    }
+    if (isFinalBoss(e)) {
+      updateFinalBoss(e, player, dt);
       continue;
     }
 
@@ -358,7 +390,7 @@ export function checkContactDamage(
 ): number {
   let totalDamage = 0;
   for (const e of enemies) {
-    if (!e.alive || isMidBoss(e)) continue;
+    if (!e.alive || isMidBoss(e) || isFinalBoss(e)) continue;
     const dx = player.x - e.x;
     const dy = player.y - e.y;
     const collideR = e.radius + player.radius;
@@ -580,13 +612,17 @@ export function renderEnemies(ctx: CanvasRenderingContext2D, enemies: EnemyState
   // Normals first, elites after, so a crowd cannot paint over the elite body.
   for (const elitePass of [false, true]) {
     for (const e of enemies) {
-      if ((!e.alive && !e.dying) || e.isElite !== elitePass || isMidBoss(e)) continue;
+      if ((!e.alive && !e.dying) || e.isElite !== elitePass || isMidBoss(e) || isFinalBoss(e)) continue;
       drawEnemyBody(ctx, e, low, now);
     }
   }
   for (const e of enemies) {
     if (!isMidBoss(e) || (!e.alive && !e.dying)) continue;
     renderMidBoss(ctx, e);
+  }
+  for (const e of enemies) {
+    if (!isFinalBoss(e) || (!e.alive && !e.dying)) continue;
+    renderFinalBoss(ctx, e);
   }
 }
 
@@ -746,6 +782,11 @@ export function cullFarEnemies(enemies: EnemyState[], px: number, py: number): E
       continue;
     }
     if (isMidBoss(e) && e.alive) {
+      if (write !== i) enemies[write] = e;
+      write++;
+      continue;
+    }
+    if (isFinalBoss(e) && e.alive) {
       if (write !== i) enemies[write] = e;
       write++;
       continue;

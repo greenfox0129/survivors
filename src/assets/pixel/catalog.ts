@@ -71,6 +71,7 @@ export const STRIP_FRAME_W: Record<string, number> = {
   "items/big-sword": 7,
   "boss/raccoon-idle": 60,
   "boss/raccoon-charge": 60,
+  "boss/spirit-idle": 50,
 };
 
 /** Walk sheet of a playable character (every character in progression.ts has one). */

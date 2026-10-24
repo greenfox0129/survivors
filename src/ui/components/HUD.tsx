@@ -31,8 +31,10 @@ export function HUD({ stats }: HUDProps) {
   const emptyWeaponSlots = Math.max(0, CONFIG.maxWeapons - stats.weapons.length);
   const [eliteBanner, setEliteBanner] = useState(false);
   const [bossBanner, setBossBanner] = useState(false);
+  const [finalBanner, setFinalBanner] = useState(false);
   const prevElite = useRef<number | null>(stats.eliteSeconds);
   const prevBoss = useRef(stats.midBoss);
+  const prevFinal = useRef(stats.finalBoss);
   useEffect(() => {
     const prev = prevElite.current;
     prevElite.current = stats.eliteSeconds;
@@ -43,6 +45,10 @@ export function HUD({ stats }: HUDProps) {
     prevBoss.current = stats.midBoss;
   }, [stats.midBoss]);
   useEffect(() => {
+    if (!prevFinal.current && stats.finalBoss) setFinalBanner(true);
+    prevFinal.current = stats.finalBoss;
+  }, [stats.finalBoss]);
+  useEffect(() => {
     if (!eliteBanner) return;
     const id = window.setTimeout(() => setEliteBanner(false), 2200);
     return () => window.clearTimeout(id);
@@ -52,6 +58,11 @@ export function HUD({ stats }: HUDProps) {
     const id = window.setTimeout(() => setBossBanner(false), 2200);
     return () => window.clearTimeout(id);
   }, [bossBanner]);
+  useEffect(() => {
+    if (!finalBanner) return;
+    const id = window.setTimeout(() => setFinalBanner(false), 2200);
+    return () => window.clearTimeout(id);
+  }, [finalBanner]);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10">
@@ -102,6 +113,12 @@ export function HUD({ stats }: HUDProps) {
       {bossBanner && (
         <div className="absolute left-1/2 top-16 flex -translate-x-1/2 items-center gap-2 rounded-lg border-2 border-orange-300 bg-slate-950/95 px-4 py-2">
           <span className="text-lg font-bold tracking-wide text-orange-100">중간보스 출현</span>
+        </div>
+      )}
+
+      {finalBanner && (
+        <div className="absolute left-1/2 top-16 flex -translate-x-1/2 items-center gap-2 rounded-lg border-2 border-violet-300 bg-slate-950/95 px-4 py-2">
+          <span className="text-lg font-bold tracking-wide text-violet-100">보스 출현</span>
         </div>
       )}
 

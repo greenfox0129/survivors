@@ -1,7 +1,7 @@
 # 장신구 수치표 (Accessories)
 
 > ⚙ **자동 생성 문서** — `npm run docs:spec` 으로 다시 만든다. 직접 수정하지 말 것.
-> 기준: v0.5.0 · 출처: `src/game/data/*.ts`, `src/game/weapons/*.ts`
+> 기준: v0.6.0 · 출처: `src/game/data/*.ts`, `src/game/weapons/*.ts`
 
 보유 한도: **5개** · 레벨업 선택지에서 획득/강화
 
