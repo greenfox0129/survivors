@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Pause, Play, Flag } from "lucide-react";
 import { GameEngine } from "@/game/core/GameEngine";
 import { setCanvasPointer } from "@/game/core/pointer";
-import { CONFIG } from "@/game/data/config";
+import { CONFIG, xpForLevel } from "@/game/data/config";
 import type { GameStats, UpgradeOption, WeaponType } from "@/game/core/types";
 import { HUD } from "@/ui/components/HUD";
 import { UpgradeModal } from "@/ui/components/UpgradeModal";
@@ -39,7 +39,7 @@ function initialStats(save: SaveData): GameStats {
     kills: 0,
     level: 1,
     xp: 0,
-    xpToNext: CONFIG.leveling.baseXpToNext,
+    xpToNext: xpForLevel(1),
     hp: CONFIG.player.maxHp,
     maxHp: CONFIG.player.maxHp,
     alive: true,

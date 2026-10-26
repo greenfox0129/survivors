@@ -4,16 +4,16 @@
 |---|---|
 | `screens/Lobby.tsx` | 메뉴 카드 8개(게임 시작·제약·뽑기·캐릭터·특성·도감·업적·설정), 재화·선택 캐릭터, 버전·아이콘 크레딧 |
 | `screens/ConstraintScreen.tsx` | 제약 단계와 점수, 완료 골드 배율 |
-| `screens/SettingsScreen.tsx` | 그래픽·소리·브레스 방향 (설정은 세이브와 별도) |
+| `screens/SettingsScreen.tsx` | 그래픽·소리·브레스 방향·무기 투명도 (설정은 세이브와 별도) |
 | `screens/GameCanvas.tsx` | 캔버스 + 엔진 생성/정리, 입력, 단계(playing/levelup/paused/gameover), ESC·포커스 상실 일시정지, 골드·업적 정산, 화면 높이 맞춤 |
 | `screens/GachaScreen.tsx` | 뽑기(1회/10연), 엠블럼 연출, 연타·중도 이탈 방지 |
 | `screens/CharacterScreen.tsx` | 캐릭터 선택·레벨업·각성(별)·돌파·초기화 |
-| `screens/TraitsScreen.tsx` | 특성 강화·초기화 |
+| `screens/TraitsScreen.tsx` | 특성 강화·초기화. 골드 탭과, 클리어 업적 뒤의 별 업그레이드 탭 |
 | `screens/CodexScreen.tsx` | 도감 (적: 아이콘 + 실제 도형 / 무기 / 진화 / 장신구) — 레벨 효과는 무기 등록표에서 |
 | `screens/AchievementsScreen.tsx` | 업적 (진화 무기 아이콘, 중간보스는 너구리 초상) |
 | `components/HUD.tsx` | 시간·처치·스코어·레벨·XP·HP·리롤·무기/장신구 칩·빈 슬롯 |
 | `components/UpgradeModal.tsx` | 레벨업 3지선다 + 리롤, 배지(NEW/UP/EVOLVE), 단축키 1/2/3·R, 대기 수 표시 |
-| `components/SettingsPanel.tsx` | 그래픽 품질·배경음·효과음 (일시정지 메뉴·설정 화면 공용) |
+| `components/SettingsPanel.tsx` | 그래픽 품질·배경음·효과음·무기 투명도 (일시정지 메뉴·설정 화면 공용) |
 | `components/GameIcon.tsx` | SVG 아이콘을 CSS mask 로 틴트 |
 | `components/EnemyShape.tsx` | 게임 속 적 도형 SVG (저사양 모드의 모습) |
 | `components/PixelSprite.tsx` | `PixelFace`(38×38 초상) · `PixelWalker`(4프레임 걷기) · `PixelStrip`(보스 가로 스트립 한 칸) — `src/assets/pixel`, 초상·걷기는 없으면 SVG 엠블럼 폴백 |

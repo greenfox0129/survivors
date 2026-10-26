@@ -52,6 +52,8 @@ export interface TraitDef {
   maxLevel: number;
   // Effect per level (applied to all characters)
   effectLabel: (level: number) => string;
+  /** Stars charged for each level. Gold traits leave this unset. */
+  starCost?: number;
 }
 
 // ---- Characters ----
@@ -245,6 +247,25 @@ export const TRAITS: TraitDef[] = [
   },
 ];
 
+/** Post-clear traits. Spend stars, not gold. Locked until the clear achievement. */
+export const STAR_TRAITS: TraitDef[] = [
+  {
+    id: "extraChoice",
+    name: "선택 확장",
+    desc: "레벨업 때 고를 수 있는 강화가 4개가 됩니다.",
+    maxLevel: 1,
+    starCost: 4,
+    effectLabel: (lv) => (lv > 0 ? "선택지 4개" : "선택지 3개"),
+  },
+];
+
+/** Unreleased star traits. Levels bought in a local build are turned back into stars. */
+export const RETIRED_STAR_TRAITS = ["fortitude", "regeneration", "bounty"] as const;
+
+export function isStarTraitsUnlocked(completed: readonly string[]): boolean {
+  return completed.includes("kill_finalboss");
+}
+
 // Upgrade costs
 export const CHARACTER_UPGRADE_COST = (level: number): number =>
   100 * level;
@@ -283,10 +304,26 @@ export function characterTotalStars(stars: number): number {
   return STAR_UP_STAR_COST * stars;
 }
 
+/** Memories spent to reach this breakthrough tier. Reset pays them back. */
+export function breakthroughMemoriesSpent(tier: number): number {
+  let total = 0;
+  const steps = Math.min(MAX_BREAKTHROUGH, Math.max(0, Math.floor(tier)));
+  for (let i = 0; i < steps; i++) total += BREAKTHROUGH_MEMORY_COSTS[i];
+  return total;
+}
+
 export function traitTotalSpent(level: number): number {
   let total = 0;
   for (let i = 0; i < level; i++) total += TRAIT_UPGRADE_COST(i);
   return total;
+}
+
+export function starTraitCost(trait: TraitDef): number {
+  return trait.starCost ?? 0;
+}
+
+export function starTraitTotalSpent(trait: TraitDef, level: number): number {
+  return starTraitCost(trait) * level;
 }
 
 // Starting state
@@ -295,7 +332,7 @@ export const DEFAULT_OWNED: OwnedCharacter[] = [
 ];
 
 export const DEFAULT_TRAIT_LEVELS: Record<string, number> = Object.fromEntries(
-  TRAITS.map((t) => [t.id, 0])
+  [...TRAITS, ...STAR_TRAITS].map((t) => [t.id, 0])
 );
 
 export const DEFAULT_GOLD = 500;
@@ -372,14 +409,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     reward: 1,
     enemy: "midboss",
   },
+  {
+    id: "kill_finalboss",
+    name: "게임 클리어",
+    desc: "거대 영혼을 쓰러뜨리기",
+    reward: 1,
+    enemy: "finalboss",
+  },
 ];
 
-/** Evolution is the held weapon's form. The midboss counts if it died this run. */
+/** Evolution is the held weapon's form. Boss kills count if they died this run. */
 export function isAchievementMet(
   ach: AchievementDef,
-  stats: Pick<GameStats, "weapons" | "midBossKilled">,
+  stats: Pick<GameStats, "weapons" | "midBossKilled" | "victory">,
 ): boolean {
   if (ach.id === "kill_midboss") return stats.midBossKilled;
+  if (ach.id === "kill_finalboss") return stats.victory;
   if (!ach.id.startsWith("evo_")) return false;
   const weaponType = ach.id.slice(4) as WeaponType;
   return stats.weapons.some((w) => w.type === weaponType && w.evolved);

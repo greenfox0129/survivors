@@ -10,6 +10,7 @@ import { EVOLUTIONS } from "@/game/data/evolutions";
 import { getRadialSprite, drawCentered } from "@/game/render/sprites";
 import { isLowQuality } from "@/game/render/quality";
 import { drawStrip, getPixelImage } from "@/game/render/pixel";
+import { popWeaponFade, pushWeaponFade } from "@/game/core/settings";
 
 export function createAuraState(w: WeaponInstance): AuraState {
   const d = CONFIG.weapons.aura;
@@ -147,6 +148,8 @@ export function renderAura(
   aura: AuraState,
   px: number, py: number
 ): void {
+  if (!pushWeaponFade(ctx, "aura")) return;
+  try {
   const color = CONFIG.weapons.aura.color;
   const pulse = Math.sin(Date.now() / 300) * 0.08 + 0.92;
 
@@ -177,4 +180,7 @@ export function renderAura(
   ctx.beginPath();
   ctx.arc(px, py, aura.radius * pulse, 0, Math.PI * 2);
   ctx.stroke();
+  } finally {
+    popWeaponFade(ctx);
+  }
 }

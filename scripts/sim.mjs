@@ -84,10 +84,10 @@ try {
     fail("constraint score/gold");
   }
   const mods = resolveRunConstraints({ enemyHp: 2, spawnRate: 3, playerDamage: 1, hpGrowth: 3 });
-  if (mods.enemyHp !== 2 || mods.spawnInterval !== 0.5 || mods.playerDamage !== 0.8 || mods.xp !== 1 || mods.hpGrowth !== 2) {
+  if (mods.enemyHp !== 2 || mods.playerDamage !== 0.8 || mods.xp !== 1 || mods.hpGrowth !== 2) {
     fail(`constraint mods ${JSON.stringify(mods)}`);
   }
-  if (mods.enemyCount !== undefined) fail("enemy count constraint should be gone");
+  if (mods.enemyCount !== undefined || mods.spawnInterval !== undefined) fail("removed constraints should be gone");
 
   const ctxStub = {}; // update() never touches the canvas
   const makeSave = (id, bt = 4) => ({

@@ -11,6 +11,7 @@ import { getRadialSprite, drawCentered } from "@/game/render/sprites";
 import { isLowQuality } from "@/game/render/quality";
 import { getIconSprite, getFxSprite, drawSpriteCentered } from "@/game/render/iconSprites";
 import { drawStrip, getPixelImage } from "@/game/render/pixel";
+import { popWeaponFade, pushWeaponFade } from "@/game/core/settings";
 
 /** Burning field as a patch of animated pixel flames (high quality). */
 function renderPixelFlames(ctx: CanvasRenderingContext2D, b: BombEntity, now: number, life: number): void {
@@ -28,29 +29,43 @@ function renderPixelFlames(ctx: CanvasRenderingContext2D, b: BombEntity, now: nu
 function renderPixelBomb(ctx: CanvasRenderingContext2D, b: BombEntity, now: number): boolean {
   if (!getPixelImage("proj/canonball") || !getPixelImage("fx/circle-orange") || !getPixelImage("fx/fire")) return false;
   const color = CONFIG.weapons.bomb.color;
-  if (b.phase === "falling") {
-    // Impact area stays visible (gameplay info) — outline only on high quality
-    ctx.beginPath();
-    ctx.arc(b.targetX, b.targetY, b.explosionRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = color + "88";
-    ctx.lineWidth = 1;
-    ctx.setLineDash([4, 4]);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    if (b.explosionRadius > 150) {
-      // Evolved: a meteor (fireball head points up-right in the sheet → +45°)
-      drawStrip(ctx, "proj/fireball", now / 80, b.x, b.y, 3, Math.atan2(b.targetY - b.y, b.targetX - b.x) + Math.PI / 4);
-    } else {
-      drawStrip(ctx, "proj/canonball", now / 70, b.x, b.y, 1.6);
+  if (b.phase === "falling" || b.phase === "exploding") {
+    if (!pushWeaponFade(ctx, "bomb")) return true;
+    try {
+      if (b.phase === "falling") {
+        // Impact area stays visible (gameplay info) — outline only on high quality
+        ctx.beginPath();
+        ctx.arc(b.targetX, b.targetY, b.explosionRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = color + "88";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        if (b.explosionRadius > 150) {
+          // Evolved: a meteor (fireball head points up-right in the sheet → +45°)
+          drawStrip(ctx, "proj/fireball", now / 80, b.x, b.y, 3, Math.atan2(b.targetY - b.y, b.targetX - b.x) + Math.PI / 4);
+        } else {
+          drawStrip(ctx, "proj/canonball", now / 70, b.x, b.y, 1.6);
+        }
+      } else {
+        const prog = Math.min(0.999, b.explosionTimer / 0.3);
+        drawStrip(ctx, "fx/circle-orange", prog * 4, b.x, b.y, (b.explosionRadius * 2) / 28);
+        drawStrip(ctx, "fx/smoke", prog * 6, b.x, b.y, Math.max(2, b.explosionRadius / 16));
+      }
+    } finally {
+      popWeaponFade(ctx);
     }
-  } else if (b.phase === "exploding") {
-    const prog = Math.min(0.999, b.explosionTimer / 0.3);
-    drawStrip(ctx, "fx/circle-orange", prog * 4, b.x, b.y, (b.explosionRadius * 2) / 28);
-    drawStrip(ctx, "fx/smoke", prog * 6, b.x, b.y, Math.max(2, b.explosionRadius / 16));
+    return true;
   } else if (b.phase === "burning") {
-    renderPixelFlames(ctx, b, now, b.burnTimer);
+    if (!pushWeaponFade(ctx, "bombBurn")) return true;
+    try {
+      renderPixelFlames(ctx, b, now, b.burnTimer);
+    } finally {
+      popWeaponFade(ctx);
+    }
+    return true;
   }
-  return true;
+  return false;
 }
 
 let idCounter = 5200;
@@ -249,84 +264,101 @@ export function renderBombs(ctx: CanvasRenderingContext2D, bombs: BombEntity[]):
   const now = Date.now();
   for (const b of bombs) {
     if (!low && renderPixelBomb(ctx, b, now)) continue;
-    if (b.phase === "falling") {
-      // Shadow at target
-      ctx.fillStyle = color + "22";
-      ctx.beginPath();
-      ctx.arc(b.targetX, b.targetY, b.explosionRadius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = color + "66";
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
-      ctx.stroke();
-      ctx.setLineDash([]);
+    if (b.phase === "falling" || b.phase === "exploding") {
+      if (!pushWeaponFade(ctx, "bomb")) continue;
+      try {
+        if (b.phase === "falling") {
+          // Shadow at target
+          ctx.fillStyle = color + "22";
+          ctx.beginPath();
+          ctx.arc(b.targetX, b.targetY, b.explosionRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = color + "66";
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
 
-      // Falling bomb (icon; meteor once evolved — the shadow above shows the impact area)
-      const bombSprite = getIconSprite(b.explosionRadius > 150 ? "weapon-bomb-evo" : "weapon-bomb", color, 22);
-      if (bombSprite) {
-        drawSpriteCentered(ctx, bombSprite, b.x, b.y);
-      } else {
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, 8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "#fbbf24";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-    }
+          // Falling bomb (icon; meteor once evolved — the shadow above shows the impact area)
+          const bombSprite = getIconSprite(b.explosionRadius > 150 ? "weapon-bomb-evo" : "weapon-bomb", color, 22);
+          if (bombSprite) {
+            drawSpriteCentered(ctx, bombSprite, b.x, b.y);
+          } else {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#fbbf24";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        } else {
+          const prog = b.explosionTimer / 0.3;
+          const r = b.explosionRadius * (0.5 + prog * 0.5);
+          ctx.fillStyle = color + Math.round((1 - prog) * 200).toString(16).padStart(2, "0");
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#fbbf24";
+          ctx.lineWidth = 2;
+          ctx.stroke();
 
-    if (b.phase === "exploding") {
-      const prog = b.explosionTimer / 0.3;
-      const r = b.explosionRadius * (0.5 + prog * 0.5);
-      ctx.fillStyle = color + Math.round((1 - prog) * 200).toString(16).padStart(2, "0");
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#fbbf24";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Fire burst texture over the blast (decoration)
-      if (!low) {
-        const fire = getFxSprite("fire_01", "#fdba74", 128);
-        if (fire) {
-          const s = b.explosionRadius * (1.4 + prog * 0.6);
-          ctx.globalAlpha = 1 - prog;
-          ctx.drawImage(fire, b.x - s / 2, b.y - s / 2, s, s);
-          ctx.globalAlpha = 1;
+          // Fire burst texture over the blast (decoration)
+          if (!low) {
+            const fire = getFxSprite("fire_01", "#fdba74", 128);
+            if (fire) {
+              const s = b.explosionRadius * (1.4 + prog * 0.6);
+              ctx.save();
+              ctx.globalAlpha *= 1 - prog;
+              ctx.drawImage(fire, b.x - s / 2, b.y - s / 2, s, s);
+              ctx.restore();
+            }
+          }
         }
+      } finally {
+        popWeaponFade(ctx);
       }
     }
 
     if (b.phase === "burning") {
-      const prog = 1 - (b.burnTimer / b.burnDuration);
-      const r = b.burnRadius;
-      const pulse = Math.sin(now / 100) * 0.1 + 0.9;
+      if (!pushWeaponFade(ctx, "bombBurn")) continue;
+      try {
+        const prog = 1 - (b.burnTimer / b.burnDuration);
+        const r = b.burnRadius;
+        const pulse = Math.sin(now / 100) * 0.1 + 0.9;
 
-      // Burning field — cached sprite (center alpha 0x50), faded with globalAlpha
-      const field = getRadialSprite(r, [[0, color + "50"], [1, color + "00"]]);
-      ctx.globalAlpha = Math.max(0, prog);
-      drawCentered(ctx, field, b.x, b.y, r * pulse);
-      ctx.globalAlpha = 1;
+        // Burning field — cached sprite (center alpha 0x50), faded with globalAlpha
+        const field = getRadialSprite(r, [[0, color + "50"], [1, color + "00"]]);
+        ctx.save();
+        ctx.globalAlpha *= Math.max(0, prog);
+        drawCentered(ctx, field, b.x, b.y, r * pulse);
+        ctx.restore();
 
-      // Flickering embers + small flame texture (decoration — skipped in low quality)
-      if (low) continue;
-      const flame = getFxSprite("flame_01", "#fb923c", 64);
-      if (flame) {
-        const fs = r * (0.9 + Math.sin(now / 90 + b.id) * 0.1);
-        ctx.globalAlpha = Math.max(0, prog) * 0.55;
-        ctx.drawImage(flame, b.x - fs / 2, b.y - fs * 0.6, fs, fs);
-        ctx.globalAlpha = 1;
-      }
-      ctx.fillStyle = "#fbbf24" + Math.round(prog * 150).toString(16).padStart(2, "0");
-      for (let i = 0; i < 3; i++) {
-        const a = (now / 500 + i * 2) % (Math.PI * 2);
-        const ex = b.x + Math.cos(a) * r * 0.5;
-        const ey = b.y + Math.sin(a) * r * 0.5;
-        ctx.beginPath();
-        ctx.arc(ex, ey, 3, 0, Math.PI * 2);
-        ctx.fill();
+        // Flickering embers + small flame texture (decoration — skipped in low quality)
+        if (!low) {
+          const flame = getFxSprite("flame_01", "#fb923c", 64);
+          if (flame) {
+            const fs = r * (0.9 + Math.sin(now / 90 + b.id) * 0.1);
+            ctx.save();
+            ctx.globalAlpha *= Math.max(0, prog) * 0.55;
+            ctx.drawImage(flame, b.x - fs / 2, b.y - fs * 0.6, fs, fs);
+            ctx.restore();
+          }
+          ctx.save();
+          ctx.globalAlpha *= Math.max(0, prog);
+          ctx.fillStyle = "#fbbf24" + Math.round(150).toString(16);
+          for (let i = 0; i < 3; i++) {
+            const a = (now / 500 + i * 2) % (Math.PI * 2);
+            const ex = b.x + Math.cos(a) * r * 0.5;
+            const ey = b.y + Math.sin(a) * r * 0.5;
+            ctx.beginPath();
+            ctx.arc(ex, ey, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+      } finally {
+        popWeaponFade(ctx);
       }
     }
   }

@@ -33,6 +33,7 @@ const TRAIT_ICONS: Record<string, string> = {
   magnetism: "acc-magnetCharm",
   greed: "trait-greed",
   reroll: "ui-reroll",
+  extraChoice: "ui-upgrade",
 };
 
 export function traitIcon(traitId: string): string {

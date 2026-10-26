@@ -7,4 +7,4 @@
 | `upgrades.ts` | 레벨업 선택지 생성 — 진화 우선 노출, 나머지는 [무기 강화/신무기/장신구] 동일 가중치 (`CATEGORY_WEIGHTS`) |
 | `traitHelper.ts` | 세이브(캐릭터·별·레벨·특성·돌파) → 게임 시작 배율(`GameModifiers`) 계산 |
 
-선택지 가중치를 바꾸고 싶으면 `upgrades.ts` 의 `CATEGORY_WEIGHTS`, 선택지 개수는 `OPTION_COUNT`.
+선택지 가중치를 바꾸고 싶으면 `upgrades.ts` 의 `CATEGORY_WEIGHTS`. 개수는 기본 3이고, 별 특성 선택 확장을 사면 4다.

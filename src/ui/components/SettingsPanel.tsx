@@ -3,10 +3,13 @@
 // ============================================================
 
 import { Volume2, VolumeX } from "lucide-react";
-import type { QualitySetting } from "@/game/core/settings";
+import type { QualitySetting, WeaponOpacityLayer } from "@/game/core/settings";
+import { setWeaponOpacity, WEAPON_OPACITY_LAYERS } from "@/game/core/settings";
 import { isAutoDowngraded } from "@/game/render/quality";
 import { playUiSound } from "@/game/core/audio";
 import { useSettings } from "@/ui/hooks/useSettings";
+import { GameIcon } from "@/ui/components/GameIcon";
+import { weaponIcon } from "@/ui/icons";
 
 const QUALITY_OPTIONS: { value: QualitySetting; label: string; hint: string }[] = [
   { value: "auto", label: "자동", hint: "프레임이 떨어지면 장식 효과를 줄입니다" },
@@ -145,6 +148,56 @@ export function SettingsPanel() {
         onVolume={(sfxVolume) => update({ sfxVolume, sfxMuted: false })}
         onToggleMute={() => update({ sfxMuted: !settings.sfxMuted })}
         onPreview={playUiSound}
+      />
+
+      <div>
+        <div className="mb-1 text-sm font-semibold text-slate-200">무기 투명도</div>
+        <p className="mb-2 text-[11px] text-slate-500">
+          0%여도 피해는 그대로입니다. 그림이 나뉘면 그 칸만 따로 조절합니다.
+        </p>
+        <div className="flex flex-col gap-2">
+          {WEAPON_OPACITY_LAYERS.map((layer) => (
+            <OpacityRow
+              key={layer.id}
+              layer={layer}
+              value={settings.weaponOpacity[layer.id] ?? 1}
+              onChange={(value) => setWeaponOpacity(layer.id, value)}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OpacityRow({
+  layer,
+  value,
+  onChange,
+}: {
+  layer: WeaponOpacityLayer;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const pct = Math.round(value * 100);
+  return (
+    <div className={layer.sub ? "pl-7" : ""}>
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <span className={`flex min-w-0 items-center gap-1.5 text-xs font-semibold ${layer.sub ? "text-slate-400" : "text-slate-200"}`}>
+          {!layer.sub && <GameIcon name={weaponIcon(layer.weapon)} size={14} />}
+          <span className="truncate">{layer.label}</span>
+        </span>
+        <span className="font-mono text-[11px] text-slate-500">{pct}%</span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={1}
+        value={pct}
+        onChange={(e) => onChange(Number(e.target.value) / 100)}
+        className="h-1.5 w-full cursor-pointer accent-cyan-400"
+        aria-label={`${layer.label} 투명도`}
       />
     </div>
   );

@@ -51,5 +51,5 @@ const WM = await import('/src/game/systems/WeaponManager.ts');
 
 ## 경험치 곡선
 
-`xpToNext(L)` 은 L≤10 일 때 `floor(5 × 1.6^(L-1))`, 그 이후는 10레벨 필요량에 `1.4^(L-10)` 을 곱한다. 큰 병합 보석이 한 번에 여러 레벨을
+`xpToNext(L)` 은 30레벨까지 고정 표이고, 그 이후는 `floor(5000 × 1.4^(L-30))` 이다. 큰 병합 보석이 한 번에 여러 레벨을
 올릴 수 있으며, 레벨마다 선택지가 하나씩 주어진다(KI-03).

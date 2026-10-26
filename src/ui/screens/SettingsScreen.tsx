@@ -22,7 +22,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         </button>
 
         <h1 className="text-3xl font-bold text-slate-100 mb-1">설정</h1>
-        <p className="text-slate-500 text-sm mb-6">그래픽, 소리, 브레스 방향을 조절합니다. 이 기기에만 저장됩니다.</p>
+        <p className="text-slate-500 text-sm mb-6">그래픽, 소리, 브레스 방향, 무기 투명도를 조절합니다. 이 기기에만 저장됩니다.</p>
 
         <div className="rounded-2xl border border-slate-700 bg-slate-900/70 p-6">
           <SettingsPanel />

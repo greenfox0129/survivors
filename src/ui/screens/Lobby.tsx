@@ -101,7 +101,7 @@ const MENU_ITEMS: MenuCard[] = [
   },
   {
     title: "설정",
-    desc: "그래픽, 소리, 브레스 방향을 조절하세요",
+    desc: "그래픽, 소리, 무기 투명도를 조절하세요",
     lucide: "settings",
     iconColor: "#cbd5e1",
     color: "border-slate-500/40 bg-slate-900/40",

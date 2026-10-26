@@ -9,6 +9,7 @@ import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
 import { getIconSprite, drawSpriteCentered } from "@/game/render/iconSprites";
 import { isLowQuality } from "@/game/render/quality";
+import { popWeaponFade, pushWeaponFade } from "@/game/core/settings";
 import { drawStrip, getPixelImage } from "@/game/render/pixel";
 
 let idCounter = 5400;
@@ -179,21 +180,27 @@ export function renderTraps(ctx: CanvasRenderingContext2D, traps: TrapEntity[]):
     if (!t.alive) continue;
 
     // Slow aura (Lv5+)
-    if (t.slowRadius > 0) {
-      ctx.strokeStyle = "#67e8f922";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([3, 6]);
-      ctx.beginPath();
-      ctx.arc(t.x, t.y, t.slowRadius * pulse, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
+    if (t.slowRadius > 0 && pushWeaponFade(ctx, "trapSlow")) {
+      try {
+        ctx.strokeStyle = "#67e8f922";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([3, 6]);
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.slowRadius * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
 
-      ctx.fillStyle = "#67e8f908";
-      ctx.beginPath();
-      ctx.arc(t.x, t.y, t.slowRadius, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = "#67e8f908";
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.slowRadius, 0, Math.PI * 2);
+        ctx.fill();
+      } finally {
+        popWeaponFade(ctx);
+      }
     }
 
+    if (!pushWeaponFade(ctx, "trap")) continue;
+    try {
     if (pixel) {
       // Rune circle (looping spark animation); evolved/permanent traps crackle with thunder
       drawStrip(ctx, "fx/circle-spark", now / 110 + t.id, t.x, t.y, (t.radius * 2.3) / 32);
@@ -237,5 +244,8 @@ export function renderTraps(ctx: CanvasRenderingContext2D, traps: TrapEntity[]):
       ctx.lineTo(t.x + Math.cos(a) * (t.radius + 4), t.y + Math.sin(a) * (t.radius + 4));
     }
     ctx.stroke();
+    } finally {
+      popWeaponFade(ctx);
+    }
   }
 }

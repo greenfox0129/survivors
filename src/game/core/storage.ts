@@ -14,6 +14,7 @@ import {
   DEFAULT_OWNED,
   DEFAULT_TRAIT_LEVELS,
   DEFAULT_COMPLETED_ACHIEVEMENTS,
+  RETIRED_STAR_TRAITS,
   type OwnedCharacter,
 } from "@/game/data/progression";
 
@@ -88,9 +89,27 @@ export function migrateSave(input: RawSave): RawSave {
 }
 
 /** 변환된 세이브에 빠진 필드를 기본값으로 채운다. */
+/** Those three traits shipped only in a local build, at 1 star per level. */
+function refundRetiredStarTraits(
+  traitLevels: Record<string, number>,
+  stars: number,
+): { traitLevels: Record<string, number>; stars: number } {
+  const next = { ...traitLevels };
+  let refund = 0;
+  for (const id of RETIRED_STAR_TRAITS) {
+    refund += next[id] ?? 0;
+    delete next[id];
+  }
+  return { traitLevels: next, stars: stars + refund };
+}
+
 function normalize(raw: RawSave): SaveData {
   const base = defaultSave();
   const parsed = raw as Partial<SaveData>;
+  const traits = refundRetiredStarTraits(
+    { ...base.traitLevels, ...(parsed.traitLevels ?? {}) },
+    parsed.stars ?? 0,
+  );
   return {
     ...base,
     ...parsed,
@@ -99,8 +118,8 @@ function normalize(raw: RawSave): SaveData {
       memories: o.memories ?? 0,
       breakthrough: o.breakthrough ?? 0,
     })),
-    traitLevels: { ...base.traitLevels, ...(parsed.traitLevels ?? {}) },
-    stars: parsed.stars ?? 0,
+    traitLevels: traits.traitLevels,
+    stars: traits.stars,
     completedAchievements: parsed.completedAchievements ?? base.completedAchievements,
     constraintLevels: normalizeConstraintLevels(parsed.constraintLevels ?? raw.constraintLevels),
   };

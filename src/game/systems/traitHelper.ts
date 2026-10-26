@@ -20,6 +20,8 @@ export interface GameModifiers {
   rerolls: number;
   passive: PassiveType;
   startAccessory: AccessoryType | null; // 4돌파: paired accessory at game start
+  /** Level-up cards. 3, or 4 after the star trait 선택 확장. */
+  upgradeChoices: number;
 }
 
 /** 1돌파가 체력·공격력·이동속도에 곱하는 배율. 이후 돌파는 이 셋을 더 올리지 않는다. */
@@ -64,6 +66,7 @@ export function computeModifiers(save: SaveData): GameModifiers {
   const magnetism = tl.magnetism ?? 0;
   const greed = tl.greed ?? 0;
   const reroll = tl.reroll ?? 0;
+  const extraChoice = tl.extraChoice ?? 0;
 
   hpMult *= 1 + vitality * 0.10;
   speedMult *= 1 + swiftness * 0.05;
@@ -112,5 +115,6 @@ export function computeModifiers(save: SaveData): GameModifiers {
     rerolls: reroll + (breakthrough >= 3 ? 2 : 0),
     passive: charDef?.passive ?? "none",
     startAccessory,
+    upgradeChoices: extraChoice > 0 ? 4 : 3,
   };
 }

@@ -82,15 +82,14 @@ let idCounter = 1000;
 let spawnTimer = 0;
 let eliteSpawned = 0;
 
-/** Set from the active run's constraints. Defaults leave spawning unchanged. */
-let enemyRun = { hp: 1, damage: 1, speed: 1, hpGrowth: 1, spawn: 1 };
+/** Set from the active run's constraints. */
+let enemyRun = { hp: 1, damage: 1, speed: 1, hpGrowth: 1 };
 
 export function setEnemyConstraints(mods: {
   hp: number;
   damage: number;
   speed: number;
   hpGrowth: number;
-  spawn: number;
 }): void {
   enemyRun = mods;
 }
@@ -241,7 +240,7 @@ export function updateEnemies(
 ): void {
   if (getFinalBossSpawned() === 0 && enemies.length < enemyCap(_elapsedTime)) {
     spawnTimer += dt;
-    const interval = regularSpawnInterval(_elapsedTime) * enemyRun.spawn;
+    const interval = regularSpawnInterval(_elapsedTime);
     // Catch up when the interval is shorter than a frame. Stop if it is not a positive number.
     while (interval > 0 && spawnTimer >= interval && enemies.length < enemyCap(_elapsedTime)) {
       spawnTimer -= interval;
@@ -304,24 +303,14 @@ export function updateEnemies(
     }
 
     if (dist > 0.1) {
-      // Distance-based speed boost: far enemies move faster to catch up,
-      // smoothly decelerating to base speed as they get close.
-      // Boost starts beyond ~150px and maxes at ~1.8x around the spawn distance (~500px).
-      const nearDist = 150;
-      const farDist = 500;
       const chasing = !e.ranged || dist > CONFIG.ranged.range;
-      let speedMult = 1;
-      if (chasing && dist > nearDist) {
-        const t = Math.min((dist - nearDist) / (farDist - nearDist), 1);
-        speedMult = 1 + t * 1.6; // up to 2.6x at far distance
-      }
-      const step = e.speed * speedMult * dt;
+      const step = e.speed * dt;
       if (chasing) {
         e.x += (dx / dist) * step;
         e.y += (dy / dist) * step;
       } else if (dist < CONFIG.ranged.backup) {
-        e.x -= (dx / dist) * e.speed * dt;
-        e.y -= (dy / dist) * e.speed * dt;
+        e.x -= (dx / dist) * step;
+        e.y -= (dy / dist) * step;
       }
     }
     if (e.ranged) tryShoot(e, dx, dy, dist, dt);
@@ -590,20 +579,34 @@ function renderEnemySprite(ctx: CanvasRenderingContext2D, e: EnemyState, now: nu
   return true;
 }
 
-/** Opaque shots. Drawn after enemy bodies so the body does not hide them. */
+/**
+ * Opaque shots. A light disk plus a dark rim reads on the floor, and the
+ * enemy color sits in the middle so eye and skull shots stay distinct.
+ * The disk is bigger than the hit, so a shot can look like it grazed the player.
+ * Drawn after bodies so a sprite cannot cover the bullet.
+ */
 export function renderEnemyShots(ctx: CanvasRenderingContext2D): void {
   if (shots.length === 0) return;
+  const drawR = CONFIG.ranged.shotDrawRadius;
   ctx.beginPath();
   for (let i = 0; i < shots.length; i++) {
     const s = shots[i];
-    ctx.moveTo(s.x + s.radius, s.y);
-    ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+    ctx.moveTo(s.x + drawR, s.y);
+    ctx.arc(s.x, s.y, drawR, 0, Math.PI * 2);
   }
-  ctx.fillStyle = shots[0].color;
+  ctx.fillStyle = "#fffbeb";
   ctx.fill();
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 3;
   ctx.strokeStyle = "#1c1917";
   ctx.stroke();
+  for (let i = 0; i < shots.length; i++) {
+    const s = shots[i];
+    const core = drawR * 0.55;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, core, 0, Math.PI * 2);
+    ctx.fillStyle = s.color;
+    ctx.fill();
+  }
 }
 
 export function renderEnemies(ctx: CanvasRenderingContext2D, enemies: EnemyState[]): void {
@@ -663,6 +666,8 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: EnemyState, low: boolea
 }
 
 const ELITE_CROWN = 28;
+/** Pixels above the head. The cyclops horn sits in the top of the sheet. */
+const ELITE_CROWN_GAP = 38;
 
 /** Point on the screen edge, inset, along the ray from the camera to the elite. */
 function eliteEdgePoint(camX: number, camY: number, ex: number, ey: number): { x: number; y: number } {
@@ -712,7 +717,7 @@ export function renderEliteMarkers(
       e.y > top + margin && e.y < bottom - margin;
     if (onScreen) {
       const head = e.shape === "sprite" ? e.radius * 1.75 : pixel ? e.radius * ENEMY_SPRITE_PER_RADIUS * 0.5 + 4 : e.radius;
-      drawSpriteCentered(ctx, crown, e.x, e.y - head - 22);
+      drawSpriteCentered(ctx, crown, e.x, e.y - head - ELITE_CROWN_GAP);
       continue;
     }
 

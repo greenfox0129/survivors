@@ -6,7 +6,7 @@
 export interface ConstraintStep {
   /** Short label for the stepper, e.g. "×2". */
   label: string;
-  /** Multiplier applied to that system. Spawn rate stores the interval scale (faster = smaller). */
+  /** Multiplier applied to that system. */
   value: number;
   score: number;
 }
@@ -66,17 +66,6 @@ export const CONSTRAINTS: ConstraintDef[] = [
     ],
   },
   {
-    id: "spawnRate",
-    name: "출현 속도",
-    desc: "적이 나타나는 속도",
-    steps: [
-      { label: "×1", value: 1, score: 0 },
-      { label: "×1.25", value: 0.8, score: 10 },
-      { label: "×1.5", value: 1 / 1.5, score: 25 },
-      { label: "×2", value: 0.5, score: 40 },
-    ],
-  },
-  {
     id: "playerDamage",
     name: "가하는 피해",
     desc: "무기 피해",
@@ -109,7 +98,6 @@ export interface RunConstraints {
   enemySpeed: number;
   /** Multiplier on the per-minute HP growth. 1 keeps regular ×1.5 and elite ×2. */
   hpGrowth: number;
-  spawnInterval: number;
   playerDamage: number;
   xp: number;
 }
@@ -138,7 +126,6 @@ export function resolveRunConstraints(raw: unknown): RunConstraints {
     enemyDamage: stepValue("enemyDamage", levels),
     enemySpeed: stepValue("enemySpeed", levels),
     hpGrowth: stepValue("hpGrowth", levels),
-    spawnInterval: stepValue("spawnRate", levels),
     playerDamage: stepValue("playerDamage", levels),
     xp: stepValue("xpGain", levels),
   };

@@ -199,7 +199,6 @@ export class GameEngine {
       damage: this.constraints.enemyDamage,
       speed: this.constraints.enemySpeed,
       hpGrowth: this.constraints.hpGrowth,
-      spawn: this.constraints.spawnInterval,
     });
 
     this.updateWeaponMods();
@@ -553,7 +552,12 @@ export class GameEngine {
    * opening an empty modal (which would soft-lock the game).
    */
   private openNextLevelUp(): void {
-    const options = pickUpgrades(this.weaponMgr, this.accessoryMgr, this.save?.selectedCharacter);
+    const options = pickUpgrades(
+      this.weaponMgr,
+      this.accessoryMgr,
+      this.save?.selectedCharacter,
+      this.modifiers.upgradeChoices,
+    );
     if (options.length === 0) {
       this.pendingLevelUps = 0;
       this.paused = false;
@@ -572,7 +576,12 @@ export class GameEngine {
   rerollUpgrades(): UpgradeOption[] | null {
     if (this.rerollsLeft <= 0) return null;
     this.rerollsLeft--;
-    return pickUpgrades(this.weaponMgr, this.accessoryMgr, this.save?.selectedCharacter);
+    return pickUpgrades(
+      this.weaponMgr,
+      this.accessoryMgr,
+      this.save?.selectedCharacter,
+      this.modifiers.upgradeChoices,
+    );
   }
 
   getRerollsLeft(): number {

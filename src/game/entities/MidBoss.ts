@@ -134,7 +134,7 @@ export function updateMidBoss(e: EnemyState, player: PlayerState, dt: number): v
     if (dist <= CONFIG.midBoss.approach) {
       beginAttack(e, player);
     } else if (dist > 0.001) {
-      const step = e.speed * approachSpeedMult(dist) * dt;
+      const step = e.speed * dt;
       e.x += (dx / dist) * step;
       e.y += (dy / dist) * step;
       boss.facingRight = dx >= 0;
@@ -279,15 +279,6 @@ function sweepHits(
   const ox = player.x - cx;
   const oy = player.y - cy;
   return ox * ox + oy * oy < r * r;
-}
-
-/** Same far catch-up as other enemies, so a boss left behind still reaches dash range. */
-function approachSpeedMult(dist: number): number {
-  const near = 150;
-  const far = 500;
-  if (dist <= near) return 1;
-  const t = Math.min((dist - near) / (far - near), 1);
-  return 1 + t * 1.6;
 }
 
 function drawTelegraph(ctx: CanvasRenderingContext2D): void {

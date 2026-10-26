@@ -5,7 +5,7 @@
 //   1) 진화 가능한 무기는 항상 선택지 맨 앞에 노출
 //   2) 나머지 칸은 [무기 강화 / 신규 무기 / 장신구(강화+신규)] 3개 카테고리를
 //      동일 가중치로 뽑은 뒤, 카테고리 안에서 무작위 1개 (중복 없음)
-//   3) 총 3개
+//   3) 기본 3칸. 별 특성 선택 확장을 사면 4칸.
 // ============================================================
 
 import type { UpgradeOption } from "@/game/core/types";
@@ -14,8 +14,8 @@ import { weaponLevelEffectAt } from "@/game/weapons/registry";
 import { WeaponManager, weaponName, weaponFormName } from "@/game/systems/WeaponManager";
 import { AccessoryManager, accessoryName } from "@/game/systems/AccessoryManager";
 
-/** 레벨업 1회에 보여줄 선택지 수 */
-const OPTION_COUNT = 3;
+/** 레벨업 1회에 보여줄 선택지 수. 별 특성 선택 확장은 4. */
+export const BASE_UPGRADE_CHOICES = 3;
 
 /** 카테고리별 가중치 — 0으로 두면 해당 카테고리는 나오지 않는다 */
 const CATEGORY_WEIGHTS = {
@@ -30,7 +30,12 @@ function optionKey(o: UpgradeOption): string {
   return o.kind + (o.weaponType ?? o.accessoryType ?? "");
 }
 
-export function pickUpgrades(wm: WeaponManager, am: AccessoryManager, characterId?: string): UpgradeOption[] {
+export function pickUpgrades(
+  wm: WeaponManager,
+  am: AccessoryManager,
+  characterId?: string,
+  choiceCount = BASE_UPGRADE_CHOICES,
+): UpgradeOption[] {
   const pool: UpgradeOption[] = [];
 
   // Weapon level-up options (owned, not maxed) — 다음 레벨에서 얻는 효과를 표시
@@ -101,7 +106,7 @@ export function pickUpgrades(wm: WeaponManager, am: AccessoryManager, characterI
 
   // Evolution options always appear first
   const evolutionOpts = pool.filter((o) => o.kind === "weaponEvolve");
-  const pickCount = Math.max(0, OPTION_COUNT - evolutionOpts.length);
+  const pickCount = Math.max(0, choiceCount - evolutionOpts.length);
 
   const categories: Record<Category, UpgradeOption[]> = {
     weaponLevel: [],

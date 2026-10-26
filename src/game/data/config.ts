@@ -29,11 +29,15 @@ export const CONFIG = {
   },
 
   // ---- Leveling / XP ----
+  // xpCurve[0] is the XP for level 1 → 2. After the table, each step is
+  // xpGrowthLate times the last listed cost, with the fraction dropped.
   leveling: {
-    baseXpToNext: 5,      // XP needed for level 1 → 2
-    xpGrowth: 1.6,        // per level, through level 10
-    xpGrowthLate: 1.4,    // per level from level 11 on
-    xpGrowthLateFrom: 11,
+    xpCurve: [
+      10, 20, 30, 50, 70, 100, 140, 180, 220, 260,
+      290, 320, 350, 380, 410, 440, 470, 500, 530, 560,
+      590, 650, 710, 800, 900, 1000, 1100, 2000, 3000, 5000,
+    ],
+    xpGrowthLate: 1.4,
     maxLevel: 50,
   },
 
@@ -72,7 +76,7 @@ export const CONFIG = {
       borderColor: "#7f1d1d",
       radius: 12,
       hp: 5,
-      speed: 55,
+      speed: 82.5,
       damage: 8,
       spawnWeight: 10,
       unlockedTime: 0,
@@ -85,7 +89,7 @@ export const CONFIG = {
       borderColor: "#6d28d9",
       radius: 9,
       hp: 3,
-      speed: 95,
+      speed: 142.5,
       damage: 6,
       spawnWeight: 7,
       unlockedTime: 30,
@@ -98,7 +102,7 @@ export const CONFIG = {
       borderColor: "#0e7490",
       radius: 14,
       hp: 7.5,
-      speed: 65,
+      speed: 97.5,
       damage: 10,
       spawnWeight: 5,
       unlockedTime: 60,
@@ -111,7 +115,7 @@ export const CONFIG = {
       borderColor: "#64748b",
       radius: 13,
       hp: 12.5,
-      speed: 45,
+      speed: 67.5,
       damage: 12,
       spawnWeight: 6,
       unlockedTime: 90,
@@ -124,9 +128,9 @@ export const CONFIG = {
       borderColor: "#854d0e",
       radius: 13,
       hp: 7,
-      speed: 48,
+      speed: 72,
       damage: 8,
-      spawnWeight: 4,
+      spawnWeight: 2,
       unlockedTime: 120,
       shape: "circle" as const,
       ranged: true,
@@ -138,7 +142,7 @@ export const CONFIG = {
       borderColor: "#166534",
       radius: 10,
       hp: 15,
-      speed: 100,
+      speed: 150,
       damage: 14,
       spawnWeight: 4,
       unlockedTime: 150,
@@ -151,7 +155,7 @@ export const CONFIG = {
       borderColor: "#3f6212",
       radius: 12,
       hp: 18,
-      speed: 72,
+      speed: 108,
       damage: 16,
       spawnWeight: 3,
       unlockedTime: 210,
@@ -164,7 +168,7 @@ export const CONFIG = {
       borderColor: "#881337",
       radius: 11,
       hp: 20,
-      speed: 110,
+      speed: 165,
       damage: 15,
       spawnWeight: 3,
       unlockedTime: 270,
@@ -177,7 +181,7 @@ export const CONFIG = {
       borderColor: "#115e59",
       radius: 14,
       hp: 24,
-      speed: 90,
+      speed: 135,
       damage: 18,
       spawnWeight: 3,
       unlockedTime: 330,
@@ -190,7 +194,7 @@ export const CONFIG = {
       borderColor: "#475569",
       radius: 16,
       hp: 30,
-      speed: 85,
+      speed: 127.5,
       damage: 18,
       spawnWeight: 4,
       unlockedTime: 390,
@@ -203,9 +207,9 @@ export const CONFIG = {
       borderColor: "#9f1239",
       radius: 14,
       hp: 35,
-      speed: 40,
+      speed: 60,
       damage: 14,
-      spawnWeight: 3,
+      spawnWeight: 1.5,
       unlockedTime: 420,
       shape: "circle" as const,
       ranged: true,
@@ -217,7 +221,7 @@ export const CONFIG = {
       borderColor: "#9a3412",
       radius: 20,
       hp: 40,
-      speed: 35,
+      speed: 52.5,
       damage: 20,
       spawnWeight: 2,
       unlockedTime: 450,
@@ -230,7 +234,7 @@ export const CONFIG = {
       borderColor: "#86198f",
       radius: 18,
       hp: 45,
-      speed: 30,
+      speed: 45,
       damage: 22,
       spawnWeight: 2,
       unlockedTime: 510,
@@ -245,7 +249,8 @@ export const CONFIG = {
     backup: 150,      // step back when the player gets closer
     cooldown: 1.8,    // seconds between shots
     shotSpeed: 240,   // px/s, aimed at the player when fired
-    shotRadius: 5,
+    shotRadius: 5,    // hit only. The picture is larger so a miss can look close
+    shotDrawRadius: 10,
     shotDamage: 2,    // base; spawn scale matches contact, the hit does not
     maxShots: 40,
   },
@@ -627,17 +632,13 @@ interface AccessoryDef {
   growthKillHeal?: number;
 }
 
-// Derived helper: XP required to go from `level` to `level+1`.
-// 1.6× through level 10, then 1.4×. The first step stays baseXpToNext.
+// XP required to go from `level` to `level+1`.
+// The table covers the early levels. Later levels are the last table cost × 1.4 per step.
 export function xpForLevel(level: number): number {
-  const { baseXpToNext, xpGrowth, xpGrowthLate, xpGrowthLateFrom } = CONFIG.leveling;
-  const early = xpGrowthLateFrom - 1;
-  if (level <= early) {
-    return Math.floor(baseXpToNext * Math.pow(xpGrowth, level - 1));
-  }
-  return Math.floor(
-    baseXpToNext * Math.pow(xpGrowth, early - 1) * Math.pow(xpGrowthLate, level - early),
-  );
+  const { xpCurve, xpGrowthLate } = CONFIG.leveling;
+  if (level <= xpCurve.length) return xpCurve[level - 1];
+  const last = xpCurve[xpCurve.length - 1];
+  return Math.floor(last * Math.pow(xpGrowthLate, level - xpCurve.length));
 }
 
 /**

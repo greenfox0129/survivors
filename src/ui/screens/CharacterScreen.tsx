@@ -10,6 +10,7 @@ import {
   STAR_UP_STAR_COST,
   characterTotalSpent,
   characterTotalStars,
+  breakthroughMemoriesSpent,
   breakthroughMemoryCost,
   MAX_BREAKTHROUGH,
   ACHIEVEMENTS,
@@ -44,7 +45,8 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
   const def = getCharDef(selectedId);
   const refundAmount = owned ? characterTotalSpent(owned.level) : 0;
   const refundStars = owned ? characterTotalStars(owned.stars) : 0;
-  const canReset = owned !== undefined && (owned.level > 1 || owned.stars > 0);
+  const refundMemories = owned ? breakthroughMemoriesSpent(owned.breakthrough) : 0;
+  const canReset = owned !== undefined && (owned.level > 1 || owned.stars > 0 || owned.breakthrough > 0);
 
   function handleSelect(id: string) {
     setSelectedId(id);
@@ -73,7 +75,9 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
   function handleReset() {
     if (!owned || !canReset) return;
     const newOwned = save.owned.map((o) =>
-      o.id === owned.id ? { ...o, level: 1, stars: 0 } : o
+      o.id === owned.id
+        ? { ...o, level: 1, stars: 0, breakthrough: 0, memories: o.memories + refundMemories }
+        : o
     );
     onUpdate({ ...save, gold: save.gold + refundAmount, stars: save.stars + refundStars, owned: newOwned });
     setShowReset(false);
@@ -425,7 +429,7 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
                 <RotateCcw className="w-4 h-4" />
                 강화 초기화
                 <span className="text-amber-300/70 text-xs font-mono">
-                  (환불 +{refundAmount} G{refundStars > 0 ? ` +${refundStars} 별` : ""})
+                  (환불 {refundParts(refundAmount, refundStars, refundMemories)})
                 </span>
               </button>
             )}
@@ -456,24 +460,33 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
               </button>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed mb-1">
-              {def?.name}의 레벨과 각성을 초기화합니다.
+              {def?.name}의 레벨, 각성, 돌파를 초기화합니다.
             </p>
             <p className="text-slate-400 text-sm leading-relaxed mb-4">
-              사용한 골드와 별을 전액 환불받습니다.
+              사용한 골드, 별, 기억을 전액 돌려받습니다.
             </p>
             <div className="rounded-lg bg-slate-800/60 px-4 py-3 mb-5 flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-300 text-sm">골드 환불</span>
-                <span className="text-amber-300 font-mono font-bold flex items-center gap-1">
-                  +{refundAmount} G
-                </span>
-              </div>
+              {refundAmount > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-300 text-sm">골드 환불</span>
+                  <span className="text-amber-300 font-mono font-bold">+{refundAmount} G</span>
+                </div>
+              )}
               {refundStars > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="text-slate-300 text-sm">별 환불</span>
                   <span className="text-cyan-300 font-mono font-bold flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 fill-cyan-400 text-cyan-400" />
                     +{refundStars}
+                  </span>
+                </div>
+              )}
+              {refundMemories > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-300 text-sm">기억 환불</span>
+                  <span className="text-violet-300 font-mono font-bold flex items-center gap-1">
+                    <GameIcon name={UI_ICONS.memory} size={14} />
+                    +{refundMemories}
                   </span>
                 </div>
               )}
@@ -501,6 +514,14 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
       )}
     </div>
   );
+}
+
+function refundParts(gold: number, stars: number, memories: number): string {
+  const parts: string[] = [];
+  if (gold > 0) parts.push(`+${gold} G`);
+  if (stars > 0) parts.push(`+${stars} 별`);
+  if (memories > 0) parts.push(`+${memories} 기억`);
+  return parts.join(" ");
 }
 
 function StatBar({ label, value, display }: { label: string; value: number; display: string }) {

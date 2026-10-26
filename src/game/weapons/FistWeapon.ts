@@ -9,6 +9,7 @@ import { EVOLUTIONS } from "@/game/data/evolutions";
 import type { EnemyState, WeaponInstance, WeaponMods } from "@/game/core/types";
 import { damageEnemy } from "@/game/entities/EnemyManager";
 import { drawSpriteCentered, getIconSprite } from "@/game/render/iconSprites";
+import { popWeaponFade, pushWeaponFade } from "@/game/core/settings";
 
 const JAB_GAP = CONFIG.weapons.fist.jabInterval;
 const FINISHER_WINDUP = 0.16;
@@ -321,6 +322,8 @@ export function updateFist(
 }
 
 export function renderFist(ctx: CanvasRenderingContext2D, state: FistState): void {
+  if (!pushWeaponFade(ctx, "fist")) return;
+  try {
   const color = CONFIG.weapons.fist.color;
   if (state.show > 0) {
     const icon = getIconSprite("weapon-fist", color, state.hitR * 2);
@@ -333,5 +336,8 @@ export function renderFist(ctx: CanvasRenderingContext2D, state: FistState): voi
   if (state.show3 > 0) {
     const icon = getIconSprite("weapon-fist", color, state.hit3R * 2);
     if (icon) drawSpriteCentered(ctx, icon, state.hit3X, state.hit3Y);
+  }
+  } finally {
+    popWeaponFade(ctx);
   }
 }

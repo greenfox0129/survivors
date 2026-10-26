@@ -11,6 +11,7 @@ import { EVOLUTIONS } from "@/game/data/evolutions";
 import { spawnMuzzleFlash } from "@/game/render/effects";
 import { isLowQuality } from "@/game/render/quality";
 import { drawStrip } from "@/game/render/pixel";
+import { popWeaponFade, pushWeaponFade } from "@/game/core/settings";
 
 let idCounter = 5000;
 export function resetBulletIds() { idCounter = 5000; }
@@ -167,6 +168,8 @@ export function updateBullet(
 }
 
 export function renderBullets(ctx: CanvasRenderingContext2D, projectiles: Projectile[]): void {
+  if (!pushWeaponFade(ctx, "bullet")) return;
+  try {
   const pixel = !isLowQuality();
   const frame = Math.floor(performance.now() / 90);
   for (const p of projectiles) {
@@ -183,6 +186,9 @@ export function renderBullets(ctx: CanvasRenderingContext2D, projectiles: Projec
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.radius + 2, 0, Math.PI * 2);
     ctx.stroke();
+  }
+  } finally {
+    popWeaponFade(ctx);
   }
 }
 

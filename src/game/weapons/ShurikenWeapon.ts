@@ -10,6 +10,7 @@ import { EVOLUTIONS } from "@/game/data/evolutions";
 import { getIconSprite, drawSpriteRotated } from "@/game/render/iconSprites";
 import { isLowQuality } from "@/game/render/quality";
 import { drawStrip } from "@/game/render/pixel";
+import { popWeaponFade, pushWeaponFade } from "@/game/core/settings";
 
 let idCounter = 5800;
 export function resetShurikenIds() { idCounter = 5800; }
@@ -189,6 +190,8 @@ export function cullShurikens(projectiles: ShurikenProjectile[]): ShurikenProjec
 }
 
 export function renderShurikens(ctx: CanvasRenderingContext2D, projectiles: ShurikenProjectile[]): void {
+  if (!pushWeaponFade(ctx, "shuriken")) return;
+  try {
   const pixel = !isLowQuality();
   for (const p of projectiles) {
     if (!p.alive) continue;
@@ -221,5 +224,8 @@ export function renderShurikens(ctx: CanvasRenderingContext2D, projectiles: Shur
     ctx.fill();
     ctx.stroke();
     ctx.restore();
+  }
+  } finally {
+    popWeaponFade(ctx);
   }
 }

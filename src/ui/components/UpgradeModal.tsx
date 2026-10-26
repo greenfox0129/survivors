@@ -87,8 +87,8 @@ export function UpgradeModal({ options, onSelect, onReroll, rerollsLeft, pending
   }, [options, onSelect, onReroll, canReroll]);
 
   return (
-    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md px-6">
+    <div className="absolute inset-0 z-20 flex items-center justify-center overflow-y-auto bg-black/70 backdrop-blur-sm">
+      <div className="w-full max-w-md px-6 py-4">
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-2xl font-bold text-amber-300 tracking-wide">
             LEVEL UP
@@ -112,7 +112,7 @@ export function UpgradeModal({ options, onSelect, onReroll, rerollsLeft, pending
           </button>
         </div>
         <p className="text-center text-slate-400 text-sm mb-6">
-          강화를 선택하세요 <span className="text-slate-600">(1 · 2 · 3)</span>
+          강화를 선택하세요 <span className="text-slate-600">({options.map((_, i) => i + 1).join(" · ")})</span>
         </p>
 
         <div className="flex flex-col gap-3">

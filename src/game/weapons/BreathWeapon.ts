@@ -12,6 +12,7 @@ import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
 import { isLowQuality } from "@/game/render/quality";
 import { drawStrip, drawTintedStrip, getPixelImage } from "@/game/render/pixel";
+import { popWeaponFade, pushWeaponFade } from "@/game/core/settings";
 
 const BURN_DURATION = 3.0;
 const BURN_TICK_INTERVAL = 0.5;
@@ -221,6 +222,8 @@ export function renderBreath(
   px: number,
   py: number
 ): void {
+  if (!pushWeaponFade(ctx, "claw")) return;
+  try {
   if (!state.breathActive) {
     const color = CONFIG.weapons.claw.color;
     ctx.strokeStyle = color + "08";
@@ -278,4 +281,7 @@ export function renderBreath(
     ctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2);
   }
   ctx.fill();
+  } finally {
+    popWeaponFade(ctx);
+  }
 }

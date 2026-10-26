@@ -225,10 +225,10 @@ try {
       CONFIG.enemyTypes.map((t) => [t.name, `\`${t.id}\``, t.unlockedTime, t.hp, t.speed, t.damage, t.radius, t.spawnWeight, t.shape, t.ranged ? "원거리" : "접촉"]),
     ),
     "",
-    `- 원거리(눈알·해골): ${CONFIG.ranged.range}px 안에 멈추고, ${CONFIG.ranged.backup}px보다 가까우면 물러난다. ${CONFIG.ranged.cooldown}초마다 직선 탄(속도 ${CONFIG.ranged.shotSpeed}, 반경 ${CONFIG.ranged.shotRadius}). 탄 피해는 기본 ${CONFIG.ranged.shotDamage}. 접촉과 같은 분당 배율을 받는다. 동시에 ${CONFIG.ranged.maxShots}발. 엘리트는 쏘지 않는다.`,
+    `- 원거리(눈알·해골): ${CONFIG.ranged.range}px 안에 멈추고, ${CONFIG.ranged.backup}px보다 가까우면 물러난다. ${CONFIG.ranged.cooldown}초마다 직선 탄(속도 ${CONFIG.ranged.shotSpeed}, 판정 반경 ${CONFIG.ranged.shotRadius}, 그림 반경 ${CONFIG.ranged.shotDrawRadius}). 탄 피해는 기본 ${CONFIG.ranged.shotDamage}. 접촉과 같은 분당 배율을 받는다. 동시에 ${CONFIG.ranged.maxShots}발. 엘리트는 쏘지 않는다.`,
     "",
     "- 일반 적 속도는 생성 시 ×0.8~1.2 무작위.",
-    "- 플레이어와 150px 이상 떨어지면 거리 비례 가속 (500px에서 최대 ×2.6) — 화면 밖 적이 따라잡도록.",
+    "- 거리 가속은 없다. 일반 몹은 항상 기본 속도로 움직인다.",
     `- 플레이어에서 ${n(CONFIG.canvasWidth * 1.5)}px 이상 멀어진 적은 제거 (cullFarEnemies).`,
     "",
     "## 스폰",
@@ -271,7 +271,7 @@ try {
   }
   const levelDoc = [
     header("레벨·경험치 (Leveling)"),
-    `공식: L≤${CONFIG.leveling.xpGrowthLateFrom - 1} 은 \`floor(${CONFIG.leveling.baseXpToNext} × ${CONFIG.leveling.xpGrowth}^(L-1))\`, 그 이후는 \`floor(${CONFIG.leveling.baseXpToNext} × ${CONFIG.leveling.xpGrowth}^${CONFIG.leveling.xpGrowthLateFrom - 2} × ${CONFIG.leveling.xpGrowthLate}^(L-${CONFIG.leveling.xpGrowthLateFrom - 1}))\` · 일반 보석 1개 = 1 XP (병합 보석은 합산)`,
+    `1레벨부터 ${CONFIG.leveling.xpCurve.length}레벨까지는 표의 고정값. 그 이후는 \`floor(${CONFIG.leveling.xpCurve.at(-1)} × ${CONFIG.leveling.xpGrowthLate}^(L-${CONFIG.leveling.xpCurve.length}))\` · 일반 보석 1개 = 1 XP (병합 보석은 합산)`,
     "",
     table(["레벨 L", "L→L+1 필요 XP", "누적 XP"], lvRows),
     "",
@@ -312,6 +312,13 @@ try {
     table(
       ["특성", "id", "최대", "최대 효과", "Lv1 비용", "최대까지 총 비용"],
       P.TRAITS.map((t) => [t.name, `\`${t.id}\``, t.maxLevel, t.effectLabel(t.maxLevel), `${P.TRAIT_UPGRADE_COST(0)}G`, `${P.traitTotalSpent(t.maxLevel)}G`]),
+    ),
+    "",
+    "## 별 특성 (게임 클리어 업적 후, 별 소모)",
+    "",
+    table(
+      ["특성", "id", "최대", "최대 효과", "레벨 비용", "최대까지 총 비용"],
+      P.STAR_TRAITS.map((t) => [t.name, `\`${t.id}\``, t.maxLevel, t.effectLabel(t.maxLevel), `별 ${t.starCost}`, `별 ${P.starTraitTotalSpent(t, t.maxLevel)}`]),
     ),
     "",
     "## 업적",

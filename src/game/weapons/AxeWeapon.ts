@@ -13,6 +13,7 @@ import { EVOLUTIONS } from "@/game/data/evolutions";
 import type { EnemyState, WeaponInstance, WeaponMods } from "@/game/core/types";
 import { damageEnemy } from "@/game/entities/EnemyManager";
 import { getIconSprite, getPlainIcon } from "@/game/render/iconSprites";
+import { popWeaponFade, pushWeaponFade } from "@/game/core/settings";
 
 const AXE_REACH = 0.45;
 
@@ -355,8 +356,16 @@ export function renderAxe(
   py: number,
   w: WeaponInstance,
 ): void {
-  for (const wave of state.waves) renderWave(ctx, wave);
+  if (state.waves.length > 0 && pushWeaponFade(ctx, "axeWave")) {
+    try {
+      for (const wave of state.waves) renderWave(ctx, wave);
+    } finally {
+      popWeaponFade(ctx);
+    }
+  }
   if (state.phase !== "swing") return;
+  if (!pushWeaponFade(ctx, "axe")) return;
+  try {
   const color = CONFIG.weapons.axe.color;
   const angle = state.from + state.span * state.progress;
   const length = state.radius;
@@ -396,4 +405,7 @@ export function renderAxe(
     ctx.fillRect(-26, -drawn, 52, 18);
   }
   ctx.restore();
+  } finally {
+    popWeaponFade(ctx);
+  }
 }

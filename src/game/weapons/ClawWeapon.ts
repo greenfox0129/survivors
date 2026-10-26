@@ -10,6 +10,7 @@ import type { WeaponMods } from "@/game/core/types";
 import { EVOLUTIONS } from "@/game/data/evolutions";
 import { isLowQuality } from "@/game/render/quality";
 import { drawStrip, getPixelImage } from "@/game/render/pixel";
+import { popWeaponFade, pushWeaponFade } from "@/game/core/settings";
 
 // Claw image — loaded lazily on first render (so this module can also be imported
 // outside a browser, e.g. by scripts/gen-spec.mjs), drawn statically at the attack
@@ -281,6 +282,8 @@ export function renderClaw(
   py: number,
   _w: WeaponInstance
 ): void {
+  if (!pushWeaponFade(ctx, "claw")) return;
+  try {
   if (!state.slashActive) {
     // Show subtle range indicator when not slashing
     const color = CONFIG.weapons.claw.color;
@@ -320,7 +323,7 @@ export function renderClaw(
     const cy = py + Math.sin(baseAngle) * reach;
 
     ctx.save();
-    ctx.globalAlpha = alpha * 0.9;
+    ctx.globalAlpha *= alpha * 0.9;
     ctx.translate(cx, cy);
     // Rotate to align the image with the attack direction.
     ctx.rotate(baseAngle + Math.PI / 2 + Math.PI / 4);
@@ -332,12 +335,15 @@ export function renderClaw(
   if (alpha > 0.5) {
     const color = CONFIG.weapons.claw.color;
     ctx.save();
-    ctx.globalAlpha = (alpha - 0.5) * 0.5;
+    ctx.globalAlpha *= (alpha - 0.5) * 0.5;
     ctx.strokeStyle = color + "44";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(px, py, state.radius * (1 - alpha) * 0.5, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
+  }
+  } finally {
+    popWeaponFade(ctx);
   }
 }

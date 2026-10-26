@@ -10,6 +10,7 @@ import { EVOLUTIONS } from "@/game/data/evolutions";
 import { getIconSprite, drawSpriteRotated } from "@/game/render/iconSprites";
 import { isLowQuality } from "@/game/render/quality";
 import { drawStrip, getPixelImage } from "@/game/render/pixel";
+import { popWeaponFade, pushWeaponFade } from "@/game/core/settings";
 
 export function createMeleeBlades(w: WeaponInstance): MeleeBlade[] {
   const count = meleeBladeCount(w);
@@ -126,6 +127,8 @@ export function renderMelee(
   px: number, py: number,
   w: WeaponInstance
 ): void {
+  if (!pushWeaponFade(ctx, "melee")) return;
+  try {
   const orbitR = meleeBladeRadius(w);
   const size = meleeBladeSize(w);
   const color = CONFIG.weapons.melee.color;
@@ -176,5 +179,8 @@ export function renderMelee(
     ctx.lineWidth = 1.5;
     ctx.stroke();
     ctx.restore();
+  }
+  } finally {
+    popWeaponFade(ctx);
   }
 }
