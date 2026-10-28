@@ -30,10 +30,10 @@ const FILES = [
     [`units/char-${id}.png`, `${CH}/${src}/SeparateAnim/Walk.png`],
     [`faces/char-${id}.png`, `${CH}/${src}/Faceset.png`],
   ]),
-  // Linya is a cat beastkin composited from Universal LPC (see art/linya/README.md).
-  // 32×32 frames, not the 16×16 Ninja Adventure sheet.
-  ["units/char-linya.png", "art/linya/char-linya-walk.png"],
-  ["faces/char-linya.png", "art/linya/char-linya-face.png"],
+  // Linya's run is a right-facing 48px strip (8 frames). Idle is one 32px frame.
+  // Left is the same picture flipped. The portrait is the idle frame, not the old LPC face.
+  ["units/char-linya-run.png", "art/linya/char-linya-run.png"],
+  ["units/char-linya-idle.png", "art/linya/char-linya-idle.png"],
   // Euroan is a red-haired man composited from Universal LPC (see art/euroan/README.md).
   ["units/char-euroan.png", "art/euroan/char-euroan-walk.png"],
   ["faces/char-euroan.png", "art/euroan/char-euroan-face.png"],
@@ -59,6 +59,7 @@ const FILES = [
     ["lizard", `${MO}/Lizard/Lizard.png`, `${MO}/Lizard/Faceset.png`],
     ["elite", `${MO}/Cyclope/SpriteSheet.png`, `${MO}/Cyclope/Faceset.png`],
     ["wraith", `${MO}/Flam/SpriteSheet.png`, `${MO}/Flam/Faceset.png`],
+    ["lantern", `${MO}/LanternRed/SpriteSheet.png`, `${MO}/LanternRed/Faceset.png`],
   ].flatMap(([id, sheet, face]) => [
     [`units/enemy-${id}.png`, sheet],
     [`faces/enemy-${id}.png`, face],

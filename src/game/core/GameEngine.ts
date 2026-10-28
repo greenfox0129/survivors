@@ -22,6 +22,8 @@ import {
   damagePlayer,
   renderPlayer,
 } from "@/game/entities/Player";
+import { createCompanion, type Companion } from "@/game/entities/Companion";
+import { normalizeCompanion } from "@/game/data/companions";
 import {
   updateEnemies,
   checkContactDamage,
@@ -48,6 +50,7 @@ import {
   rollSpecialDrop,
   updateGems,
   renderGems,
+  renderTreasureMarkers,
   cullGems,
   mergeFarGems,
   consolidateGems,
@@ -108,6 +111,8 @@ export class GameEngine {
   private midBossKilled = false;
   private victory = false;
   private save: SaveData | null;
+  /** Hired at run start. Reset drops it so 다시 시작 does not keep the pull. */
+  private companion: Companion | null = null;
   private rerollsLeft: number = 0;
   private breakthrough: number = 0;
   private statEmitTimer: number = 0;
@@ -154,6 +159,7 @@ export class GameEngine {
     ]);
     preloadPixel(pixelNames()); // ~300 KB of small PNGs, all used in play
     this.weaponMgr = new WeaponManager(getStartWeapon(this.save));
+    this.companion = createCompanion(normalizeCompanion(save?.companion), this.player);
     this.accessoryMgr = new AccessoryManager();
     this.baseMaxHp = this.player.maxHp;
     this.rerollsLeft = this.modifiers.rerolls;
@@ -198,7 +204,6 @@ export class GameEngine {
       hp: this.constraints.enemyHp,
       damage: this.constraints.enemyDamage,
       speed: this.constraints.enemySpeed,
-      hpGrowth: this.constraints.hpGrowth,
     });
 
     this.updateWeaponMods();
@@ -284,6 +289,7 @@ export class GameEngine {
   }
 
   reset(): void {
+    this.companion = null;
     this.constraints = resolveRunConstraints(this.save?.constraintLevels);
     if (this.save) {
       this.modifiers = computeModifiers(this.save);
@@ -445,8 +451,11 @@ export class GameEngine {
       // Shield Forge + guardianWall: reduce incoming damage
       const guardianReduction = this.passive === "guardianWall" ? (this.breakthrough >= 3 ? 0.25 : 0.15) : 0;
       const reducedDmg = incomingDmg * (1 - accMods.damageReduction - guardianReduction);
-      playHurtSound();
-      if (damagePlayer(this.player, reducedDmg)) noteDamageTaken(reducedDmg);
+      const leaked = this.companion ? this.companion.absorb(reducedDmg) : reducedDmg;
+      if (leaked > 0) {
+        playHurtSound();
+        if (damagePlayer(this.player, leaked)) noteDamageTaken(leaked);
+      }
 
       // Thorn Armor + guardianWall: reflect damage to contacting enemies
       const guardianReflect = this.passive === "guardianWall" ? (this.breakthrough >= 3 ? 6 : 3) : 0;
@@ -477,6 +486,9 @@ export class GameEngine {
     this.weaponMgr.update(this.enemies, this.player, dt, () => {
       this.noteKill();
     });
+    const companionXp = this.companion?.update(dt, this.player, this.enemies, this.gems, () => {
+      this.noteKill();
+    }) ?? 0;
 
     // Single pass for gem drops from newly dead enemies
     for (const e of this.enemies) {
@@ -499,7 +511,7 @@ export class GameEngine {
     }
     if (gemResult.bomb) this.detonateScreen();
     const treasurePicked = gemResult.treasure;
-    const xpGained = gemResult.xp * this.xpMult;
+    const xpGained = (gemResult.xp + companionXp) * this.xpMult;
     this.gems = cullGems(this.gems);
     // Merge far gems into nearby ones instead of deleting them
     const gemMaxDist = CONFIG.canvasWidth * 1.2;
@@ -557,6 +569,7 @@ export class GameEngine {
       this.accessoryMgr,
       this.save?.selectedCharacter,
       this.modifiers.upgradeChoices,
+      { weapons: this.modifiers.sealedWeapons, accessories: this.modifiers.sealedAccessories },
     );
     if (options.length === 0) {
       this.pendingLevelUps = 0;
@@ -581,6 +594,7 @@ export class GameEngine {
       this.accessoryMgr,
       this.save?.selectedCharacter,
       this.modifiers.upgradeChoices,
+      { weapons: this.modifiers.sealedWeapons, accessories: this.modifiers.sealedAccessories },
     );
   }
 
@@ -654,6 +668,7 @@ export class GameEngine {
       finalBoss: getFinalBossSpawned() > 0,
       victory: this.victory,
       failedElite: this.failedElite,
+      companionLabel: this.companion?.label() ?? null,
       damageTaken: report.taken,
       healing: report.healed,
       damageDealt: report.dealt,
@@ -708,7 +723,10 @@ export class GameEngine {
     renderEnemyShots(ctx);
     renderEffects(ctx);
     this.weaponMgr.render(ctx, this.player);
+    this.companion?.renderWeapons(ctx);
     renderEliteMarkers(ctx, this.enemies, this.camera.x, this.camera.y);
+    renderTreasureMarkers(ctx, this.gems, this.camera.x, this.camera.y);
+    this.companion?.render(ctx, this.player);
     renderPlayer(ctx, this.player);
     ctx.restore();
   }

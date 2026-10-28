@@ -29,6 +29,8 @@ export interface PlayerState extends Entity {
   sprite?: string;
   /** Facing column of the walk sheet: 0 down, 1 up, 2 left, 3 right */
   facing: number;
+  /** Side-view sprites face right when 1 and flip when -1. Kept while moving straight up or down. */
+  side: number;
   /** Last movement angle in radians. Breath sprays this way, including while firing. */
   aim: number;
   /** Seconds spent walking (drives the walk frame) */
@@ -45,6 +47,8 @@ export interface EnemyState extends Entity {
   shotTimer: number;
   /** Holds a band around the player and fires. Elites never do. */
   ranged: boolean;
+  /** Stands still and fires at the player. Not the eye/skull kite. */
+  stationary: boolean;
   enemyType: string;
   color: string;
   borderColor: string;
@@ -59,8 +63,10 @@ export interface EnemyState extends Entity {
   gemDropped: boolean;
   /** Seconds left to kill this elite. Missing on normal enemies. */
   eliteLife?: number;
-  /** Facing column toward the player (pixel sprites): 0 down, 1 up, 2 left, 3 right */
+  /** Pixel facing column: 0 down, 1 up, 2 left, 3 right. */
   facing: number;
+  /** Straight flight in radians. Swarm bats keep the heading they took at spawn. */
+  course?: number;
 }
 
 // ---- Weapon types ----
@@ -323,6 +329,8 @@ export interface GameStats {
   victory: boolean;
   /** The run ended because an elite outlasted its timer. */
   failedElite: boolean;
+  /** Hired companion, or null. Warden includes the shield numbers. */
+  companionLabel: string | null;
   /** Contact damage that landed, after shields. Invulnerable frames are not counted. */
   damageTaken: number;
   /** HP actually restored (fang, regen, heart). Raising max HP is not healing. */

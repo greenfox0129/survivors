@@ -99,6 +99,7 @@ export function createMidBossState(
     contactTimer: 0,
     shotTimer: 0,
     ranged: false,
+    stationary: false,
     enemyType: "midboss",
     color: c.color,
     borderColor: c.borderColor,

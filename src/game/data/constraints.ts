@@ -55,17 +55,6 @@ export const CONSTRAINTS: ConstraintDef[] = [
     ],
   },
   {
-    id: "hpGrowth",
-    name: "체력 배율",
-    desc: "분당 체력 증가. 기본은 일반 적 ×1.5, 엘리트 ×2",
-    steps: [
-      { label: "×1", value: 1, score: 0 },
-      { label: "×1.25", value: 1.25, score: 25 },
-      { label: "×1.5", value: 1.5, score: 50 },
-      { label: "×2", value: 2, score: 80 },
-    ],
-  },
-  {
     id: "playerDamage",
     name: "가하는 피해",
     desc: "무기 피해",
@@ -96,8 +85,6 @@ export interface RunConstraints {
   enemyHp: number;
   enemyDamage: number;
   enemySpeed: number;
-  /** Multiplier on the per-minute HP growth. 1 keeps regular ×1.5 and elite ×2. */
-  hpGrowth: number;
   playerDamage: number;
   xp: number;
 }
@@ -125,7 +112,6 @@ export function resolveRunConstraints(raw: unknown): RunConstraints {
     enemyHp: stepValue("enemyHp", levels),
     enemyDamage: stepValue("enemyDamage", levels),
     enemySpeed: stepValue("enemySpeed", levels),
-    hpGrowth: stepValue("hpGrowth", levels),
     playerDamage: stepValue("playerDamage", levels),
     xp: stepValue("xpGain", levels),
   };

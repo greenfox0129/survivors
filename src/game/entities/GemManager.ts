@@ -404,6 +404,64 @@ function drawHeart(ctx: CanvasRenderingContext2D, x: number, y: number, s: numbe
   ctx.fill();
 }
 
+const CHEST_MARKER = 26;
+
+/** Point on the screen edge, inset, along the ray from the camera. Same inset as the elite crown. */
+function screenEdgePoint(camX: number, camY: number, x: number, y: number): { x: number; y: number } {
+  const hw = CONFIG.canvasWidth / 2 - 36;
+  const hh = CONFIG.canvasHeight / 2 - 36;
+  const dx = x - camX;
+  const dy = y - camY;
+  const ax = Math.abs(dx);
+  const ay = Math.abs(dy);
+  let scale = 1;
+  if (ax * hh > ay * hw && ax > 0) scale = hw / ax;
+  else if (ay > 0) scale = hh / ay;
+  return { x: camX + dx * scale, y: camY + dy * scale };
+}
+
+/**
+ * Off-screen treasure chests keep a chest icon on the screen edge, with a tick toward them.
+ * On-screen chests are drawn by renderGems.
+ */
+export function renderTreasureMarkers(
+  ctx: CanvasRenderingContext2D,
+  gems: Gem[],
+  camX: number,
+  camY: number,
+): void {
+  let icon: HTMLCanvasElement | null | undefined;
+  const left = camX - CONFIG.canvasWidth / 2;
+  const top = camY - CONFIG.canvasHeight / 2;
+  const right = camX + CONFIG.canvasWidth / 2;
+  const bottom = camY + CONFIG.canvasHeight / 2;
+  const margin = 48;
+  for (const g of gems) {
+    if (!g.alive || !g.isTreasure) continue;
+    const onScreen =
+      g.x > left + margin && g.x < right - margin &&
+      g.y > top + margin && g.y < bottom - margin;
+    if (onScreen) continue;
+
+    if (icon === undefined) icon = getIconSprite(UI_ICONS.treasure, "#fbbf24", CHEST_MARKER);
+    if (!icon) continue;
+
+    const edge = screenEdgePoint(camX, camY, g.x, g.y);
+    const dx = g.x - camX;
+    const dy = g.y - camY;
+    const mag = Math.hypot(dx, dy) || 1;
+    const ux = dx / mag;
+    const uy = dy / mag;
+    ctx.beginPath();
+    ctx.moveTo(edge.x - ux * 16, edge.y - uy * 16);
+    ctx.lineTo(edge.x + ux * 10, edge.y + uy * 10);
+    ctx.strokeStyle = "#fbbf24";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    drawSpriteCentered(ctx, icon, edge.x - ux * 18, edge.y - uy * 18);
+  }
+}
+
 export function renderGems(ctx: CanvasRenderingContext2D, gems: Gem[]): void {
   const low = isLowQuality();
   const now = performance.now();

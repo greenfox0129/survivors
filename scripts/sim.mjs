@@ -55,16 +55,14 @@ try {
     !close(eliteHp(60), 250 * 2.1) ||
     !close(eliteHp(120), 250 * 2.1 ** 2) ||
     !close(eliteHp(300), 250 * 2.1 ** 5) ||
-    !close(eliteHp(360), 250 * 2.1 ** 5 * 1.7) ||
-    !close(eliteHp(360, 2), 250 * (2.1 * 2) ** 5 * (1.7 * 2))
+    !close(eliteHp(360), 250 * 2.1 ** 5 * 1.7)
   ) {
-    fail(`elite hp ${eliteHp(0)}/${eliteHp(60)}/${eliteHp(300)}/${eliteHp(360)}/${eliteHp(360, 2)}`);
+    fail(`elite hp ${eliteHp(0)}/${eliteHp(60)}/${eliteHp(300)}/${eliteHp(360)}`);
   }
   if (
     !close(enemyHpScale(0), 1) ||
     !close(enemyHpScale(300), 1.8 ** 5) ||
     !close(enemyHpScale(360), 1.8 ** 5 * 1.3) ||
-    !close(enemyHpScale(360, 2), (1.8 * 2) ** 5 * (1.3 * 2)) ||
     !close(midBossHp(300), 200 * 2.1 ** 5) ||
     !close(finalBossHp(600), 500 * 2.1 ** 5 * 1.7 ** 5)
   ) {
@@ -84,10 +82,12 @@ try {
     fail("constraint score/gold");
   }
   const mods = resolveRunConstraints({ enemyHp: 2, spawnRate: 3, playerDamage: 1, hpGrowth: 3 });
-  if (mods.enemyHp !== 2 || mods.playerDamage !== 0.8 || mods.xp !== 1 || mods.hpGrowth !== 2) {
+  if (mods.enemyHp !== 2 || mods.playerDamage !== 0.8 || mods.xp !== 1) {
     fail(`constraint mods ${JSON.stringify(mods)}`);
   }
-  if (mods.enemyCount !== undefined || mods.spawnInterval !== undefined) fail("removed constraints should be gone");
+  if (mods.enemyCount !== undefined || mods.spawnInterval !== undefined || mods.hpGrowth !== undefined) {
+    fail("removed constraints should be gone");
+  }
 
   const ctxStub = {}; // update() never touches the canvas
   const makeSave = (id, bt = 4) => ({
@@ -99,6 +99,29 @@ try {
     stars: 0,
     completedAchievements: [],
   });
+
+  const { rollCompanion, normalizeCompanion } = await server.ssrLoadModule("/src/game/data/companions.ts");
+  const merc = rollCompanion(() => 0);
+  const cat = rollCompanion(() => 0.34);
+  const warden = rollCompanion(() => 0.67);
+  if (merc.kind !== "mercenary" || merc.weaponLevel !== 1) fail(`companion merc ${JSON.stringify(merc)}`);
+  if (cat.kind !== "cat" || warden.kind !== "warden") fail(`companion kinds ${cat.kind}/${warden.kind}`);
+  if (normalizeCompanion({ kind: "mercenary", weapon: "nope", weaponLevel: 9 })) fail("bad companion kept");
+  if (normalizeCompanion(null) !== null) fail("empty companion");
+
+  const { pickUpgrades } = await server.ssrLoadModule("/src/game/systems/upgrades.ts");
+  const { WeaponManager } = await server.ssrLoadModule("/src/game/systems/WeaponManager.ts");
+  const { AccessoryManager } = await server.ssrLoadModule("/src/game/systems/AccessoryManager.ts");
+  const sealWm = new WeaponManager("bullet");
+  const sealAm = new AccessoryManager();
+  for (let i = 0; i < 30; i++) {
+    for (const opt of pickUpgrades(sealWm, sealAm, "survivor", 4, { weapons: ["axe", "melee"], accessories: ["swiftBoots"] })) {
+      if (opt.weaponType === "axe" || opt.weaponType === "melee" || opt.accessoryType === "swiftBoots") fail(`sealed card ${opt.label}`);
+    }
+    for (const opt of pickUpgrades(sealWm, sealAm, "survivor", 3, { weapons: ["bullet"], accessories: [] })) {
+      if (opt.weaponType === "bullet") fail(`sealed start weapon ${opt.label}`);
+    }
+  }
 
   // ---------------------------------------------------------------- 1. long runs
   const rows = [];
@@ -158,8 +181,12 @@ try {
     } catch (err) {
       fail(`${ch.id}: ${err && err.stack ? err.stack.split("\n").slice(0, 2).join(" | ") : err}`);
     }
-    // Regular spawns stop at the time-scaled cap; elites (1/min) may exceed it slightly.
-    const spawnCap = enemyCap(MINUTES * 60) + Math.ceil(MINUTES) + 1;
+    // Regular spawns stop at the time-scaled cap. Elites, lanterns, and one bat swarm may exceed it.
+    const t = MINUTES * 60;
+    const turret = CONFIG.turret;
+    const lastLantern = Math.min(t, CONFIG.finalBoss.spawnAt - turret.spawnInterval);
+    const lanterns = t < turret.spawnAt ? 0 : Math.floor((lastLantern - turret.spawnAt) / turret.spawnInterval) + 1;
+    const spawnCap = enemyCap(t) + Math.ceil(MINUTES) + 1 + lanterns + CONFIG.swarm.count;
     if (maxEnemies > spawnCap) fail(`${ch.id}: ${maxEnemies} enemies > cap ${spawnCap}`);
     // XP gems consolidate at 40; +1 covers a spawn before the next merge.
     // Chests are excluded from that merge, so they are capped on their own.

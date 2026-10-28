@@ -166,6 +166,11 @@ export function HUD({ stats }: HUDProps) {
             <div key={`empty-${i}`} className="w-7 h-7 rounded-md border border-dashed border-slate-700/70 bg-slate-900/30" />
           ))}
         </div>
+        {stats.companionLabel && (
+          <div className="flex w-fit items-center rounded-md border border-lime-800/70 bg-slate-900/80 px-1.5 py-1 text-xs font-medium text-lime-200">
+            {stats.companionLabel}
+          </div>
+        )}
         {stats.accessories.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {stats.accessories.map((a, i) => (

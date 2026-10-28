@@ -1,28 +1,25 @@
-# art/linya — Linya, the cat beastkin
+# art/linya — Linya
 
-Walk sheet and portrait for Linya. These two PNGs are the only files the game
-ships (`scripts/sync-pixel-assets.mjs` copies them into `src/assets/pixel/`).
+The game ships two pictures from this folder (`scripts/sync-pixel-assets.mjs`
+copies them into `src/assets/pixel/`).
 
 | File | Layout |
 |---|---|
-| `char-linya-walk.png` | 128×128 = 4 columns × 4 rows of 32×32 frames. Columns: down, up, left, right. Rows: walk frames. |
-| `char-linya-face.png` | 38×38 portrait (same size as the other faces). |
+| `char-linya-run.png` | 384×48 = 8 frames of 48×48, all facing right. Played while she moves. Looking left flips the frame. |
+| `char-linya-idle.png` | 32×32, facing right. Shown while she stands, and used as her portrait. Looking left flips the in-game frame. |
 
-The frames are larger than the Ninja Adventure 16×16 sheets so the ears and tail
-stay readable. `drawUnit` scales this sheet so her on-screen height matches the
-other characters.
+The run and the idle are the same pixel size: the body is about 30px tall and the
+feet sit about 14px below the frame center, so one scale lines them up.
+`char-linya-walk.png` is the old four-direction LPC sheet, and `char-linya-face.png` is the old LPC portrait. Neither is copied into the game anymore.
 
-## What she is
+## Run and idle
 
-A humanoid black cat: cat ears, cat tail, black bob, green eyes, pink kimono,
-black boots. Composited from Universal LPC layers (64×64 walk rows, nearest-
-neighbour down to 32×32). Not a mask, not a quadruped.
+These two pictures were supplied for this project. They are not Universal LPC art
+and they are not covered by the license below.
 
-## License — CC BY-SA 3.0
+## Old portrait — CC BY-SA 3.0
 
-The body and the eyes are CC BY-SA, so this combined sprite is **CC BY-SA 3.0**.
-That is the one exception to the CC0 / CC-BY rule in `art/README.md`: the packs
-already in the repo have no cat-person walk cycle.
+`char-linya-face.png` stays in this folder and is not shipped. It is the cat beastkin composited from Universal LPC layers. The body and the eyes are CC BY-SA, so that file is **CC BY-SA 3.0**.
 
 Say you used Liberated Pixel Cup / Universal LPC art by the people below, and
 link the license: https://creativecommons.org/licenses/by-sa/3.0/

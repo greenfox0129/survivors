@@ -1,7 +1,8 @@
 // ============================================================
 //  PixelSprite — pixel-art portraits and walking sprites for the UI
 //  (src/assets/pixel). Crisp scaling via image-rendering.
-//  Most sheets are Ninja Adventure (CC0, 16px frames). Linya and Euroan are 32px LPC.
+//  Most sheets are Ninja Adventure (CC0, 16px frames). Euroan, Cheon, and Kali are 32px LPC.
+//  Linya's walk and portrait are the right-facing pictures supplied for this project.
 //
 //  <PixelFace kind="char" id="survivor" size={48} />   38×38 faceset, square
 //  <PixelWalker id="survivor" size={64} />            4-frame walk loop (CSS steps)
@@ -13,7 +14,7 @@
 
 import type { CSSProperties } from "react";
 import { pixelUrl } from "@/assets/pixel";
-import { characterFace, characterSheet, enemyFace, enemySheet } from "@/assets/pixel/catalog";
+import { characterFace, characterSheet, enemyFace, enemySheet, sideView } from "@/assets/pixel/catalog";
 import { GameIcon } from "@/ui/components/GameIcon";
 import { characterIcon, enemyIcon } from "@/ui/icons";
 
@@ -31,7 +32,8 @@ interface FaceProps {
 }
 
 export function PixelFace({ kind, id, size, color, className = "", dimmed }: FaceProps) {
-  const name = kind === "char" ? characterFace(id) : enemyFace(id);
+  const side = kind === "char" ? sideView(characterSheet(id)) : undefined;
+  const name = side ? side.idle : kind === "char" ? characterFace(id) : enemyFace(id);
   const url = name ? pixelUrl(name) : undefined;
   if (!url) {
     return <GameIcon name={kind === "char" ? characterIcon(id) : enemyIcon(id)} size={Math.round(size * 0.7)} color={color} />;
@@ -59,9 +61,31 @@ interface WalkerProps {
   className?: string;
 }
 
-/** Walking unit (sheet = 4 columns × 4 rows; rows animate). Source pixel size does not matter. */
+/** Walking unit. Most sheets are 4 columns × 4 rows. Linya is a right-facing run strip, flipped when facing left. */
 export function PixelWalker({ kind = "char", id, size, facing = 0, className = "" }: WalkerProps) {
   const sheet = kind === "char" ? characterSheet(id) : enemySheet(id);
+  const side = sheet ? sideView(sheet) : undefined;
+  if (side) {
+    const url = pixelUrl(side.run);
+    if (!url) return <GameIcon name={kind === "char" ? characterIcon(id) : enemyIcon(id)} size={size} />;
+    return (
+      <span
+        aria-hidden
+        className={`pixel-strip inline-block shrink-0 ${className}`}
+        style={{
+          ...PIXELATED,
+          width: size,
+          height: size,
+          backgroundImage: `url("${url}")`,
+          backgroundRepeat: "no-repeat",
+          backgroundSize: `${size * side.frames}px ${size}px`,
+          transform: facing === 2 ? "scaleX(-1)" : undefined,
+          ["--strip-w" as string]: `${size * side.frames}px`,
+          ["--strip-frames" as string]: String(side.frames),
+        }}
+      />
+    );
+  }
   const url = sheet ? pixelUrl(sheet) : undefined;
   if (!url) return <GameIcon name={kind === "char" ? characterIcon(id) : enemyIcon(id)} size={size} />;
   return (

@@ -240,10 +240,25 @@ export const CONFIG = {
       unlockedTime: 510,
       shape: "hexagon" as const,
     },
+    {
+      id: "lantern",
+      name: "랜턴",
+      color: "#fb7185",
+      borderColor: "#9f1239",
+      radius: 13,
+      hp: 16,
+      speed: 0,
+      damage: 10,
+      spawnWeight: 0, // not in the random pool; EnemyManager spawns it on a clock
+      unlockedTime: 300,
+      shape: "hexagon" as const,
+      ranged: true,
+      stationary: true,
+    },
   ] as const,
 
   // Ranged types (enemyTypes[].ranged) hold this band and fire a straight shot.
-  // Elites keep the chase and never shoot.
+  // Elites keep the chase and never shoot. The lantern ignores the band: it never moves.
   ranged: {
     range: 260,       // stop approaching inside this
     backup: 150,      // step back when the player gets closer
@@ -253,6 +268,23 @@ export const CONFIG = {
     shotDrawRadius: 10,
     shotDamage: 2,    // base; spawn scale matches contact, the hit does not
     maxShots: 40,
+  },
+
+  // After 5:00, one lantern every 10s until the final boss. It stands and shoots.
+  turret: {
+    spawnAt: 300,
+    spawnInterval: 10,
+    range: 720, // far enough to fire from the spawn edge
+  },
+
+  // From 1:10, a filled disk of bats every 40s. One heading, then a straight line.
+  swarm: {
+    spawnAt: 70,
+    spawnInterval: 40,
+    count: 20,
+    radius: 80,
+    hpMult: 4, // on the bat's base HP
+    speedMult: 2.5, // shared. No per-bat speed roll.
   },
 
   // ---- Elite enemies (spawn every 60s) ----
@@ -279,7 +311,7 @@ export const CONFIG = {
   // 적의 체력, 공격력, and 속도 still apply when the boss is created.
   midBoss: {
     spawnAt: 300,
-    hp: 200, // × the elite HP curve, with 체력 배율 inside each minute's rate
+    hp: 200, // × the elite HP curve
     radius: 36,
     speed: 80,
     approach: 200,
@@ -643,21 +675,20 @@ export function xpForLevel(level: number): number {
 
 /**
  * Per-minute HP scale with a breakpoint. The first `lateFrom` seconds use `early`,
- * and time after that uses `late` on top. `growthMult` (제약 체력 배율) multiplies
- * both rates before the exponent. Already-spawned enemies do not call this again.
+ * and time after that uses `late` on top. Already-spawned enemies do not call this again.
  */
-function steppedHpScale(elapsedSeconds: number, early: number, late: number, lateFrom: number, growthMult: number): number {
+function steppedHpScale(elapsedSeconds: number, early: number, late: number, lateFrom: number): number {
   const minutes = elapsedSeconds / 60;
   const split = lateFrom / 60;
   const earlyMinutes = Math.min(minutes, split);
   const lateMinutes = Math.max(0, minutes - split);
-  return Math.pow(early * growthMult, earlyMinutes) * Math.pow(late * growthMult, lateMinutes);
+  return Math.pow(early, earlyMinutes) * Math.pow(late, lateMinutes);
 }
 
 /** HP multiplier for a regular enemy spawned at `elapsedSeconds`. 1 at 0:00. */
-export function enemyHpScale(elapsedSeconds: number, growthMult = 1): number {
+export function enemyHpScale(elapsedSeconds: number): number {
   const e = CONFIG.enemy;
-  return steppedHpScale(elapsedSeconds, e.hpPerMinute, e.hpPerMinuteLate, e.hpLateFrom, growthMult);
+  return steppedHpScale(elapsedSeconds, e.hpPerMinute, e.hpPerMinuteLate, e.hpLateFrom);
 }
 
 /** Contact-damage multiplier for any enemy spawned at `elapsedSeconds`. 1 at 0:00, 1.2 at 1:00. */
@@ -666,24 +697,24 @@ export function enemyDamageScale(elapsedSeconds: number): number {
 }
 
 /** Elite curve shared by elites, the midboss, and the final boss. */
-function eliteHpScale(elapsedSeconds: number, growthMult: number): number {
+function eliteHpScale(elapsedSeconds: number): number {
   const e = CONFIG.elite;
-  return steppedHpScale(elapsedSeconds, e.hpPerMinute, e.hpPerMinuteLate, e.hpLateFrom, growthMult);
+  return steppedHpScale(elapsedSeconds, e.hpPerMinute, e.hpPerMinuteLate, e.hpLateFrom);
 }
 
 /** Elite HP at spawn. Does not use the regular type's HP. */
-export function eliteHp(elapsedSeconds: number, growthMult = 1): number {
-  return CONFIG.elite.hp * eliteHpScale(elapsedSeconds, growthMult);
+export function eliteHp(elapsedSeconds: number): number {
+  return CONFIG.elite.hp * eliteHpScale(elapsedSeconds);
 }
 
 /** Midboss HP at spawn. Same curve as an elite, with its own base. */
-export function midBossHp(elapsedSeconds: number, growthMult = 1): number {
-  return CONFIG.midBoss.hp * eliteHpScale(elapsedSeconds, growthMult);
+export function midBossHp(elapsedSeconds: number): number {
+  return CONFIG.midBoss.hp * eliteHpScale(elapsedSeconds);
 }
 
 /** Final boss HP at spawn. Same curve as an elite. */
-export function finalBossHp(elapsedSeconds: number, growthMult = 1): number {
-  return CONFIG.finalBoss.hp * eliteHpScale(elapsedSeconds, growthMult);
+export function finalBossHp(elapsedSeconds: number): number {
+  return CONFIG.finalBoss.hp * eliteHpScale(elapsedSeconds);
 }
 
 /** Special-item chance per kill. Flat until 5:00, then ×0.8 each minute. */

@@ -5,7 +5,7 @@
 
 import { CHARACTERS, type PassiveType } from "@/game/data/progression";
 import { EVOLUTIONS } from "@/game/data/evolutions";
-import type { AccessoryType } from "@/game/core/types";
+import type { AccessoryType, WeaponType } from "@/game/core/types";
 import type { SaveData } from "@/game/core/storage";
 
 export interface GameModifiers {
@@ -22,6 +22,9 @@ export interface GameModifiers {
   startAccessory: AccessoryType | null; // 4돌파: paired accessory at game start
   /** Level-up cards. 3, or 4 after the star trait 선택 확장. */
   upgradeChoices: number;
+  /** Star seal and gold seal. Both are omitted from level-up cards. */
+  sealedWeapons: WeaponType[];
+  sealedAccessories: AccessoryType[];
 }
 
 /** 1돌파가 체력·공격력·이동속도에 곱하는 배율. 이후 돌파는 이 셋을 더 올리지 않는다. */
@@ -67,6 +70,14 @@ export function computeModifiers(save: SaveData): GameModifiers {
   const greed = tl.greed ?? 0;
   const reroll = tl.reroll ?? 0;
   const extraChoice = tl.extraChoice ?? 0;
+  const sealedWeapons = [
+    (tl.weaponSeal ?? 0) > 0 ? save.sealedWeapon : null,
+    (tl.weaponSealGold ?? 0) > 0 ? save.sealedWeaponGold : null,
+  ].filter((id): id is WeaponType => id != null);
+  const sealedAccessories = [
+    (tl.accessorySeal ?? 0) > 0 ? save.sealedAccessory : null,
+    (tl.accessorySealGold ?? 0) > 0 ? save.sealedAccessoryGold : null,
+  ].filter((id): id is AccessoryType => id != null);
 
   hpMult *= 1 + vitality * 0.10;
   speedMult *= 1 + swiftness * 0.05;
@@ -98,7 +109,7 @@ export function computeModifiers(save: SaveData): GameModifiers {
     // 4돌파: start with paired accessory for evolution
     const startWeapon = charDef?.startWeapon ?? "bullet";
     const evo = EVOLUTIONS[startWeapon as keyof typeof EVOLUTIONS];
-    if (evo) {
+    if (evo && !sealedAccessories.includes(evo.pairedAccessory)) {
       startAccessory = evo.pairedAccessory;
     }
   }
@@ -116,5 +127,7 @@ export function computeModifiers(save: SaveData): GameModifiers {
     passive: charDef?.passive ?? "none",
     startAccessory,
     upgradeChoices: extraChoice > 0 ? 4 : 3,
+    sealedWeapons,
+    sealedAccessories,
   };
 }

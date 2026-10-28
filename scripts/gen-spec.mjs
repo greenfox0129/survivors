@@ -222,10 +222,12 @@ try {
     "",
     table(
       ["이름", "id", "등장(초)", "HP", "속도", "접촉 피해", "반경", "가중치", "모양", "공격"],
-      CONFIG.enemyTypes.map((t) => [t.name, `\`${t.id}\``, t.unlockedTime, t.hp, t.speed, t.damage, t.radius, t.spawnWeight, t.shape, t.ranged ? "원거리" : "접촉"]),
+      CONFIG.enemyTypes.map((t) => [t.name, `\`${t.id}\``, t.unlockedTime, t.hp, t.speed, t.damage, t.radius, t.spawnWeight, t.shape, t.stationary ? "고정 사격" : t.ranged ? "원거리" : "접촉"]),
     ),
     "",
     `- 원거리(눈알·해골): ${CONFIG.ranged.range}px 안에 멈추고, ${CONFIG.ranged.backup}px보다 가까우면 물러난다. ${CONFIG.ranged.cooldown}초마다 직선 탄(속도 ${CONFIG.ranged.shotSpeed}, 판정 반경 ${CONFIG.ranged.shotRadius}, 그림 반경 ${CONFIG.ranged.shotDrawRadius}). 탄 피해는 기본 ${CONFIG.ranged.shotDamage}. 접촉과 같은 분당 배율을 받는다. 동시에 ${CONFIG.ranged.maxShots}발. 엘리트는 쏘지 않는다.`,
+    `- 랜턴: ${CONFIG.turret.spawnAt}초부터 ${CONFIG.turret.spawnInterval}초마다 1마리. 가중치 풀이 아니다. 움직이지 않고 ${CONFIG.turret.range}px 안에서 같은 탄을 쏜다. 최종 보스가 나오면 멈춘다.`,
+    `- 박쥐 무리: ${CONFIG.swarm.spawnAt}초부터 ${CONFIG.swarm.spawnInterval}초마다 ${CONFIG.swarm.count}마리. 반지름 ${CONFIG.swarm.radius}px인 채워진 원. 체력은 박쥐의 ${CONFIG.swarm.hpMult}배, 속도는 ${CONFIG.swarm.speedMult}배. 속도 흩어짐은 없다. 스폰 때 플레이어 방향을 잡고 그 직선으로만 날아간다. 멀어지면 제거된다.`,
     "",
     "- 일반 적 속도는 생성 시 ×0.8~1.2 무작위.",
     "- 거리 가속은 없다. 일반 몹은 항상 기본 속도로 움직인다.",
@@ -311,7 +313,10 @@ try {
     "",
     table(
       ["특성", "id", "최대", "최대 효과", "Lv1 비용", "최대까지 총 비용"],
-      P.TRAITS.map((t) => [t.name, `\`${t.id}\``, t.maxLevel, t.effectLabel(t.maxLevel), `${P.TRAIT_UPGRADE_COST(0)}G`, `${P.traitTotalSpent(t.maxLevel)}G`]),
+      [
+        ...P.TRAITS.map((t) => [t.name, `\`${t.id}\``, t.maxLevel, t.effectLabel(t.maxLevel), `${P.TRAIT_UPGRADE_COST(0)}G`, `${P.traitTotalSpent(t.maxLevel)}G`]),
+        ...P.GOLD_SEAL_TRAITS.map((t) => [t.name, `\`${t.id}\``, t.maxLevel, t.effectLabel(t.maxLevel), `${t.goldCost}G`, `${t.goldCost}G`]),
+      ],
     ),
     "",
     "## 별 특성 (게임 클리어 업적 후, 별 소모)",

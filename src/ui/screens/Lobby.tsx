@@ -1,4 +1,4 @@
-import { Scale, Settings } from "lucide-react";
+import { Scale, Settings, Wrench } from "lucide-react";
 import { GAME_INFO } from "@/gameInfo";
 import type { SaveData } from "@/game/core/storage";
 import { CHARACTERS } from "@/game/data/progression";
@@ -6,10 +6,11 @@ import { weaponName } from "@/game/systems/WeaponManager";
 import { PixelFace, PixelWalker } from "@/ui/components/PixelSprite";
 import { GameIcon } from "@/ui/components/GameIcon";
 import { constraintGoldMultiplier, constraintScore } from "@/game/data/constraints";
+import { companionSummary } from "@/game/data/companions";
 import { UI_ICONS, weaponIcon } from "@/ui/icons";
 import { readableAccent, weaponColor } from "@/ui/theme";
 
-export type Screen = "lobby" | "game" | "gacha" | "codex" | "achievements" | "characters" | "traits" | "constraints" | "settings";
+export type Screen = "lobby" | "game" | "gacha" | "codex" | "achievements" | "characters" | "traits" | "constraints" | "prep" | "settings";
 
 interface LobbyProps {
   onNavigate: (screen: Screen) => void;
@@ -20,7 +21,7 @@ interface MenuCard {
   title: string;
   desc: string;
   icon?: string;
-  lucide?: "constraints" | "settings";
+  lucide?: "constraints" | "prep" | "settings";
   iconColor: string;
   color: string;
   hoverColor: string;
@@ -38,6 +39,16 @@ const MENU_ITEMS: MenuCard[] = [
     hoverColor: "hover:border-cyan-400 hover:bg-cyan-900/40",
     glow: "group-hover:shadow-cyan-500/20",
     screen: "game",
+  },
+  {
+    title: "정비",
+    desc: "다음 한 판의 동행자를 뽑으세요",
+    lucide: "prep",
+    iconColor: "#bef264",
+    color: "border-lime-500/40 bg-lime-950/30",
+    hoverColor: "hover:border-lime-400 hover:bg-lime-900/40",
+    glow: "group-hover:shadow-lime-500/20",
+    screen: "prep",
   },
   {
     title: "제약",
@@ -193,10 +204,12 @@ export function Lobby({ onNavigate, save }: LobbyProps) {
       {/* Menu grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-3xl">
         {MENU_ITEMS.map((item) => {
+          const armed = item.screen === "prep" ? companionSummary(save.companion) : null;
           const desc =
-            item.screen === "constraints" && runScore > 0
+            armed ??
+            (item.screen === "constraints" && runScore > 0
               ? `점수 ${runScore} · 골드 ×${runGold.toFixed(2)}`
-              : item.desc;
+              : item.desc);
           return (
           <button
             key={item.screen}
@@ -210,6 +223,8 @@ export function Lobby({ onNavigate, save }: LobbyProps) {
                             transition-transform duration-300 group-hover:scale-110">
               {item.lucide === "constraints" ? (
                 <Scale className="h-8 w-8" style={{ color: item.iconColor }} />
+              ) : item.lucide === "prep" ? (
+                <Wrench className="h-8 w-8" style={{ color: item.iconColor }} />
               ) : item.lucide === "settings" ? (
                 <Settings className="h-8 w-8" style={{ color: item.iconColor }} />
               ) : (
@@ -234,7 +249,7 @@ export function Lobby({ onNavigate, save }: LobbyProps) {
         WASD / 방향키 — 이동 · 공격은 자동 · ESC — 일시정지
       </p>
       <p className="mt-2 text-[11px] text-slate-700">
-        v{GAME_INFO.version} · Icons by {ICON_AUTHORS} (game-icons.net, CC BY 3.0) · Pixel art: Ninja Adventure by Pixel-boy &amp; AAA (CC0) · 리냐·에우로안·천·칼리: Universal LPC (CC BY-SA 3.0)
+        v{GAME_INFO.version} · Icons by {ICON_AUTHORS} (game-icons.net, CC BY 3.0) · Pixel art: Ninja Adventure by Pixel-boy &amp; AAA (CC0) · 리냐: 이 프로젝트 · 에우로안·천·칼리: Universal LPC (CC BY-SA 3.0)
       </p>
 
     </div>

@@ -131,9 +131,13 @@
     "author": "Delapouite",
     "source": "https://game-icons.net/1x1/delapouite/ogre.html"
   },
-  "enemy-eye": {
+    "enemy-eye": {
     "author": "Lorc",
     "source": "https://game-icons.net/1x1/lorc/eyeball.html"
+  },
+  "enemy-lantern": {
+    "author": "Lorc",
+    "source": "https://game-icons.net/1x1/lorc/lantern.html"
   },
   "enemy-lizard": {
     "author": "Lorc",

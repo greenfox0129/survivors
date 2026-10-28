@@ -8,7 +8,7 @@
 //   3) 기본 3칸. 별 특성 선택 확장을 사면 4칸.
 // ============================================================
 
-import type { UpgradeOption } from "@/game/core/types";
+import type { AccessoryType, UpgradeOption, WeaponType } from "@/game/core/types";
 import { EVOLUTIONS, superEvolutionFor } from "@/game/data/evolutions";
 import { weaponLevelEffectAt } from "@/game/weapons/registry";
 import { WeaponManager, weaponName, weaponFormName } from "@/game/systems/WeaponManager";
@@ -16,6 +16,12 @@ import { AccessoryManager, accessoryName } from "@/game/systems/AccessoryManager
 
 /** 레벨업 1회에 보여줄 선택지 수. 별 특성 선택 확장은 4. */
 export const BASE_UPGRADE_CHOICES = 3;
+
+/** 별 봉인과 골드 봉인으로 고른 항목. 획득, 강화, 진화 카드에서 빠진다. */
+export interface UpgradeSeals {
+  weapons: readonly WeaponType[];
+  accessories: readonly AccessoryType[];
+}
 
 /** 카테고리별 가중치 — 0으로 두면 해당 카테고리는 나오지 않는다 */
 const CATEGORY_WEIGHTS = {
@@ -35,11 +41,15 @@ export function pickUpgrades(
   am: AccessoryManager,
   characterId?: string,
   choiceCount = BASE_UPGRADE_CHOICES,
+  seals: UpgradeSeals = { weapons: [], accessories: [] },
 ): UpgradeOption[] {
+  const sealedWeapons = new Set(seals.weapons);
+  const sealedAccessories = new Set(seals.accessories);
   const pool: UpgradeOption[] = [];
 
   // Weapon level-up options (owned, not maxed) — 다음 레벨에서 얻는 효과를 표시
   for (const w of wm.getUpgradeableWeapons()) {
+    if (sealedWeapons.has(w.type)) continue;
     const effect = weaponLevelEffectAt(w, w.level + 1);
     const displayName = weaponFormName(w);
     pool.push({
@@ -54,6 +64,7 @@ export function pickUpgrades(
   // New weapon options (if slots available)
   if (wm.canAddWeapon()) {
     for (const type of wm.getUnownedWeapons()) {
+      if (sealedWeapons.has(type)) continue;
       pool.push({
         kind: "newWeapon",
         label: `${weaponName(type)} 획득`,
@@ -66,6 +77,7 @@ export function pickUpgrades(
   // Weapon evolution options (max level + paired accessory owned)
   const evolvable = wm.getEvolvableWeapons((accType) => am.hasAccessory(accType));
   for (const w of evolvable) {
+    if (sealedWeapons.has(w.type)) continue;
     const evo = EVOLUTIONS[w.type];
     const sup = superEvolutionFor(characterId, w.type);
     pool.push({
@@ -82,6 +94,7 @@ export function pickUpgrades(
 
   // Accessory level-up options (owned, not maxed)
   for (const a of am.getUpgradeableAccessories()) {
+    if (sealedAccessories.has(a.type)) continue;
     pool.push({
       kind: "accessoryLevel",
       label: `${accessoryName(a.type)} 강화 (Lv ${a.level + 1})`,
@@ -94,6 +107,7 @@ export function pickUpgrades(
   // New accessory options (if slots available)
   if (am.canAddAccessory()) {
     for (const type of am.getUnownedAccessories()) {
+      if (sealedAccessories.has(type)) continue;
       pool.push({
         kind: "newAccessory",
         label: `${accessoryName(type)} 획득`,

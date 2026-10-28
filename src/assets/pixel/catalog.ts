@@ -3,7 +3,9 @@
 //
 //  Unit sheets (units/*): 4 columns × 4 rows. Default frame is 16×16 (64×64 sheet).
 //    column = facing (0 down, 1 up, 2 left, 3 right), row = walk frame.
-//    Linya, Euroan, Cheon, and Kali are 32×32 LPC frames (see UNIT_FRAME_PX).
+//    Euroan, Cheon, and Kali are 32×32 LPC frames (see UNIT_FRAME_PX).
+//    Linya is a side view: units/char-linya-run (8×48, faces right) and
+//    units/char-linya-idle (32×32). Left is a horizontal flip. See SIDE_VIEWS.
 //  Faces (faces/*): 38×38 portrait used by the UI.
 //  Strips (proj/*, fx/*, items/*): frames laid out horizontally; the frame width
 //    is listed below and the frame height is the image height.
@@ -18,7 +20,6 @@ export const UNIT_FRAMES = 4;
  * On-screen height still tracks the 16px cast — see UNIT_DRAW_SCALE.
  */
 export const UNIT_FRAME_PX: Record<string, number> = {
-  "units/char-linya": 32,
   "units/char-euroan": 32,
   "units/char-cheon": 32,
   "units/char-kali": 32,
@@ -29,17 +30,31 @@ export const UNIT_FRAME_PX: Record<string, number> = {
  * shorter than the 16px characters. 1.2 matches their on-screen height.
  */
 export const UNIT_DRAW_SCALE: Record<string, number> = {
-  "units/char-linya": 1.2,
   "units/char-euroan": 1.2,
   "units/char-cheon": 1.2,
   "units/char-kali": 1.2,
 };
+
+/**
+ * Characters drawn from a right-facing strip. `sheet` is still `units/char-<id>`
+ * so the rest of the game can ask for the character by one name.
+ * Opaque body is about 30px tall in both pictures, so one scale fits both.
+ */
+export const SIDE_VIEWS: Record<string, { run: string; idle: string; frames: number }> = {
+  "units/char-linya": { run: "units/char-linya-run", idle: "units/char-linya-idle", frames: 8 },
+};
+
+export function sideView(sheet: string): { run: string; idle: string; frames: number } | undefined {
+  return SIDE_VIEWS[sheet];
+}
 
 /** Facing column in a unit sheet. */
 export const FACING = { down: 0, up: 1, left: 2, right: 3 } as const;
 
 /** Frame width (px) of every horizontal strip. Single images use their own width. */
 export const STRIP_FRAME_W: Record<string, number> = {
+  "units/char-linya-run": 48,
+  "units/char-linya-idle": 32,
   "proj/kunai": 14,
   "proj/big-kunai": 35,
   "proj/shuriken": 16,

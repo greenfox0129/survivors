@@ -54,6 +54,8 @@ export interface TraitDef {
   effectLabel: (level: number) => string;
   /** Stars charged for each level. Gold traits leave this unset. */
   starCost?: number;
+  /** Flat gold price. Seals can be bought with this or with stars. */
+  goldCost?: number;
 }
 
 // ---- Characters ----
@@ -257,6 +259,42 @@ export const STAR_TRAITS: TraitDef[] = [
     starCost: 4,
     effectLabel: (lv) => (lv > 0 ? "선택지 4개" : "선택지 3개"),
   },
+  {
+    id: "weaponSeal",
+    name: "무기 봉인",
+    desc: "무기 하나를 고르면 레벨업에 나오지 않습니다.",
+    maxLevel: 1,
+    starCost: 2,
+    effectLabel: (lv) => (lv > 0 ? "무기 하나 제외" : "봉인 없음"),
+  },
+  {
+    id: "accessorySeal",
+    name: "장신구 봉인",
+    desc: "장신구 하나를 고르면 레벨업에 나오지 않습니다.",
+    maxLevel: 1,
+    starCost: 2,
+    effectLabel: (lv) => (lv > 0 ? "장신구 하나 제외" : "봉인 없음"),
+  },
+];
+
+/** Gold-tab seals. Independent from the star seals, so both can be owned. */
+export const GOLD_SEAL_TRAITS: TraitDef[] = [
+  {
+    id: "weaponSealGold",
+    name: "무기 봉인",
+    desc: "무기 하나를 고르면 레벨업에 나오지 않습니다. 별 봉인과 다른 하나를 고릅니다.",
+    maxLevel: 1,
+    goldCost: 50000,
+    effectLabel: (lv) => (lv > 0 ? "무기 하나 제외" : "봉인 없음"),
+  },
+  {
+    id: "accessorySealGold",
+    name: "장신구 봉인",
+    desc: "장신구 하나를 고르면 레벨업에 나오지 않습니다. 별 봉인과 다른 하나를 고릅니다.",
+    maxLevel: 1,
+    goldCost: 50000,
+    effectLabel: (lv) => (lv > 0 ? "장신구 하나 제외" : "봉인 없음"),
+  },
 ];
 
 /** Unreleased star traits. Levels bought in a local build are turned back into stars. */
@@ -332,7 +370,7 @@ export const DEFAULT_OWNED: OwnedCharacter[] = [
 ];
 
 export const DEFAULT_TRAIT_LEVELS: Record<string, number> = Object.fromEntries(
-  [...TRAITS, ...STAR_TRAITS].map((t) => [t.id, 0])
+  [...TRAITS, ...STAR_TRAITS, ...GOLD_SEAL_TRAITS].map((t) => [t.id, 0])
 );
 
 export const DEFAULT_GOLD = 500;
@@ -345,6 +383,8 @@ export interface AchievementDef {
   reward: number; // star currency
   /** faces/enemy-<id> portrait. Weapon achievements leave this unset. */
   enemy?: string;
+  /** Clear the final boss with at least this constraint score. */
+  minScore?: number;
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -416,13 +456,23 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     reward: 1,
     enemy: "finalboss",
   },
+  ...[100, 200, 300].map((score) => ({
+    id: `clear_${score}`,
+    name: `게임 클리어 ${score}`,
+    desc: `제약 점수 ${score} 이상으로 거대 영혼을 쓰러뜨리기`,
+    reward: 1,
+    enemy: "finalboss",
+    minScore: score,
+  })),
 ];
 
 /** Evolution is the held weapon's form. Boss kills count if they died this run. */
 export function isAchievementMet(
   ach: AchievementDef,
   stats: Pick<GameStats, "weapons" | "midBossKilled" | "victory">,
+  constraintScore = 0,
 ): boolean {
+  if (ach.minScore != null) return stats.victory && constraintScore >= ach.minScore;
   if (ach.id === "kill_midboss") return stats.midBossKilled;
   if (ach.id === "kill_finalboss") return stats.victory;
   if (!ach.id.startsWith("evo_")) return false;

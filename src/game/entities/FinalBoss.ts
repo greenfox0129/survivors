@@ -133,6 +133,7 @@ export function createFinalBossState(
     contactTimer: 0,
     shotTimer: 0,
     ranged: false,
+    stationary: false,
     enemyType: "finalboss",
     color: c.color,
     borderColor: c.borderColor,

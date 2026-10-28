@@ -4,13 +4,16 @@
 
 import { CONFIG, xpForLevel } from "@/game/data/config";
 import type { PlayerState } from "@/game/core/types";
+import { sideView } from "@/assets/pixel/catalog";
 import { isLowQuality } from "@/game/render/quality";
 import { getIconSprite, drawSpriteCentered } from "@/game/render/iconSprites";
-import { drawUnit, facingFromVector } from "@/game/render/pixel";
+import { drawSideCharacter, drawUnit, facingFromVector } from "@/game/render/pixel";
 
 /** Source px → world px for the player's 16px walk sheet. */
 const PLAYER_SPRITE_SCALE = 2.25;
 const WALK_FPS = 8;
+/** Linya's run strip has 8 frames, so this is a bit faster than the 4-frame walk. */
+const SIDE_RUN_FPS = 12;
 
 let idCounter = 0;
 
@@ -45,6 +48,7 @@ export function createPlayer(mods?: {
     emblem: mods?.emblem,
     sprite: mods?.sprite,
     facing: 0,
+    side: 1,
     aim: Math.PI / 2,
     walkTime: 0,
     moving: false,
@@ -77,6 +81,7 @@ export function updatePlayer(
   player.moving = len > 0;
   if (player.moving) {
     player.facing = facingFromVector(dx, dy, player.facing);
+    if (dx !== 0) player.side = dx < 0 ? -1 : 1;
     player.aim = Math.atan2(dy, dx);
     player.walkTime += dt;
   }
@@ -126,9 +131,12 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: PlayerState)
 
   // High quality: the character's own pixel sprite (falls through to the circle while loading)
   if (!isLowQuality() && player.sprite) {
-    const frame = player.moving ? Math.floor(player.walkTime * WALK_FPS) : 0;
+    const side = sideView(player.sprite);
+    const frame = player.moving ? Math.floor(player.walkTime * (side ? SIDE_RUN_FPS : WALK_FPS)) : 0;
     // i-frames: classic blink (skip every other 0.1s) instead of a translucent body
-    const drawn = blinking || drawUnit(ctx, player.sprite, player.facing, frame, player.x, player.y - 4, PLAYER_SPRITE_SCALE);
+    const drawn = blinking || (side
+      ? drawSideCharacter(ctx, player.sprite, player.moving, frame, player.side < 0, player.x, player.y - 4, PLAYER_SPRITE_SCALE)
+      : drawUnit(ctx, player.sprite, player.facing, frame, player.x, player.y - 4, PLAYER_SPRITE_SCALE));
     if (drawn) {
       ctx.strokeStyle = "rgba(255,255,255,0.10)";
       ctx.lineWidth = 1;

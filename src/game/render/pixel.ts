@@ -9,7 +9,7 @@
 // ============================================================
 
 import { pixelUrl } from "@/assets/pixel";
-import { STRIP_FRAME_W, UNIT_DRAW_SCALE, UNIT_FRAME, UNIT_FRAME_PX, UNIT_FRAMES } from "@/assets/pixel/catalog";
+import { sideView, STRIP_FRAME_W, UNIT_DRAW_SCALE, UNIT_FRAME, UNIT_FRAME_PX, UNIT_FRAMES } from "@/assets/pixel/catalog";
 
 const images = new Map<string, HTMLImageElement>();
 const tinted = new Map<string, HTMLCanvasElement>();
@@ -129,6 +129,33 @@ export function drawUnit(
   ctx.drawImage(src, facing * framePx, row * framePx, framePx, framePx, Math.round(x - s / 2), Math.round(y - s / 2), s, s);
   ctx.imageSmoothingEnabled = true;
   return true;
+}
+
+/** Opaque body height shared by Linya's run strip and idle frame. */
+const SIDE_BODY_PX = 30;
+
+/**
+ * Right-facing run or idle, flipped when looking left.
+ * `scale` is the same number drawUnit receives: 16 source px become 16×scale world px.
+ * @returns false while the picture is still loading
+ */
+export function drawSideCharacter(
+  ctx: CanvasRenderingContext2D,
+  sheet: string,
+  moving: boolean,
+  frame: number,
+  flipX: boolean,
+  x: number,
+  y: number,
+  scale: number,
+): boolean {
+  const view = sideView(sheet);
+  if (!view) return false;
+  const name = moving ? view.run : view.idle;
+  if (!getPixelImage(name)) return false;
+  const s = UNIT_FRAME * scale;
+  drawShadow(ctx, x, y + s * 0.42, scale);
+  return drawStrip(ctx, name, moving ? frame : 0, x, y, s / SIDE_BODY_PX, 0, flipX);
 }
 
 /** Number of frames in a horizontal strip (1 until the image has loaded). */

@@ -2,7 +2,8 @@
 
 | 폴더/파일 | 내용 |
 |---|---|
-| `screens/Lobby.tsx` | 메뉴 카드 8개(게임 시작·제약·뽑기·캐릭터·특성·도감·업적·설정), 재화·선택 캐릭터, 버전·아이콘 크레딧 |
+| `screens/Lobby.tsx` | 메뉴 카드 9개(게임 시작·정비·제약·뽑기·캐릭터·특성·도감·업적·설정), 재화·선택 캐릭터, 버전·아이콘 크레딧 |
+| `screens/PrepScreen.tsx` | 정비 가챠. 3000G로 다음 한 판의 동행자를 뽑는다. 다시 뽑으면 덮어쓰고 골드는 돌아오지 않는다 |
 | `screens/ConstraintScreen.tsx` | 제약 단계와 점수, 완료 골드 배율 |
 | `screens/SettingsScreen.tsx` | 그래픽·소리·브레스 방향·무기 투명도 (설정은 세이브와 별도) |
 | `screens/GameCanvas.tsx` | 캔버스 + 엔진 생성/정리, 입력, 단계(playing/levelup/paused/gameover), ESC·포커스 상실 일시정지, 골드·업적 정산, 화면 높이 맞춤 |

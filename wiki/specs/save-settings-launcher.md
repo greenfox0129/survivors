@@ -6,7 +6,7 @@
 
 ```ts
 interface SaveData {
-  schemaVersion: number;          // 현재 3
+  schemaVersion: number;          // 현재 5
   gold: number;
   owned: { id, level, stars, memories, breakthrough }[];
   traitLevels: Record<string, number>;
@@ -14,6 +14,7 @@ interface SaveData {
   stars: number;                  // 각성 재화
   completedAchievements: string[];
   constraintLevels: Record<string, number>; // 제약 단계. 0 은 해제
+  companion: { kind, weapon?, weaponLevel? } | null; // 정비 동행자. 시작 시 null
   updatedAt?: number;             // 저장 시각 (실행기 디스크 백업과 비교)
 }
 ```
@@ -25,6 +26,8 @@ interface SaveData {
 | 1 | Bolt 원본 (schemaVersion 필드 없음) |
 | 2 | 캐릭터에 `memories`/`breakthrough` 기본값, 업적 id `max_*` → `evo_*` |
 | 3 | `constraintLevels` 추가. 없으면 전부 해제 |
+| 4 | `prep` 추가. 없으면 아무것도 안 산 상태 |
+| 5 | `prep` 을 지우고 `companion` 추가. 사 둔 보급은 골드로 환불 |
 
 새 변경은 `SAVE_SCHEMA_VERSION` + `MIGRATIONS[n]` 추가. 알 수 없는 미래 버전 세이브는 그대로 두고 기본값만 보충한다.
 

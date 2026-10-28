@@ -45,6 +45,8 @@ type EnemyTypeConfig = {
   unlockedTime: number;
   shape: "circle" | "triangle" | "square" | "diamond" | "hexagon" | "star" | "sprite";
   ranged?: boolean;
+  /** Not in the chase. Fires from where it spawned. */
+  stationary?: boolean;
 };
 
 type EnemyShot = {
@@ -81,15 +83,16 @@ function getWolfImage(): HTMLImageElement | null {
 let idCounter = 1000;
 let spawnTimer = 0;
 let eliteSpawned = 0;
+let lanternSpawned = 0;
+let swarmSpawned = 0;
 
 /** Set from the active run's constraints. */
-let enemyRun = { hp: 1, damage: 1, speed: 1, hpGrowth: 1 };
+let enemyRun = { hp: 1, damage: 1, speed: 1 };
 
 export function setEnemyConstraints(mods: {
   hp: number;
   damage: number;
   speed: number;
-  hpGrowth: number;
 }): void {
   enemyRun = mods;
 }
@@ -98,6 +101,8 @@ export function resetEnemyManager(): void {
   spawnTimer = 0;
   idCounter = 1000;
   eliteSpawned = 0;
+  lanternSpawned = 0;
+  swarmSpawned = 0;
   shots.length = 0;
   resetMidBoss();
   resetFinalBoss();
@@ -110,7 +115,7 @@ export function getEliteSpawned(): number {
 function createEliteEnemy(elapsedTime: number, px: number, py: number): EnemyState {
   const pos = spawnEdgePosition(px, py);
   const ec = CONFIG.elite;
-  const hp = eliteHp(elapsedTime, enemyRun.hpGrowth) * enemyRun.hp;
+  const hp = eliteHp(elapsedTime) * enemyRun.hp;
   const speed = ec.speed * ec.speedMult * enemyRun.speed;
   return {
     id: ++idCounter,
@@ -126,6 +131,7 @@ function createEliteEnemy(elapsedTime: number, px: number, py: number): EnemySta
     contactTimer: 0,
     shotTimer: 0,
     ranged: false,
+    stationary: false,
     enemyType: "elite",
     color: ec.color,
     borderColor: ec.borderColor,
@@ -145,7 +151,7 @@ function createEliteEnemy(elapsedTime: number, px: number, py: number): EnemySta
 function createMidBoss(elapsedTime: number, px: number, py: number): EnemyState {
   const pos = spawnEdgePosition(px, py);
   const c = CONFIG.midBoss;
-  const hp = midBossHp(elapsedTime, enemyRun.hpGrowth) * enemyRun.hp;
+  const hp = midBossHp(elapsedTime) * enemyRun.hp;
   const speed = c.speed * enemyRun.speed;
   return createMidBossState(
     ++idCounter,
@@ -160,7 +166,7 @@ function createMidBoss(elapsedTime: number, px: number, py: number): EnemyState 
 
 function createFinalBoss(elapsedTime: number, px: number, py: number): EnemyState {
   const pos = spawnEdgePosition(px, py);
-  const hp = finalBossHp(elapsedTime, enemyRun.hpGrowth) * enemyRun.hp;
+  const hp = finalBossHp(elapsedTime) * enemyRun.hp;
   const damage = CONFIG.finalBoss.damage * enemyDamageScale(elapsedTime) * CONFIG.elite.damageMult * enemyRun.damage;
   return createFinalBossState(++idCounter, pos.x, pos.y, hp, damage, px, py);
 }
@@ -181,6 +187,7 @@ function spawnEdgePosition(px: number, py: number): { x: number; y: number } {
 function getAvailableTypes(elapsedTime: number): readonly EnemyTypeConfig[] {
   const window = CONFIG.enemy.activeSeconds;
   return CONFIG.enemyTypes.filter((t) => {
+    if (t.spawnWeight <= 0) return false;
     if (elapsedTime < t.unlockedTime) return false;
     return elapsedTime < t.unlockedTime + window;
   });
@@ -203,7 +210,7 @@ function createEnemy(elapsedTime: number, px: number, py: number): EnemyState | 
   if (!t) return null;
   const pos = spawnEdgePosition(px, py);
   const variance = 0.8 + Math.random() * 0.4;
-  const hp = t.hp * enemyHpScale(elapsedTime, enemyRun.hpGrowth) * enemyRun.hp;
+  const hp = t.hp * enemyHpScale(elapsedTime) * enemyRun.hp;
   return {
     id: ++idCounter,
     x: pos.x,
@@ -218,6 +225,7 @@ function createEnemy(elapsedTime: number, px: number, py: number): EnemyState | 
     contactTimer: 0,
     shotTimer: t.ranged ? Math.random() * CONFIG.ranged.cooldown : 0,
     ranged: t.ranged === true,
+    stationary: t.stationary === true,
     enemyType: t.id,
     color: t.color,
     borderColor: t.borderColor,
@@ -231,6 +239,100 @@ function createEnemy(elapsedTime: number, px: number, py: number): EnemyState | 
     gemDropped: false,
     facing: 0,
   };
+}
+
+function createLantern(elapsedTime: number, px: number, py: number): EnemyState | null {
+  const t = CONFIG.enemyTypes.find((type) => type.id === "lantern");
+  if (!t) return null;
+  const pos = spawnEdgePosition(px, py);
+  const hp = t.hp * enemyHpScale(elapsedTime) * enemyRun.hp;
+  return {
+    id: ++idCounter,
+    x: pos.x,
+    y: pos.y,
+    radius: t.radius,
+    hp,
+    maxHp: hp,
+    alive: true,
+    speed: 0,
+    baseSpeed: 0,
+    damage: t.damage * enemyDamageScale(elapsedTime) * enemyRun.damage,
+    contactTimer: 0,
+    shotTimer: Math.random() * CONFIG.ranged.cooldown,
+    ranged: true,
+    stationary: true,
+    enemyType: t.id,
+    color: t.color,
+    borderColor: t.borderColor,
+    shape: t.shape,
+    spriteFrame: 0,
+    spriteTimer: 0,
+    facingRight: true,
+    dying: false,
+    dyingTimer: 0,
+    isElite: false,
+    gemDropped: false,
+    facing: 0,
+  };
+}
+
+/** Filled disk. Index 0 is the center; the rest spiral out to `radius`. */
+function diskOffset(index: number, count: number, radius: number): { x: number; y: number } {
+  if (index <= 0 || count <= 1) return { x: 0, y: 0 };
+  const r = radius * Math.sqrt(index / (count - 1));
+  const theta = index * Math.PI * (3 - Math.sqrt(5));
+  return { x: Math.cos(theta) * r, y: Math.sin(theta) * r };
+}
+
+/** Bats share one speed and one heading so the disk does not stretch. */
+function createSwarm(elapsedTime: number, px: number, py: number): EnemyState[] {
+  const t = CONFIG.enemyTypes.find((type) => type.id === "bat");
+  if (!t) return [];
+  const edge = spawnEdgePosition(px, py);
+  const outX = edge.x - px;
+  const outY = edge.y - py;
+  const out = Math.hypot(outX, outY) || 1;
+  const cx = edge.x + (outX / out) * CONFIG.swarm.radius;
+  const cy = edge.y + (outY / out) * CONFIG.swarm.radius;
+  const course = Math.atan2(py - cy, px - cx);
+  const hp = t.hp * CONFIG.swarm.hpMult * enemyHpScale(elapsedTime) * enemyRun.hp;
+  // The 0.8–1.2 roll is for loose trash. A shared speed keeps this disk rigid.
+  const speed = t.speed * CONFIG.swarm.speedMult * enemyRun.speed;
+  const damage = t.damage * enemyDamageScale(elapsedTime) * enemyRun.damage;
+  const bats: EnemyState[] = [];
+  for (let i = 0; i < CONFIG.swarm.count; i++) {
+    const off = diskOffset(i, CONFIG.swarm.count, CONFIG.swarm.radius);
+    bats.push({
+      id: ++idCounter,
+      x: cx + off.x,
+      y: cy + off.y,
+      radius: t.radius,
+      hp,
+      maxHp: hp,
+      alive: true,
+      speed,
+      baseSpeed: speed,
+      damage,
+      contactTimer: 0,
+      shotTimer: 0,
+      ranged: false,
+      stationary: false,
+      enemyType: t.id,
+      color: t.color,
+      borderColor: t.borderColor,
+      shape: t.shape,
+      spriteFrame: 0,
+      spriteTimer: 0,
+      facingRight: true,
+      dying: false,
+      dyingTimer: 0,
+      isElite: false,
+      gemDropped: false,
+      facing: 0,
+      course,
+    });
+  }
+  return bats;
 }
 
 export function updateEnemies(
@@ -268,6 +370,33 @@ export function updateEnemies(
     }
   }
 
+  // From 5:00, one lantern every 10s. It is not part of the random pool or the cap.
+  const turretStart = CONFIG.turret.spawnAt;
+  const turretInterval = CONFIG.turret.spawnInterval;
+  if (turretInterval > 0 && _elapsedTime >= turretStart) {
+    const due = Math.floor((_elapsedTime - turretStart) / turretInterval) + 1;
+    while (lanternSpawned < due) {
+      lanternSpawned++;
+      const at = turretStart + (lanternSpawned - 1) * turretInterval;
+      if (getFinalBossSpawned() > 0 || at >= CONFIG.finalBoss.spawnAt) continue;
+      const spawned = createLantern(_elapsedTime, player.x, player.y);
+      if (spawned) enemies.push(spawned);
+    }
+  }
+
+  // From 1:10, twenty bats in a disk. Not part of the random pool or the cap.
+  const swarmStart = CONFIG.swarm.spawnAt;
+  const swarmInterval = CONFIG.swarm.spawnInterval;
+  if (swarmInterval > 0 && _elapsedTime >= swarmStart) {
+    const due = Math.floor((_elapsedTime - swarmStart) / swarmInterval) + 1;
+    while (swarmSpawned < due) {
+      swarmSpawned++;
+      const at = swarmStart + (swarmSpawned - 1) * swarmInterval;
+      if (getFinalBossSpawned() > 0 || at >= CONFIG.finalBoss.spawnAt) continue;
+      for (const bat of createSwarm(_elapsedTime, player.x, player.y)) enemies.push(bat);
+    }
+  }
+
   for (const e of enemies) {
     if (!e.alive) continue;
 
@@ -285,32 +414,37 @@ export function updateEnemies(
     const dx = player.x - e.x;
     const dy = player.y - e.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    e.facing = facingFromVector(dx, dy, e.facing);
 
-    // Sprite animation updates. Wolves die instantly, same as the other enemies.
-    if (e.shape === "sprite") {
-      // Walk animation
-      e.spriteTimer += dt;
-      if (e.spriteTimer >= WOLF_FRAME_DURATION) {
-        e.spriteTimer -= WOLF_FRAME_DURATION;
-        e.spriteFrame = (e.spriteFrame + 1) % WOLF_COLS;
-      }
-
-      // Determine facing direction from movement
-      if (Math.abs(dx) > 1) {
-        e.facingRight = dx > 0;
-      }
-    }
-
-    if (dist > 0.1) {
-      const chasing = !e.ranged || dist > CONFIG.ranged.range;
+    if (e.course !== undefined) {
+      const cdx = Math.cos(e.course);
+      const cdy = Math.sin(e.course);
+      e.facing = facingFromVector(cdx, cdy, e.facing);
       const step = e.speed * dt;
-      if (chasing) {
-        e.x += (dx / dist) * step;
-        e.y += (dy / dist) * step;
-      } else if (dist < CONFIG.ranged.backup) {
-        e.x -= (dx / dist) * step;
-        e.y -= (dy / dist) * step;
+      e.x += cdx * step;
+      e.y += cdy * step;
+    } else {
+      e.facing = facingFromVector(dx, dy, e.facing);
+
+      // Sprite animation updates. Wolves die instantly, same as the other enemies.
+      if (e.shape === "sprite") {
+        e.spriteTimer += dt;
+        if (e.spriteTimer >= WOLF_FRAME_DURATION) {
+          e.spriteTimer -= WOLF_FRAME_DURATION;
+          e.spriteFrame = (e.spriteFrame + 1) % WOLF_COLS;
+        }
+        if (Math.abs(dx) > 1) e.facingRight = dx > 0;
+      }
+
+      if (!e.stationary && dist > 0.1) {
+        const chasing = !e.ranged || dist > CONFIG.ranged.range;
+        const step = e.speed * dt;
+        if (chasing) {
+          e.x += (dx / dist) * step;
+          e.y += (dy / dist) * step;
+        } else if (dist < CONFIG.ranged.backup) {
+          e.x -= (dx / dist) * step;
+          e.y -= (dy / dist) * step;
+        }
       }
     }
     if (e.ranged) tryShoot(e, dx, dy, dist, dt);
@@ -337,7 +471,8 @@ function shotDamage(e: EnemyState): number {
 function tryShoot(e: EnemyState, dx: number, dy: number, dist: number, dt: number): void {
   if (e.shotTimer > 0) e.shotTimer -= dt;
   const band = CONFIG.ranged;
-  if (dist > band.range || e.shotTimer > 0 || shots.length >= band.maxShots) return;
+  const range = e.stationary ? CONFIG.turret.range : band.range;
+  if (dist > range || e.shotTimer > 0 || shots.length >= band.maxShots) return;
   const aim = dist > 0.1 ? dist : 1;
   const scale = band.shotSpeed / aim;
   shots.push({

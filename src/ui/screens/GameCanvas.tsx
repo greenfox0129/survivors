@@ -53,6 +53,7 @@ function initialStats(save: SaveData): GameStats {
     finalBoss: false,
     victory: false,
     failedElite: false,
+    companionLabel: null,
     damageTaken: 0,
     healing: 0,
     damageDealt: {},
@@ -125,7 +126,7 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
         const unlocked: AchievementDef[] = [];
         for (const ach of ACHIEVEMENTS) {
           if (alreadyCompleted.has(ach.id)) continue;
-          if (isAchievementMet(ach, s)) unlocked.push(ach);
+          if (isAchievementMet(ach, s, score)) unlocked.push(ach);
         }
         const starsEarned = unlocked.reduce((sum, a) => sum + a.reward, 0);
 
@@ -134,6 +135,7 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
           gold: saveRef.current.gold + earned,
           stars: saveRef.current.stars + starsEarned,
           completedAchievements: [...saveRef.current.completedAchievements, ...unlocked.map((a) => a.id)],
+          companion: null,
         };
         saveRef.current = nextSave;
         saveSave(nextSave);
@@ -143,8 +145,18 @@ export function GameCanvas({ onExit, save }: { onExit: () => void; save: SaveDat
     }, saveRef.current);
     engineRef.current = engine;
     engine.start();
+    // Defer the wipe so a dev remount still constructs against the hired companion.
+    // The engine already copied the roll. A refresh after this cannot reuse it.
+    const consumeTimer = window.setTimeout(() => {
+      if (!saveRef.current.companion) return;
+      saveRef.current.companion = null;
+      saveSave(saveRef.current);
+    }, 0);
 
-    return () => engine.stop();
+    return () => {
+      window.clearTimeout(consumeTimer);
+      engine.stop();
+    };
   }, [setPhase]);
 
   const pauseGame = useCallback(() => {

@@ -7,6 +7,7 @@ import { AchievementsScreen } from "@/ui/screens/AchievementsScreen";
 import { CharacterScreen } from "@/ui/screens/CharacterScreen";
 import { TraitsScreen } from "@/ui/screens/TraitsScreen";
 import { ConstraintScreen } from "@/ui/screens/ConstraintScreen";
+import { PrepScreen } from "@/ui/screens/PrepScreen";
 import { SettingsScreen } from "@/ui/screens/SettingsScreen";
 import { loadSave, saveSave, type SaveData } from "@/game/core/storage";
 import { playIngameBgm, playLobbyBgm } from "@/ui/bgm";
@@ -52,6 +53,9 @@ function App() {
       )}
       {screen === "constraints" && (
         <ConstraintScreen onBack={goLobby} save={save} onUpdate={handleSaveUpdate} />
+      )}
+      {screen === "prep" && (
+        <PrepScreen onBack={goLobby} save={save} onUpdate={handleSaveUpdate} />
       )}
       {screen === "settings" && <SettingsScreen onBack={goLobby} />}
       {screen === "codex" && <CodexScreen onBack={goLobby} />}

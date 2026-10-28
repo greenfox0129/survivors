@@ -9,6 +9,10 @@
 // ============================================================
 
 import { normalizeConstraintLevels } from "@/game/data/constraints";
+import { normalizeCompanion, type CompanionRoll } from "@/game/data/companions";
+import { allAccessoryTypes } from "@/game/systems/AccessoryManager";
+import { allWeaponTypes } from "@/game/systems/WeaponManager";
+import type { AccessoryType, WeaponType } from "@/game/core/types";
 import {
   DEFAULT_GOLD,
   DEFAULT_OWNED,
@@ -22,7 +26,14 @@ const STORAGE_KEY = "vs_proto_save";
 export const SAVE_STORAGE_KEY = STORAGE_KEY;
 
 /** 현재 세이브 스키마 버전 */
-export const SAVE_SCHEMA_VERSION = 3;
+export const SAVE_SCHEMA_VERSION = 8;
+
+export type SealPay = "gold" | "star";
+
+export interface SealPayment {
+  weaponSeal: SealPay | null;
+  accessorySeal: SealPay | null;
+}
 
 export interface SaveData {
   schemaVersion: number;
@@ -34,6 +45,16 @@ export interface SaveData {
   completedAchievements: string[];
   /** 제약 단계. 키는 constraints.ts 의 id, 값은 0(해제)부터. */
   constraintLevels: Record<string, number>;
+  /** 정비에서 뽑은 동행자. 판이 시작되면 null. */
+  companion: CompanionRoll | null;
+  /** 별 봉인으로 고른 무기. 레벨이 0이면 무시된다. */
+  sealedWeapon: WeaponType | null;
+  /** 골드 봉인으로 고른 무기. 별 봉인과 다른 하나다. */
+  sealedWeaponGold: WeaponType | null;
+  /** 별 봉인으로 고른 장신구. 레벨이 0이면 무시된다. */
+  sealedAccessory: AccessoryType | null;
+  /** 골드 봉인으로 고른 장신구. 별 봉인과 다른 하나다. */
+  sealedAccessoryGold: AccessoryType | null;
   /** 마지막 저장 시각(ms) — 원클릭 실행기의 디스크 백업과 비교할 때 사용 */
   updatedAt?: number;
 }
@@ -60,6 +81,63 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
   },
   // v2 → v3: 로비 제약. 없는 세이브는 전부 해제.
   2: (raw) => ({ ...raw, constraintLevels: raw.constraintLevels ?? {} }),
+  // v3 → v4: 한 판짜리 정비 보급. 곧 동행자로 바뀌며 환불된다.
+  3: (raw) => ({ ...raw, prep: raw.prep ?? {} }),
+  // v4 → v5: 보급 4종을 지우고 동행자 가챠로 바꾼다. 사 둔 보급은 골드로 돌려준다.
+  4: (raw) => {
+    const prep = raw.prep;
+    let gold = typeof raw.gold === "number" ? raw.gold : 0;
+    if (prep && typeof prep === "object") {
+      const costs: Record<string, number> = { hp: 200, power: 250, speed: 200, study: 200 };
+      const bag = prep as Record<string, unknown>;
+      for (const id of Object.keys(costs)) {
+        if (bag[id] === 1) gold += costs[id];
+      }
+    }
+    return { ...raw, gold, companion: null };
+  },
+  // v5 → v6: 별 특성으로 무기·장신구를 하나씩 봉인할 수 있다.
+  5: (raw) => ({ ...raw, sealedWeapon: null, sealedAccessory: null }),
+  // v6 → v7: 같은 봉인을 골드로도 산다. 이미 산 것은 별로 낸 것이다.
+  6: (raw) => {
+    const levels = raw.traitLevels && typeof raw.traitLevels === "object"
+      ? (raw.traitLevels as Record<string, unknown>)
+      : {};
+    const paid = (id: string): SealPay | null =>
+      typeof levels[id] === "number" && (levels[id] as number) > 0 ? "star" : null;
+    return {
+      ...raw,
+      sealPayment: { weaponSeal: paid("weaponSeal"), accessorySeal: paid("accessorySeal") },
+    };
+  },
+  // v7 → v8: 별 봉인과 골드 봉인은 서로 다른 칸이다. 둘 다 사면 두 개를 막는다.
+  7: (raw) => {
+    const levels = raw.traitLevels && typeof raw.traitLevels === "object"
+      ? { ...(raw.traitLevels as Record<string, unknown>) }
+      : {};
+    const pay = raw.sealPayment && typeof raw.sealPayment === "object"
+      ? (raw.sealPayment as Record<string, unknown>)
+      : {};
+    const split = (starId: string, goldId: string, value: unknown) => {
+      if (pay[starId] === "gold" && typeof value === "string") {
+        levels[starId] = 0;
+        levels[goldId] = 1;
+        return { star: null, gold: value };
+      }
+      levels[goldId] = levels[goldId] ?? 0;
+      return { star: value ?? null, gold: null };
+    };
+    const weapon = split("weaponSeal", "weaponSealGold", raw.sealedWeapon);
+    const accessory = split("accessorySeal", "accessorySealGold", raw.sealedAccessory);
+    return {
+      ...raw,
+      traitLevels: levels,
+      sealedWeapon: weapon.star,
+      sealedWeaponGold: weapon.gold,
+      sealedAccessory: accessory.star,
+      sealedAccessoryGold: accessory.gold,
+    };
+  },
 };
 
 function defaultSave(): SaveData {
@@ -72,6 +150,11 @@ function defaultSave(): SaveData {
     stars: 0,
     completedAchievements: [...DEFAULT_COMPLETED_ACHIEVEMENTS],
     constraintLevels: normalizeConstraintLevels(undefined),
+    companion: null,
+    sealedWeapon: null,
+    sealedWeaponGold: null,
+    sealedAccessory: null,
+    sealedAccessoryGold: null,
   };
 }
 
@@ -122,7 +205,17 @@ function normalize(raw: RawSave): SaveData {
     stars: traits.stars,
     completedAchievements: parsed.completedAchievements ?? base.completedAchievements,
     constraintLevels: normalizeConstraintLevels(parsed.constraintLevels ?? raw.constraintLevels),
+    companion: normalizeCompanion(parsed.companion ?? raw.companion),
+    sealedWeapon: sealId(parsed.sealedWeapon, allWeaponTypes(), traits.traitLevels.weaponSeal ?? 0),
+    sealedWeaponGold: sealId(parsed.sealedWeaponGold, allWeaponTypes(), traits.traitLevels.weaponSealGold ?? 0),
+    sealedAccessory: sealId(parsed.sealedAccessory, allAccessoryTypes(), traits.traitLevels.accessorySeal ?? 0),
+    sealedAccessoryGold: sealId(parsed.sealedAccessoryGold, allAccessoryTypes(), traits.traitLevels.accessorySealGold ?? 0),
   };
+}
+
+function sealId<T extends string>(value: unknown, allowed: readonly T[], level: number): T | null {
+  if (level <= 0 || typeof value !== "string") return null;
+  return allowed.includes(value as T) ? (value as T) : null;
 }
 
 export function loadSave(): SaveData {

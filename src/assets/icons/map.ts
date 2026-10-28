@@ -34,6 +34,10 @@ const TRAIT_ICONS: Record<string, string> = {
   greed: "trait-greed",
   reroll: "ui-reroll",
   extraChoice: "ui-upgrade",
+  weaponSeal: "menu-traits",
+  accessorySeal: "menu-traits",
+  weaponSealGold: "menu-traits",
+  accessorySealGold: "menu-traits",
 };
 
 export function traitIcon(traitId: string): string {
