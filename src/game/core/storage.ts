@@ -18,6 +18,7 @@ import {
   DEFAULT_OWNED,
   DEFAULT_TRAIT_LEVELS,
   DEFAULT_COMPLETED_ACHIEVEMENTS,
+  MAX_IMPRINT,
   RETIRED_STAR_TRAITS,
   type OwnedCharacter,
 } from "@/game/data/progression";
@@ -26,7 +27,7 @@ const STORAGE_KEY = "vs_proto_save";
 export const SAVE_STORAGE_KEY = STORAGE_KEY;
 
 /** 현재 세이브 스키마 버전 */
-export const SAVE_SCHEMA_VERSION = 8;
+export const SAVE_SCHEMA_VERSION = 9;
 
 export type SealPay = "gold" | "star";
 
@@ -138,6 +139,14 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
       sealedAccessoryGold: accessory.gold,
     };
   },
+  // v8 → v9: 4돌파 뒤 기억으로 사는 각인. 없는 세이브는 0.
+  8: (raw) => {
+    const owned = Array.isArray(raw.owned) ? (raw.owned as Partial<OwnedCharacter>[]) : undefined;
+    return {
+      ...raw,
+      owned: owned?.map((o) => ({ ...o, imprint: o.imprint ?? 0 })),
+    };
+  },
 };
 
 function defaultSave(): SaveData {
@@ -200,6 +209,7 @@ function normalize(raw: RawSave): SaveData {
       ...o,
       memories: o.memories ?? 0,
       breakthrough: o.breakthrough ?? 0,
+      imprint: Math.min(MAX_IMPRINT, Math.max(0, Math.floor(o.imprint ?? 0))),
     })),
     traitLevels: traits.traitLevels,
     stars: traits.stars,

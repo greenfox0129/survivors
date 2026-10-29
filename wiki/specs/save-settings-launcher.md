@@ -6,9 +6,9 @@
 
 ```ts
 interface SaveData {
-  schemaVersion: number;          // 현재 5
+  schemaVersion: number;          // 현재 9
   gold: number;
-  owned: { id, level, stars, memories, breakthrough }[];
+  owned: { id, level, stars, memories, breakthrough, imprint }[];
   traitLevels: Record<string, number>;
   selectedCharacter: string;
   stars: number;                  // 각성 재화
@@ -28,6 +28,10 @@ interface SaveData {
 | 3 | `constraintLevels` 추가. 없으면 전부 해제 |
 | 4 | `prep` 추가. 없으면 아무것도 안 산 상태 |
 | 5 | `prep` 을 지우고 `companion` 추가. 사 둔 보급은 골드로 환불 |
+| 6 | 별 봉인 `sealedWeapon` / `sealedAccessory` |
+| 7 | 봉인을 골드로도 산 기록을 `sealPayment` 에 남김 |
+| 8 | 별 봉인과 골드 봉인을 다른 칸으로 나눔 |
+| 9 | 캐릭터 `imprint` 추가. 없으면 0 |
 
 새 변경은 `SAVE_SCHEMA_VERSION` + `MIGRATIONS[n]` 추가. 알 수 없는 미래 버전 세이브는 그대로 두고 기본값만 보충한다.
 

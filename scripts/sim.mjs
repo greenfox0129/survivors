@@ -35,7 +35,7 @@ const fail = (msg) => failures.push(msg);
 
 try {
   const { GameEngine } = await server.ssrLoadModule("/src/game/core/GameEngine.ts");
-  const { CHARACTERS } = await server.ssrLoadModule("/src/game/data/progression.ts");
+  const { CHARACTERS, imprintTotals } = await server.ssrLoadModule("/src/game/data/progression.ts");
   const { CONFIG, enemyCap, eliteHp, enemyHpScale, midBossHp, finalBossHp, regularSpawnInterval, specialDropChance } = await server.ssrLoadModule("/src/game/data/config.ts");
   const atOneMinute = 0.8 * 0.98 ** 60;
   if (
@@ -45,6 +45,11 @@ try {
   ) {
     fail(`spawn interval ${regularSpawnInterval(0)}/${regularSpawnInterval(60)}/${regularSpawnInterval(120)}`);
   }
+  const marks = imprintTotals([
+    { id: "berserker", breakthrough: 4, imprint: 3 },
+    { id: "guardian", breakthrough: 3, imprint: 3 },
+  ]);
+  if (marks.damage !== 0.15 || marks.hp !== 0) fail(`imprint ${JSON.stringify(marks)}`);
   if (enemyCap(0) !== 120 || enemyCap(60) !== 240 || enemyCap(120) !== 360 || enemyCap(30) !== 180) {
     fail(`enemy cap curve ${enemyCap(0)}/${enemyCap(30)}/${enemyCap(60)}/${enemyCap(120)}`);
   }

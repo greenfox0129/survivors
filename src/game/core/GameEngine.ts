@@ -138,7 +138,7 @@ export class GameEngine {
     this.constraints = resolveRunConstraints(this.save?.constraintLevels);
     this.modifiers = save ? computeModifiers(save) : computeModifiers({
       gold: 0,
-      owned: [{ id: "survivor", level: 1, stars: 0, memories: 0, breakthrough: 0 }],
+      owned: [{ id: "survivor", level: 1, stars: 0, memories: 0, breakthrough: 0, imprint: 0 }],
       traitLevels: {},
       selectedCharacter: "survivor",
     } as SaveData);

@@ -41,7 +41,7 @@ function processPick(save: SaveData, picked: CharacterDef): {
     );
     return { newSave: { ...save, owned: newOwned }, isDupe: true, memoriesGained: DUPE_MEMORY_REWARD };
   }
-  const newOwned = [...save.owned, { id: picked.id, level: 1, stars: 0, memories: 0, breakthrough: 0 }];
+  const newOwned = [...save.owned, { id: picked.id, level: 1, stars: 0, memories: 0, breakthrough: 0, imprint: 0 }];
   return { newSave: { ...save, owned: newOwned }, isDupe: false, memoriesGained: 0 };
 }
 

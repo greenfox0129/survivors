@@ -19,7 +19,7 @@ CONFIG.elite.spawnInterval = 6; // in-memory only: get an elite on screen quickl
 const save: SaveData = {
   schemaVersion: 2,
   gold: 0,
-  owned: [{ id: params.get("char") ?? "survivor", level: 5, stars: 3, memories: 0, breakthrough: 4 }],
+  owned: [{ id: params.get("char") ?? "survivor", level: 5, stars: 3, memories: 0, breakthrough: 4, imprint: 0 }],
   traitLevels: {},
   selectedCharacter: params.get("char") ?? "survivor",
   stars: 0,

@@ -12,7 +12,11 @@ import {
   characterTotalStars,
   breakthroughMemoriesSpent,
   breakthroughMemoryCost,
+  imprintLabel,
+  imprintMemoriesSpent,
+  imprintMemoryCost,
   MAX_BREAKTHROUGH,
+  MAX_IMPRINT,
   ACHIEVEMENTS,
   type CharacterDef,
   type OwnedCharacter,
@@ -45,8 +49,10 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
   const def = getCharDef(selectedId);
   const refundAmount = owned ? characterTotalSpent(owned.level) : 0;
   const refundStars = owned ? characterTotalStars(owned.stars) : 0;
-  const refundMemories = owned ? breakthroughMemoriesSpent(owned.breakthrough) : 0;
-  const canReset = owned !== undefined && (owned.level > 1 || owned.stars > 0 || owned.breakthrough > 0);
+  const refundMemories = owned
+    ? breakthroughMemoriesSpent(owned.breakthrough) + imprintMemoriesSpent(owned.imprint ?? 0)
+    : 0;
+  const canReset = owned !== undefined && (owned.level > 1 || owned.stars > 0 || owned.breakthrough > 0 || (owned.imprint ?? 0) > 0);
 
   function handleSelect(id: string) {
     setSelectedId(id);
@@ -76,7 +82,7 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
     if (!owned || !canReset) return;
     const newOwned = save.owned.map((o) =>
       o.id === owned.id
-        ? { ...o, level: 1, stars: 0, breakthrough: 0, memories: o.memories + refundMemories }
+        ? { ...o, level: 1, stars: 0, breakthrough: 0, imprint: 0, memories: o.memories + refundMemories }
         : o
     );
     onUpdate({ ...save, gold: save.gold + refundAmount, stars: save.stars + refundStars, owned: newOwned });
@@ -89,6 +95,18 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
     if (owned.memories < cost) return;
     const newOwned = save.owned.map((o) =>
       o.id === owned.id ? { ...o, memories: o.memories - cost, breakthrough: o.breakthrough + 1 } : o
+    );
+    onUpdate({ ...save, owned: newOwned });
+  }
+
+  function handleImprint() {
+    if (!owned || owned.breakthrough < MAX_BREAKTHROUGH) return;
+    const rank = owned.imprint ?? 0;
+    if (rank >= MAX_IMPRINT) return;
+    const cost = imprintMemoryCost(rank);
+    if (owned.memories < cost) return;
+    const newOwned = save.owned.map((o) =>
+      o.id === owned.id ? { ...o, memories: o.memories - cost, imprint: rank + 1 } : o
     );
     onUpdate({ ...save, owned: newOwned });
   }
@@ -415,6 +433,45 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
                     <span className="text-violet-300 text-sm font-bold">최대 돌파 달성</span>
                   </div>
                 )}
+                {owned.breakthrough < MAX_BREAKTHROUGH ? (
+                  <p className="mt-3 text-xs text-slate-500">
+                    4돌파 후 기억으로 각인을 남길 수 있다. 모든 캐릭터에게 적용된다.
+                  </p>
+                ) : def && (
+                  <div className="mt-3 border-t border-violet-800/40 pt-3">
+                    <div className="mb-2 flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-violet-200">각인</h3>
+                      <span className="ml-auto text-xs text-slate-500">모든 캐릭터에게 적용</span>
+                    </div>
+                    <div className="mb-2 flex gap-1.5">
+                      {Array.from({ length: MAX_IMPRINT }, (_, i) => (
+                        <div
+                          key={i}
+                          className={`h-2 flex-1 rounded-full ${(owned.imprint ?? 0) > i ? "bg-violet-400" : "bg-slate-800"}`}
+                        />
+                      ))}
+                    </div>
+                    <p className="mb-2 text-xs text-violet-200/80">{imprintLabel(def, owned.imprint ?? 0)}</p>
+                    {(owned.imprint ?? 0) < MAX_IMPRINT ? (
+                      <button
+                        onClick={handleImprint}
+                        disabled={owned.memories < imprintMemoryCost(owned.imprint ?? 0)}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-violet-700 bg-violet-900/40 px-4 py-2.5
+                                   text-sm font-semibold text-violet-200 transition-all
+                                   hover:border-violet-500 hover:bg-violet-800/40 active:scale-[0.98]
+                                   disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        각인 {(owned.imprint ?? 0) + 1}/{MAX_IMPRINT}
+                        <span className="flex items-center gap-1 font-mono text-xs text-violet-300">
+                          <GameIcon name={UI_ICONS.memory} size={12} />
+                          {imprintMemoryCost(owned.imprint ?? 0)}
+                        </span>
+                      </button>
+                    ) : (
+                      <p className="text-center text-sm font-bold text-violet-300">각인 완료</p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -460,7 +517,7 @@ export function CharacterScreen({ onBack, save, onUpdate }: CharacterScreenProps
               </button>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed mb-1">
-              {def?.name}의 레벨, 각성, 돌파를 초기화합니다.
+              {def?.name}의 레벨, 각성, 돌파, 각인을 초기화합니다.
             </p>
             <p className="text-slate-400 text-sm leading-relaxed mb-4">
               사용한 골드, 별, 기억을 전액 돌려받습니다.

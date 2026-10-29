@@ -340,9 +340,17 @@ try {
         ["캐릭터 레벨업 (L→L+1)", `100 × L G (최대 Lv10, 레벨당 피해 +3%)`],
         ["각성(별) 1단계", `별 ${P.STAR_UP_STAR_COST}개 (최대 5성, 별당 HP·속도·피해 +5%)`],
         ["돌파 필요 기억", P.BREAKTHROUGH_MEMORY_COSTS.map((c, i) => `${i}→${i + 1}: ${c}`).join(" · ")],
+        ["각인", `4돌파 후 기억 ${P.IMPRINT_MEMORY_COST} × ${P.MAX_IMPRINT}단계. 효과는 모든 캐릭터`],
         ["중복 뽑기 보상", `기억 +${P.DUPE_MEMORY_REWARD}`],
         ["돌파 효과", "1: HP+10%·피해+5%·속도+5% / 2: XP·흡수 +30% / 3: 패시브 강화 / 4: 진화 짝 장신구를 들고 시작"],
       ],
+    ),
+    "",
+    "## 각인 (4돌파 후, 모든 캐릭터)",
+    "",
+    table(
+      ["캐릭터", "1단계", "3단계"],
+      P.CHARACTERS.map((c) => [c.name, P.imprintLabel(c, 1), P.imprintLabel(c, P.MAX_IMPRINT)]),
     ),
     "",
   ].join("\n");

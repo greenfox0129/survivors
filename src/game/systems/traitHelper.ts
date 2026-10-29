@@ -3,7 +3,7 @@
 //  Applies character stats + trait bonuses to game values
 // ============================================================
 
-import { CHARACTERS, type PassiveType } from "@/game/data/progression";
+import { CHARACTERS, imprintTotals, type PassiveType } from "@/game/data/progression";
 import { EVOLUTIONS } from "@/game/data/evolutions";
 import type { AccessoryType, WeaponType } from "@/game/core/types";
 import type { SaveData } from "@/game/core/storage";
@@ -113,6 +113,15 @@ export function computeModifiers(save: SaveData): GameModifiers {
       startAccessory = evo.pairedAccessory;
     }
   }
+
+  // Imprints are bought per character after 4 breakthrough, then apply to everyone.
+  const imprint = imprintTotals(save.owned);
+  hpMult *= 1 + imprint.hp;
+  damageMult *= 1 + imprint.damage;
+  speedMult *= 1 + imprint.speed;
+  cooldownMult *= 1 - imprint.haste;
+  pickupRangeMult *= 1 + imprint.pickup;
+  xpMult *= 1 + imprint.xp;
 
   return {
     hpMult,

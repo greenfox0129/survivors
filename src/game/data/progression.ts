@@ -35,6 +35,16 @@ export interface CharacterDef {
   unlockAchievement?: string;
   passive: PassiveType;
   passiveDesc: string;
+  /** After 4 breakthrough, memories buy this. It applies to every character. */
+  imprint: ImprintDef;
+}
+
+export type ImprintStat = "hp" | "damage" | "speed" | "haste" | "xp" | "pickup";
+
+export interface ImprintDef {
+  stat: ImprintStat;
+  /** Fraction added per rank. Haste is attack speed (lower cooldown). */
+  perRank: number;
 }
 
 export interface OwnedCharacter {
@@ -43,6 +53,7 @@ export interface OwnedCharacter {
   stars: number;       // 0~5, enhances base stats further
   memories: number;    // 기억 — earned from gacha duplicates
   breakthrough: number; // 0~4 돌파 단계
+  imprint: number;     // 0~MAX_IMPRINT, only after full breakthrough
 }
 
 export interface TraitDef {
@@ -73,6 +84,7 @@ export const CHARACTERS: CharacterDef[] = [
     startWeapon: "bullet",
     passive: "extraReroll",
     passiveDesc: "레벨업마다 리롤 +1회",
+    imprint: { stat: "pickup", perRank: 0.05 },
   },
   {
     id: "berserker",
@@ -87,6 +99,7 @@ export const CHARACTERS: CharacterDef[] = [
     startWeapon: "melee",
     passive: "lowHpFury",
     passiveDesc: "체력이 낮을수록 공격력 증가 (최대 +50%)",
+    imprint: { stat: "damage", perRank: 0.05 },
   },
   {
     id: "guardian",
@@ -101,6 +114,7 @@ export const CHARACTERS: CharacterDef[] = [
     startWeapon: "trap",
     passive: "guardianWall",
     passiveDesc: "받는 피해 15% 감소 · 근접 적에게 반사 피해",
+    imprint: { stat: "hp", perRank: 0.05 },
   },
   {
     id: "scout",
@@ -115,6 +129,7 @@ export const CHARACTERS: CharacterDef[] = [
     startWeapon: "bomb",
     passive: "swiftLooter",
     passiveDesc: "이동속도의 30%만큼 추가 공격력 · 흡수 범위 +20%",
+    imprint: { stat: "speed", perRank: 0.05 },
   },
   {
     id: "mage",
@@ -129,6 +144,7 @@ export const CHARACTERS: CharacterDef[] = [
     startWeapon: "aura",
     passive: "spellPower",
     passiveDesc: "모든 공격 피해 +15%",
+    imprint: { stat: "haste", perRank: 0.05 },
   },
   {
     id: "linya",
@@ -145,6 +161,7 @@ export const CHARACTERS: CharacterDef[] = [
     unlockAchievement: "evo_shuriken",
     passive: "critStrike",
     passiveDesc: "15% 확률로 치명타 (2배 피해)",
+    imprint: { stat: "xp", perRank: 0.05 },
   },
   {
     id: "euroan",
@@ -161,6 +178,7 @@ export const CHARACTERS: CharacterDef[] = [
     unlockAchievement: "evo_claw",
     passive: "guardianWall",
     passiveDesc: "받는 피해 15% 감소 · 근접 적에게 반사 피해",
+    imprint: { stat: "hp", perRank: 0.05 },
   },
   {
     id: "cheon",
@@ -177,6 +195,7 @@ export const CHARACTERS: CharacterDef[] = [
     unlockAchievement: "evo_fist",
     passive: "physicalApex",
     passiveDesc: "모든 공격 피해 +20%",
+    imprint: { stat: "damage", perRank: 0.05 },
   },
   {
     id: "kali",
@@ -193,6 +212,7 @@ export const CHARACTERS: CharacterDef[] = [
     unlockAchievement: "evo_axe",
     passive: "critStrike",
     passiveDesc: "15% 확률로 치명타 (2배 피해)",
+    imprint: { stat: "speed", perRank: 0.05 },
   },
 ];
 
@@ -350,6 +370,64 @@ export function breakthroughMemoriesSpent(tier: number): number {
   return total;
 }
 
+/** Memories for one imprint rank. Only offered after 4 breakthrough. */
+export const IMPRINT_MEMORY_COST = 5;
+export const MAX_IMPRINT = 3;
+
+const IMPRINT_STAT_LABEL: Record<ImprintStat, string> = {
+  hp: "체력",
+  damage: "피해",
+  speed: "이동 속도",
+  haste: "공격 속도",
+  xp: "경험치",
+  pickup: "흡수 범위",
+};
+
+export function imprintMemoryCost(rank: number): number {
+  if (rank >= MAX_IMPRINT) return Infinity;
+  return IMPRINT_MEMORY_COST;
+}
+
+export function imprintMemoriesSpent(rank: number): number {
+  const steps = Math.min(MAX_IMPRINT, Math.max(0, Math.floor(rank)));
+  return IMPRINT_MEMORY_COST * steps;
+}
+
+export function imprintRank(rank: number): number {
+  return Math.min(MAX_IMPRINT, Math.max(0, Math.floor(rank)));
+}
+
+/** Text for this character's imprint at `rank`. Rank 0 still names the per-step bonus. */
+export function imprintLabel(def: CharacterDef, rank: number): string {
+  const steps = rank <= 0 ? 1 : imprintRank(rank);
+  const pct = Math.round(def.imprint.perRank * steps * 100);
+  const prefix = rank <= 0 ? "각인당 " : "";
+  return `${prefix}모든 캐릭터 ${IMPRINT_STAT_LABEL[def.imprint.stat]} +${pct}%`;
+}
+
+export interface ImprintTotals {
+  hp: number;
+  damage: number;
+  speed: number;
+  haste: number;
+  xp: number;
+  pickup: number;
+}
+
+/** Sum of imprint ranks that are actually open. A character below 4 breakthrough contributes nothing. */
+export function imprintTotals(owned: readonly Pick<OwnedCharacter, "id" | "breakthrough" | "imprint">[]): ImprintTotals {
+  const out: ImprintTotals = { hp: 0, damage: 0, speed: 0, haste: 0, xp: 0, pickup: 0 };
+  for (const row of owned) {
+    if (row.breakthrough < MAX_BREAKTHROUGH) continue;
+    const rank = imprintRank(row.imprint ?? 0);
+    if (rank <= 0) continue;
+    const def = CHARACTERS.find((c) => c.id === row.id);
+    if (!def) continue;
+    out[def.imprint.stat] += def.imprint.perRank * rank;
+  }
+  return out;
+}
+
 export function traitTotalSpent(level: number): number {
   let total = 0;
   for (let i = 0; i < level; i++) total += TRAIT_UPGRADE_COST(i);
@@ -366,7 +444,7 @@ export function starTraitTotalSpent(trait: TraitDef, level: number): number {
 
 // Starting state
 export const DEFAULT_OWNED: OwnedCharacter[] = [
-  { id: "survivor", level: 1, stars: 0, memories: 0, breakthrough: 0 },
+  { id: "survivor", level: 1, stars: 0, memories: 0, breakthrough: 0, imprint: 0 },
 ];
 
 export const DEFAULT_TRAIT_LEVELS: Record<string, number> = Object.fromEntries(
